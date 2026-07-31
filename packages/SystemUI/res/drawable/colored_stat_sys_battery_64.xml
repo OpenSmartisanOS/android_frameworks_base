@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@id/content" android:height="@dimen/status_bar_battery_icon_height" android:width="@dimen/status_bar_battery_icon_width" android:drawable="@drawable/colored_stat_sys_battery_content_64" />
+    <item android:id="@id/frame" android:height="@dimen/status_bar_battery_icon_height" android:width="@dimen/status_bar_battery_icon_width" android:drawable="@drawable/colored_stat_sys_battery_frame" />
+</layer-list>

@@ -32,7 +32,7 @@
             android:id="@+id/mobile_in"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:src="@drawable/ic_activity_down"
+            android:src="@drawable/stat_sys_signal_in"
             android:visibility="gone"
             android:paddingEnd="2dp"
             />
@@ -40,7 +40,7 @@
             android:id="@+id/mobile_out"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:src="@drawable/ic_activity_up"
+            android:src="@drawable/stat_sys_signal_out"
             android:paddingEnd="2dp"
             android:visibility="gone"
             />

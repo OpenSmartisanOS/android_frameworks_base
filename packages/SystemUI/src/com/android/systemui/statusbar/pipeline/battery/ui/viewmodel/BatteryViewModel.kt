@@ -79,6 +79,20 @@ sealed class BatteryViewModel(
             source = interactor.isCharging,
         )
 
+    val isPowerSave: Boolean by
+        hydrator.hydratedStateOf(
+            traceName = "isPowerSave",
+            initialValue = false,
+            source = interactor.powerSave,
+        )
+
+    val isPluggedIn: Boolean by
+        hydrator.hydratedStateOf(
+            traceName = "isPluggedIn",
+            initialValue = false,
+            source = interactor.isPluggedIn,
+        )
+
     val isBatteryPercentSettingEnabled: Boolean by
         hydrator.hydratedStateOf(
             traceName = "isBatteryPercentSettingEnabled",

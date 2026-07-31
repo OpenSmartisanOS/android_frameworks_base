@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list android:id="@id/stat_sys_battery_charge_anim" android:oneshot="false"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/colored_stat_sys_battery_content_72" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/colored_stat_sys_battery_content_80" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/colored_stat_sys_battery_content_88" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/colored_stat_sys_battery_content_100" />
+</animation-list>

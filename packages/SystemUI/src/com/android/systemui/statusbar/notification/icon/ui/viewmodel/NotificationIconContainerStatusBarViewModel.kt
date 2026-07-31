@@ -97,6 +97,14 @@ constructor(
             .distinctUntilChanged()
             .dumpWhileCollecting("icons")
 
+    /** Number represented by the SOS count glyph next to the app notification icons. */
+    val notificationCount: Flow<Int> =
+        iconsInteractor.statusBarNotifs
+            .map { entries -> entries.size }
+            .flowOn(bgContext)
+            .conflate()
+            .distinctUntilChanged()
+
     /** An Icon to show "isolated" in the IconContainer. */
     val isolatedIcon: Flow<AnimatedValue<NotificationIconInfo?>> =
         if (StatusBarNoHunBehavior.isEnabled) {

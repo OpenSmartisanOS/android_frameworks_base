@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<level-list
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_0" android:maxLevel="0" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_1" android:maxLevel="10" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_2" android:maxLevel="16" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_3" android:maxLevel="24" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_4" android:maxLevel="32" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_5" android:maxLevel="40" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_6" android:maxLevel="48" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_7" android:maxLevel="56" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_8" android:maxLevel="64" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_9" android:maxLevel="72" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_10" android:maxLevel="80" />
+    <item android:drawable="@drawable/colored_stat_sys_battery_charge_11" android:maxLevel="100" />
+</level-list>

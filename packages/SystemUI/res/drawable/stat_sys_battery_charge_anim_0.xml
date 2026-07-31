@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list android:id="@id/stat_sys_battery_charge_anim" android:oneshot="false"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_0" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_10" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_20" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_24" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_32" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_40" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_48" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_56" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_64" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_72" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_80" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_88" />
+    <item android:duration="@integer/config_battery_charge_drawable_frame_duration" android:drawable="@drawable/stat_sys_battery_content_100" />
+</animation-list>

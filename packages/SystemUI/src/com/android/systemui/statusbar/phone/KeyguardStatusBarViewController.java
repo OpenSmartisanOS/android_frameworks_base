@@ -316,6 +316,7 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
     private TintedIconManager mTintedIconManager;
 
     private float mKeyguardStatusBarAnimateAlpha = 1f;
+    @Nullable private ValueAnimator mKeyguardStatusBarAnimator;
     /**
      * If face auth with bypass is running for the first time after you turn on the screen.
      * (From aod or screen off)
@@ -565,6 +566,7 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
 
     @Override
     protected void onViewDetached() {
+        cancelKeyguardStatusBarAnimator();
         mSystemIconsContainer.setOnHoverListener(null);
         mConfigurationController.removeCallback(mConfigurationListener);
         mAnimationScheduler.removeCallback(mAnimationCallback);
@@ -650,12 +652,22 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
             // If our view is disabled, don't allow us to animate in.
             return;
         }
+        cancelKeyguardStatusBarAnimator();
         mView.setVisibility(View.VISIBLE);
         mView.setAlpha(0f);
         ValueAnimator anim = ValueAnimator.ofFloat(0f, 1f);
         anim.addUpdateListener(mAnimatorUpdateListener);
         anim.setDuration(StackStateAnimator.ANIMATION_DURATION_STANDARD);
         anim.setInterpolator(InterpolatorsAndroidX.LINEAR_OUT_SLOW_IN);
+        anim.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mKeyguardStatusBarAnimator == animation) {
+                    mKeyguardStatusBarAnimator = null;
+                }
+            }
+        });
+        mKeyguardStatusBarAnimator = anim;
         anim.start();
     }
 
@@ -666,6 +678,7 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
         }
 
         mLogger.log(TAG, LogLevel.DEBUG, "animating status bar out");
+        cancelKeyguardStatusBarAnimator();
         ValueAnimator anim = ValueAnimator.ofFloat(mView.getAlpha(), 0f);
         anim.addUpdateListener(mAnimatorUpdateListener);
         anim.setStartDelay(startDelay);
@@ -674,12 +687,21 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
         anim.addListener(new AnimatorListenerAdapter() {
             @Override
             public void onAnimationEnd(Animator animation) {
+                if (mKeyguardStatusBarAnimator != animation) return;
+                mKeyguardStatusBarAnimator = null;
                 mView.setVisibility(View.INVISIBLE);
                 mView.setAlpha(1f);
                 mKeyguardStatusBarAnimateAlpha = 1f;
             }
         });
+        mKeyguardStatusBarAnimator = anim;
         anim.start();
+    }
+
+    private void cancelKeyguardStatusBarAnimator() {
+        ValueAnimator animator = mKeyguardStatusBarAnimator;
+        mKeyguardStatusBarAnimator = null;
+        if (animator != null) animator.cancel();
     }
 
     /**

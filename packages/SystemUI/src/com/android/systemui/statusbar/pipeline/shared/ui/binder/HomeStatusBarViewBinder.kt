@@ -570,7 +570,7 @@ constructor(
         return LineageSettings.System.getIntForUser(
             this,
             LineageSettings.System.STATUS_BAR_CLOCK,
-            CLOCK_POSITION_LEFT,
+            CLOCK_POSITION_CENTER,
             UserHandle.USER_CURRENT,
         )
     }

@@ -121,6 +121,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public static final int FADE_IN_DURATION = 320;
     public static final int FADE_OUT_DURATION = 160;
     public static final int FADE_IN_DELAY = 50;
+    private static final int SOS_UNLOCK_ICON_FADE_IN_DURATION = 120;
     private static final int SOURCE_SYSTEM_EVENT_ANIMATOR = 1;
     private static final int SOURCE_OTHER = 2;
     private HomeStatusBarComponent mHomeStatusBarComponent;
@@ -826,10 +827,9 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             return;
         }
         if (mKeyguardStateController.isKeyguardFadingAway()) {
-            mEndSideAlphaController.animateToAlpha(/*alpha*/ 1f, SOURCE_OTHER,
-                    mKeyguardStateController.getKeyguardFadingAwayDuration(),
-                    InterpolatorsAndroidX.LINEAR_OUT_SLOW_IN,
-                    mKeyguardStateController.getKeyguardFadingAwayDelay());
+            // SOS keeps one status icon row alive across unlock. Put the home row underneath the
+            // fading keyguard row immediately so the combined icon alpha never drops to zero.
+            mEndSideAlphaController.setAlpha(1f, SOURCE_OTHER);
         } else {
             mEndSideAlphaController.animateToAlpha(/*alpha*/ 1f, SOURCE_OTHER, FADE_IN_DURATION,
                     InterpolatorsAndroidX.ALPHA_IN, FADE_IN_DELAY);
@@ -960,10 +960,13 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
 
         // Synchronize the motion with the Keyguard fading if necessary.
         if (mKeyguardStateController.isKeyguardFadingAway()) {
+            long keyguardDuration = mKeyguardStateController.getKeyguardFadingAwayDuration();
+            long iconDuration = Math.min(SOS_UNLOCK_ICON_FADE_IN_DURATION, keyguardDuration);
             v.animate()
-                    .setDuration(mKeyguardStateController.getKeyguardFadingAwayDuration())
-                    .setInterpolator(Interpolators.LINEAR_OUT_SLOW_IN)
-                    .setStartDelay(mKeyguardStateController.getKeyguardFadingAwayDelay())
+                    .setDuration(iconDuration)
+                    .setInterpolator(Interpolators.ALPHA_IN)
+                    .setStartDelay(mKeyguardStateController.getKeyguardFadingAwayDelay()
+                            + Math.max(0, keyguardDuration - iconDuration))
                     .start();
         }
     }

@@ -18,6 +18,7 @@ package com.android.systemui.statusbar.pipeline.mobile.ui.binder
 
 import android.annotation.ColorInt
 import android.content.res.ColorStateList
+import android.graphics.drawable.Animatable
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -30,7 +31,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.app.tracing.coroutines.launchTraced as launch
-import com.android.settingslib.graph.SignalDrawable
 import com.android.systemui.Flags.statusBarStaticInoutIndicators
 import com.android.systemui.common.ui.binder.IconViewBinder
 import com.android.systemui.lifecycle.repeatWhenAttached
@@ -69,7 +69,6 @@ object MobileIconBinder {
         val networkTypeView = view.requireViewById<ImageView>(R.id.mobile_type)
         val networkTypeContainer = view.requireViewById<FrameLayout>(R.id.mobile_type_container)
         val iconView = view.requireViewById<ImageView>(R.id.mobile_signal)
-        val mobileDrawable = SignalDrawable(view.context)
         val roamingView = view.requireViewById<ImageView>(R.id.mobile_roaming)
         val roamingSpace = view.requireViewById<Space>(R.id.mobile_roaming_space)
         val endSideRoamingView = view.requireViewById<ImageView>(R.id.mobile_roaming_updated)
@@ -158,12 +157,25 @@ object MobileIconBinder {
                                         packedSignalDrawableState = packedSignalDrawableState,
                                         shouldRequestLayout = shouldRequestLayout,
                                     )
-                                    iconView.setImageDrawable(mobileDrawable)
-                                    mobileDrawable.level = packedSignalDrawableState
+                                    val level = newIcon.level.coerceIn(0, 5)
+                                    val carrierChange = newIcon.carrierNetworkChange
+                                    (iconView.drawable as? Animatable)?.stop()
+                                    val iconRes =
+                                        SosSignalIconResource.resolve(
+                                            context = view.context,
+                                            subscriptionId = viewModel.subscriptionId,
+                                            level = level,
+                                            showExclamationMark = newIcon.showExclamationMark,
+                                            carrierNetworkChange = carrierChange,
+                                        )
+                                    if (iconRes != 0) {
+                                        iconView.setImageResource(iconRes)
+                                        if (carrierChange) (iconView.drawable as? Animatable)?.start()
+                                    }
                                     viewModel.verboseLogger?.logBinderSignalIconResult(
                                         parentView = view,
                                         subId = viewModel.subscriptionId,
-                                        unpackedLevel = mobileDrawable.unpackLevel(),
+                                        unpackedLevel = level,
                                     )
                                 } else if (newIcon is SignalIconModel.Satellite) {
                                     viewModel.verboseLogger?.logBinderReceivedSignalSatelliteIcon(

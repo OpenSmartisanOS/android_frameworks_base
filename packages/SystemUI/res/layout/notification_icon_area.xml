@@ -14,9 +14,25 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License
   -->
-<com.android.systemui.statusbar.phone.NotificationIconContainer
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/notificationIcons"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="wrap_content"
     android:layout_height="match_parent"
-    android:clipChildren="false"/>
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:clipChildren="false">
+
+    <com.android.systemui.statusbar.widget.SosNotificationCountView
+        android:id="@+id/sos_notification_count"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/status_bar_icon_size_sp"
+        android:layout_marginHorizontal="1dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerInside"
+        android:visibility="gone" />
+
+    <com.android.systemui.statusbar.phone.NotificationIconContainer
+        android:id="@+id/notificationIcons"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:clipChildren="false" />
+</LinearLayout>

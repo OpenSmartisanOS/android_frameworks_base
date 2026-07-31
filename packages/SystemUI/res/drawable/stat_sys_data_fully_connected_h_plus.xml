@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector android:height="@dimen/status_bar_battery_icon_height" android:width="15.0dp" android:viewportWidth="30.0" android:viewportHeight="27.0"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <path android:fillColor="#ffffff" android:pathData="M10.099,13.902H7.953V9.339H4.774v4.563H2.621V3.238h2.153v4.313h3.179V3.238h2.146V13.902z" />
+    <path android:fillColor="#ffffff" android:pathData="M18.684,7.645h2.969v1.734h-2.969v3.383h-1.845V9.379h-2.984V7.645h2.984V4.48h1.845V7.645z" />
+</vector>

@@ -55,7 +55,8 @@ public class AccessPointControllerImpl implements AccessPointController,
     // network credentials.  This is used by quick settings for secured networks.
     private static final String EXTRA_START_CONNECT_SSID = "wifi_start_connect_ssid";
 
-    private static final int[] ICONS = WifiIcons.WIFI_FULL_ICONS;
+    // Access-point rows are rendered at QS/list size; status-bar artwork is too small for them.
+    private static final int[] ICONS = WifiIcons.QS_WIFI_SIGNAL_STRENGTH[1];
 
     private final ArrayList<AccessPointCallback> mCallbacks = new ArrayList<AccessPointCallback>();
     private final UserManager mUserManager;

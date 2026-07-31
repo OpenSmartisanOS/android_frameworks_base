@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objectAnimator xmlns:android="http://schemas.android.com/apk/res/android"
+    android:interpolator="@android:anim/linear_interpolator" android:duration="@integer/carrier_network_change_anim_time" android:repeatCount="infinite">
+    <propertyValuesHolder android:propertyName="fillColor" android:valueType="colorType">
+        <keyframe android:fraction="0" android:value="?fillColor" /><keyframe android:fraction="0.32" android:value="?fillColor" />
+        <keyframe android:fraction="0.33" android:value="?backgroundColor" /><keyframe android:fraction="1" android:value="?backgroundColor" />
+    </propertyValuesHolder>
+</objectAnimator>

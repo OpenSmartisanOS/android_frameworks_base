@@ -11,3 +11,6 @@ gen/
 # to configure filepaths + project settings
 .classpath
 .settings/
+
+# macOS AppleDouble metadata
+._*

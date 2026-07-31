@@ -52,16 +52,10 @@ class BatteryInteractor @Inject constructor(
      */
     val isPluggedIn = repo.isPluggedIn
 
-    /**
-     * For the sake of battery views, consider it to be "charging" if plugged in. This allows users
-     * to easily confirm that the device is properly plugged in, even if its' technically not
-     * charging due to issues with the source.
-     *
-     * If an incompatible charger is detected, we don't consider the battery to be charging.
-     */
+    /** Whether current is actively flowing into the battery. */
     val isCharging =
-        combine(repo.isPluggedIn, repo.isIncompatibleCharging) { pluggedIn, incompatible ->
-            !incompatible && pluggedIn
+        combine(repo.isCharging, repo.isIncompatibleCharging) { charging, incompatible ->
+            charging && !incompatible
         }
 
     /**

@@ -16,7 +16,9 @@
 
 package com.android.systemui.statusbar.notification.icon.ui.viewbinder
 
+import android.graphics.Rect
 import android.view.Display
+import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.lifecycleScope
 import com.android.app.displaylib.PerDisplayRepository
 import com.android.app.tracing.traceSection
@@ -27,8 +29,11 @@ import com.android.systemui.statusbar.notification.collection.NotifPipeline
 import com.android.systemui.statusbar.notification.icon.ui.viewbinder.NotificationIconContainerViewBinder.IconViewStore
 import com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconContainerStatusBarViewModel
 import com.android.systemui.statusbar.phone.NotificationIconContainer
+import com.android.systemui.res.R
+import com.android.systemui.statusbar.widget.SosNotificationCountView
 import javax.inject.Inject
 import kotlinx.coroutines.DisposableHandle
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /** Binds a [NotificationIconContainer] to a [NotificationIconContainerStatusBarViewModel]. */
@@ -59,6 +64,31 @@ constructor(
                         ?: perDisplaySubcomponentRepository[Display.DEFAULT_DISPLAY]!!
                 val configurationState: ConfigurationState = displaySubcomponent.configurationState
                 val systemBarUtilsState = displaySubcomponent.systemBarUtilsState
+                val notificationCount =
+                    view.rootView.findViewById<SosNotificationCountView>(
+                        R.id.sos_notification_count
+                    )
+                lifecycleScope.launch {
+                    viewModel.notificationCount
+                        .combine(viewModel.iconColors(displayId)) { count, colors -> count to colors }
+                        .collect { (count, colors) ->
+                            notificationCount ?: return@collect
+                            notificationCount.setCount(count)
+                            val updateTint = {
+                                val bounds = Rect()
+                                notificationCount.getGlobalVisibleRect(bounds)
+                                notificationCount.setIconTint(colors.staticDrawableColor(bounds))
+                            }
+                            if (
+                                notificationCount.isLaidOut &&
+                                    !notificationCount.isLayoutRequested
+                            ) {
+                                updateTint()
+                            } else {
+                                notificationCount.doOnNextLayout { updateTint() }
+                            }
+                        }
+                }
                 lifecycleScope.launch {
                     NotificationIconContainerViewBinder.bind(
                         displayId = displayId,
