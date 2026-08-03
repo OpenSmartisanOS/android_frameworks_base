@@ -43,6 +43,7 @@ import com.android.systemui.kairos.stateOf
 import com.android.systemui.kairos.util.nameTag
 import com.android.systemui.kairosBuilder
 import com.android.systemui.log.table.TableLogBuffer
+import com.android.systemui.res.R
 import com.android.systemui.log.table.logDiffsForTable
 import com.android.systemui.statusbar.core.NewStatusBarIcons
 import com.android.systemui.statusbar.core.StatusBarRootModernization
@@ -295,7 +296,11 @@ constructor(
     }
 
     override val isStackable: State<Boolean> =
-        if (NewStatusBarIcons.isEnabled && StatusBarRootModernization.isEnabled) {
+        if (
+            !context.resources.getBoolean(R.bool.config_sos_legacy_shade) &&
+                NewStatusBarIcons.isEnabled &&
+                StatusBarRootModernization.isEnabled
+        ) {
             icons.flatMap { iconsBySubId: Map<Int, MobileIconInteractorKairos> ->
                 iconsBySubId.values
                     .map { it.signalLevelIcon }

@@ -28,6 +28,7 @@ import com.android.systemui.flags.FeatureFlagsClassic
 import com.android.systemui.flags.Flags.FILTER_PROVISIONING_NETWORK_SUBSCRIPTIONS
 import com.android.systemui.log.table.TableLogBuffer
 import com.android.systemui.log.table.logDiffsForTable
+import com.android.systemui.res.R
 import com.android.systemui.statusbar.core.NewStatusBarIcons
 import com.android.systemui.statusbar.core.StatusBarRootModernization
 import com.android.systemui.statusbar.pipeline.dagger.MobileSummaryLog
@@ -308,7 +309,11 @@ constructor(
             .stateIn(scope, SharingStarted.WhileSubscribed(), emptyList())
 
     override val isStackable =
-        if (NewStatusBarIcons.isEnabled && StatusBarRootModernization.isEnabled) {
+        if (
+            !context.resources.getBoolean(R.bool.config_sos_legacy_shade) &&
+                NewStatusBarIcons.isEnabled &&
+                StatusBarRootModernization.isEnabled
+        ) {
             icons.flatMapLatest { icons ->
                 if (icons.isEmpty()) {
                     flowOf(false)

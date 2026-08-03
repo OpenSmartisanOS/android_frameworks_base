@@ -25,6 +25,7 @@ public class SosNotificationCountView extends ImageView {
     private int mBackgroundRes;
     private int mRenderedCount = -1;
     private int mRenderedTint = Integer.MIN_VALUE;
+    private final boolean mUseColoredBackground;
     private final int mMaxOffsetX;
     private final int mTextOffsetY;
 
@@ -40,6 +41,8 @@ public class SosNotificationCountView extends ImageView {
                 R.dimen.sos_notification_count_max_offset_x);
         mTextOffsetY = getResources().getDimensionPixelSize(
                 R.dimen.sos_notification_count_text_offset_y);
+        mUseColoredBackground = getResources().getBoolean(
+                R.bool.config_sos_colored_notification_count);
     }
 
     public void setCount(int count) {
@@ -57,11 +60,17 @@ public class SosNotificationCountView extends ImageView {
         if (mCount == 0) return;
         final int background;
         if (mCount < 10) {
-            background = R.drawable.smartisan_bg_notification_count_single;
+            background = mUseColoredBackground
+                    ? R.drawable.colored_smartisan_bg_notification_count_single
+                    : R.drawable.smartisan_bg_notification_count_single;
         } else if (mCount <= 99) {
-            background = R.drawable.smartisan_bg_notification_count_double;
+            background = mUseColoredBackground
+                    ? R.drawable.colored_smartisan_bg_notification_count_double
+                    : R.drawable.smartisan_bg_notification_count_double;
         } else {
-            background = R.drawable.smartisan_bg_notification_count_max;
+            background = mUseColoredBackground
+                    ? R.drawable.colored_smartisan_bg_notification_count_max
+                    : R.drawable.smartisan_bg_notification_count_max;
         }
         if (mBackgroundRes != background || mSourceBitmap == null || mBitmap == null) {
             if (mSourceBitmap != null && !mSourceBitmap.isRecycled()) mSourceBitmap.recycle();
@@ -80,14 +89,15 @@ public class SosNotificationCountView extends ImageView {
         final Canvas canvas = new Canvas(mBitmap);
         canvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
         final Paint backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        if (mTint != 0) {
+        if (!mUseColoredBackground && mTint != 0) {
             backgroundPaint.setColorFilter(new PorterDuffColorFilter(mTint, PorterDuff.Mode.SRC_IN));
         }
         canvas.drawBitmap(mSourceBitmap, 0f, 0f, backgroundPaint);
         final Paint.FontMetrics metrics = mNumberPaint.getFontMetrics();
-        final float baseline = output.getHeight() / 2f
+        final float baseline = mBitmap.getHeight() / 2f
                 - (metrics.ascent + metrics.descent) / 2f + mTextOffsetY;
-        final float centerX = output.getWidth() / 2f - (mCount > 99 ? mMaxOffsetX : 0) - 0.5f;
+        final float centerX = mBitmap.getWidth() / 2f
+                - (mCount > 99 ? mMaxOffsetX : 0) - 0.5f;
         canvas.drawText(Integer.toString(Math.min(mCount, 99)), centerX,
                 baseline, mNumberPaint);
         mRenderedCount = mCount;

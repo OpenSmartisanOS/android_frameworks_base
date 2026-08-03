@@ -18,8 +18,56 @@ package com.android.systemui.statusbar.pipeline.mobile.ui.binder
 
 import android.content.Context
 import android.telephony.SubscriptionManager
+import com.android.systemui.res.R
 
 internal object SosSignalIconResource {
+    private val sim1 = intArrayOf(
+        R.drawable.stat_sys_signal_sim1_0,
+        R.drawable.stat_sys_signal_sim1_1,
+        R.drawable.stat_sys_signal_sim1_2,
+        R.drawable.stat_sys_signal_sim1_3,
+        R.drawable.stat_sys_signal_sim1_4,
+        R.drawable.stat_sys_signal_sim1_5,
+    )
+    private val sim1Fully = intArrayOf(
+        R.drawable.stat_sys_signal_sim1_0_fully,
+        R.drawable.stat_sys_signal_sim1_1_fully,
+        R.drawable.stat_sys_signal_sim1_2_fully,
+        R.drawable.stat_sys_signal_sim1_3_fully,
+        R.drawable.stat_sys_signal_sim1_4_fully,
+        R.drawable.stat_sys_signal_sim1_5_fully,
+    )
+    private val sim2 = intArrayOf(
+        R.drawable.stat_sys_signal_sim2_0,
+        R.drawable.stat_sys_signal_sim2_1,
+        R.drawable.stat_sys_signal_sim2_2,
+        R.drawable.stat_sys_signal_sim2_3,
+        R.drawable.stat_sys_signal_sim2_4,
+        R.drawable.stat_sys_signal_sim2_5,
+    )
+    private val sim2Fully = intArrayOf(
+        R.drawable.stat_sys_signal_sim2_0_fully,
+        R.drawable.stat_sys_signal_sim2_1_fully,
+        R.drawable.stat_sys_signal_sim2_2_fully,
+        R.drawable.stat_sys_signal_sim2_3_fully,
+        R.drawable.stat_sys_signal_sim2_4_fully,
+        R.drawable.stat_sys_signal_sim2_5_fully,
+    )
+    private val generic = intArrayOf(
+        R.drawable.stat_sys_signal_0,
+        R.drawable.stat_sys_signal_1,
+        R.drawable.stat_sys_signal_2,
+        R.drawable.stat_sys_signal_3,
+        R.drawable.stat_sys_signal_4,
+    )
+    private val genericFully = intArrayOf(
+        R.drawable.stat_sys_signal_0_fully,
+        R.drawable.stat_sys_signal_1_fully,
+        R.drawable.stat_sys_signal_2_fully,
+        R.drawable.stat_sys_signal_3_fully,
+        R.drawable.stat_sys_signal_4_fully,
+    )
+
     fun resolve(
         context: Context,
         subscriptionId: Int,
@@ -28,35 +76,32 @@ internal object SosSignalIconResource {
         carrierNetworkChange: Boolean,
     ): Int {
         if (carrierNetworkChange) {
-            return drawableId(context, "stat_sys_signal_carrier_network_change_animation")
+            return R.drawable.stat_sys_signal_carrier_network_change_animation
         }
 
         val safeLevel = level.coerceIn(0, 5)
-        val connectionSuffix = if (showExclamationMark) "" else "_fully"
-        val slotSuffix = activeDualSimSlotSuffix(context, subscriptionId)
-        if (slotSuffix != null) {
-            val slotResource =
-                drawableId(
-                    context,
-                    "stat_sys_signal_${slotSuffix}_${safeLevel}${connectionSuffix}",
-                )
-            if (slotResource != 0) return slotResource
+        val slot = activeDualSimSlot(context, subscriptionId)
+        if (slot >= 0) {
+            return when {
+                slot == 0 && showExclamationMark -> sim1[safeLevel]
+                slot == 0 -> sim1Fully[safeLevel]
+                showExclamationMark -> sim2[safeLevel]
+                else -> sim2Fully[safeLevel]
+            }
         }
 
-        return drawableId(context, "stat_sys_signal_${safeLevel}${connectionSuffix}")
+        val genericLevel = safeLevel.coerceAtMost(generic.lastIndex)
+        return if (showExclamationMark) generic[genericLevel] else genericFully[genericLevel]
     }
 
-    private fun activeDualSimSlotSuffix(context: Context, subscriptionId: Int): String? {
+    private fun activeDualSimSlot(context: Context, subscriptionId: Int): Int {
         val subscriptionManager = context.getSystemService(SubscriptionManager::class.java)
-        if (subscriptionManager?.activeSubscriptionInfoCount?.let { it > 1 } != true) return null
+        if (subscriptionManager?.activeSubscriptionInfoCount?.let { it > 1 } != true) return -1
 
         return when (SubscriptionManager.getSlotIndex(subscriptionId)) {
-            0 -> "sim1"
-            1 -> "sim2"
-            else -> null
+            0 -> 0
+            1 -> 1
+            else -> -1
         }
     }
-
-    private fun drawableId(context: Context, name: String): Int =
-        context.resources.getIdentifier(name, "drawable", context.packageName)
 }

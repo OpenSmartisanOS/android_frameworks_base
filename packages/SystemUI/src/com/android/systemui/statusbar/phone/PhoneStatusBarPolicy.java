@@ -32,6 +32,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.res.Resources;
+import android.media.AudioDeviceCallback;
+import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
 import android.net.ConnectivityManager;
 import android.net.Network;
@@ -167,6 +169,7 @@ public class PhoneStatusBarPolicy
     private final PrivacyLogger mPrivacyLogger;
     private final ZenModeInteractor mZenModeInteractor;
     private final ConnectivityManager mConnectivityManager;
+    private final AudioManager mAudioManager;
 
     private boolean mZenVisible;
     private boolean mVibrateVisible;
@@ -177,9 +180,22 @@ public class PhoneStatusBarPolicy
     private boolean mFirewallVisible = false;
 
     private int mLastResumedActivityUid = -1;
+    private boolean mWiredHeadsetConnected;
 
     private BluetoothController mBluetooth;
     private AlarmClockInfo mNextAlarm;
+
+    private final AudioDeviceCallback mHeadsetDeviceCallback = new AudioDeviceCallback() {
+        @Override
+        public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+            updateHeadsetDeviceState();
+        }
+
+        @Override
+        public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
+            updateHeadsetDeviceState();
+        }
+    };
 
     @Inject
     public PhoneStatusBarPolicy(Context context, StatusBarIconController iconController,
@@ -236,6 +252,7 @@ public class PhoneStatusBarPolicy
         mZenModeInteractor = zenModeInteractor;
         mJavaAdapter = javaAdapter;
         mConnectivityManager = context.getSystemService(ConnectivityManager.class);
+        mAudioManager = context.getSystemService(AudioManager.class);
 
         mSlotConnectedDisplay = resources.getString(
                 com.android.internal.R.string.status_bar_connected_display);
@@ -278,6 +295,9 @@ public class PhoneStatusBarPolicy
         filter.addAction(Intent.ACTION_PROFILE_ACCESSIBLE);
         filter.addAction(Intent.ACTION_PROFILE_INACCESSIBLE);
         mBroadcastDispatcher.registerReceiverWithHandler(mIntentReceiver, filter, mHandler);
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade) && mAudioManager != null) {
+            mAudioManager.registerAudioDeviceCallback(mHeadsetDeviceCallback, mHandler);
+        }
         Observer<Integer> observer = ringer -> mHandler.post(this::updateVolumeZen);
 
         mRingerModeTracker.getRingerMode().observeForever(observer);
@@ -288,6 +308,7 @@ public class PhoneStatusBarPolicy
 
         // TTY status
         updateTTY();
+        updateHeadsetDeviceState();
 
         // bluetooth status
         updateBluetooth();
@@ -775,6 +796,11 @@ public class PhoneStatusBarPolicy
 
     private void updateHeadsetPlug(Intent intent) {
         boolean connected = intent.getIntExtra("state", 0) != 0;
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mWiredHeadsetConnected = connected || hasWiredHeadsetDevice();
+            updateSosHeadsetIcon();
+            return;
+        }
         boolean hasMic = intent.getIntExtra("microphone", 0) != 0;
         if (connected) {
             String contentDescription = mResources.getString(hasMic
@@ -786,6 +812,41 @@ public class PhoneStatusBarPolicy
         } else {
             mIconController.setIconVisibility(mSlotHeadset, false);
         }
+    }
+
+    private void updateHeadsetDeviceState() {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
+        mWiredHeadsetConnected = hasWiredHeadsetDevice();
+        updateSosHeadsetIcon();
+    }
+
+    private void updateSosHeadsetIcon() {
+        if (mWiredHeadsetConnected) {
+            mIconController.setIcon(mSlotHeadset, R.drawable.stat_sys_normal_earphone,
+                    mResources.getString(R.string.accessibility_status_bar_headphones));
+        }
+        mIconController.setIconVisibility(mSlotHeadset, mWiredHeadsetConnected);
+    }
+
+    private boolean hasWiredHeadsetDevice() {
+        if (mAudioManager == null) {
+            return false;
+        }
+        for (AudioDeviceInfo device : mAudioManager.getDevices(AudioManager.GET_DEVICES_OUTPUTS)) {
+            switch (device.getType()) {
+                case AudioDeviceInfo.TYPE_WIRED_HEADPHONES:
+                case AudioDeviceInfo.TYPE_WIRED_HEADSET:
+                case AudioDeviceInfo.TYPE_USB_DEVICE:
+                case AudioDeviceInfo.TYPE_USB_HEADSET:
+                case AudioDeviceInfo.TYPE_USB_ACCESSORY:
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return false;
     }
 
     @Override

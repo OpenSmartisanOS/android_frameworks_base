@@ -121,7 +121,6 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     public static final int FADE_IN_DURATION = 320;
     public static final int FADE_OUT_DURATION = 160;
     public static final int FADE_IN_DELAY = 50;
-    private static final int SOS_UNLOCK_ICON_FADE_IN_DURATION = 120;
     private static final int SOURCE_SYSTEM_EVENT_ANIMATOR = 1;
     private static final int SOURCE_OTHER = 2;
     private HomeStatusBarComponent mHomeStatusBarComponent;
@@ -961,12 +960,10 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         // Synchronize the motion with the Keyguard fading if necessary.
         if (mKeyguardStateController.isKeyguardFadingAway()) {
             long keyguardDuration = mKeyguardStateController.getKeyguardFadingAwayDuration();
-            long iconDuration = Math.min(SOS_UNLOCK_ICON_FADE_IN_DURATION, keyguardDuration);
             v.animate()
-                    .setDuration(iconDuration)
+                    .setDuration(keyguardDuration)
                     .setInterpolator(Interpolators.ALPHA_IN)
-                    .setStartDelay(mKeyguardStateController.getKeyguardFadingAwayDelay()
-                            + Math.max(0, keyguardDuration - iconDuration))
+                    .setStartDelay(mKeyguardStateController.getKeyguardFadingAwayDelay())
                     .start();
         }
     }
