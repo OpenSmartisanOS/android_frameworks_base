@@ -54,6 +54,8 @@ public class SosBrightnessSliderView extends BrightnessSliderView {
         mIcon = findViewById(R.id.brightness_icon);
         mBrightnessMin = findViewById(R.id.brightness_min);
         mBrightnessMax = findViewById(R.id.brightness_max);
+        mSlider.setBackground(null);
+        mSlider.setStateListAnimator(null);
         mSlider.setThumb(null);
         mSegmentedDrawable = new SegmentedBrightnessDrawable(getContext());
         mSlider.setProgressDrawable(mSegmentedDrawable);

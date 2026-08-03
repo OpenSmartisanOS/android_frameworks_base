@@ -1440,6 +1440,9 @@ public final class NotificationPanelViewController implements
         }
         mNotificationContainerParent.setSosQuickSettingsPage(quickSettings, animate);
         mQsController.setSosQuickSettingsPage(quickSettings);
+        if (!quickSettings) {
+            setShowShelfOnly(false);
+        }
     }
 
     private void updateSosChromeForExpansion() {

@@ -274,9 +274,8 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
                 Math.max(0f, Math.min(1f, mSosExpandedHeight / mSosMaxPanelHeight));
         final float panelTranslation = Math.min(0f, mSosExpandedHeight - mSosMaxPanelHeight);
         if (mSosQsNavbarScrim != null) {
-            final boolean showNavbarScrim = mSosChromeVisible && mSosQuickSettingsPage;
-            mSosQsNavbarScrim.setVisibility(showNavbarScrim ? VISIBLE : INVISIBLE);
-            mSosQsNavbarScrim.setAlpha(showNavbarScrim ? expansion : 0f);
+            mSosQsNavbarScrim.setVisibility(INVISIBLE);
+            mSosQsNavbarScrim.setAlpha(0f);
         }
         if (mQsFrame != null) {
             mQsFrame.setTranslationY(panelTranslation);
@@ -362,6 +361,7 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
 
     private void applySosPagePosition(boolean animate) {
         if (mQsFrame == null || mSharedNotificationContainer == null
+                || mSosHeader == null || mSosPageSwitch == null
                 || mSosClearAllContainer == null || mSosSettingsContainer == null
                 || mSosClearAllButton == null || mSosSettingsButton == null
                 || mSosNotificationsButton == null || mSosQuickSettingsButton == null) {

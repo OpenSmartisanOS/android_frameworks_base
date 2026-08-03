@@ -6633,6 +6633,13 @@ public class NotificationStackScrollLayout
      */
     private void updateUseRoundedRectClipping() {
         if (SceneContainerFlag.isEnabled()) return;
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            if (mShouldUseRoundedRectClipping) {
+                mShouldUseRoundedRectClipping = false;
+                invalidate();
+            }
+            return;
+        }
         // We don't want to clip notifications when QS is expanded, because incoming heads up on
         // the bottom would be clipped otherwise
         boolean qsAllowsClipping =
