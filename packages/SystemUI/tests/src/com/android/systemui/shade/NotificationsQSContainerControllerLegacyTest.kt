@@ -73,6 +73,7 @@ class NotificationsQSContainerControllerLegacyTest : SysuiTestCase() {
     private val navigationModeController = mock<NavigationModeController>()
     private val mLauncherProxyService = mock<LauncherProxyService>()
     private val shadeHeaderController = mock<ShadeHeaderController>()
+    private val sosPanelStatusBarController = mock<SosPanelStatusBarController>()
     private val shadeInteractor = mock<ShadeInteractor>()
     private val fragmentService = mock<FragmentService>()
     private val fragmentHostManager = mock<FragmentHostManager>()
@@ -112,6 +113,7 @@ class NotificationsQSContainerControllerLegacyTest : SysuiTestCase() {
                 navigationModeController,
                 mLauncherProxyService,
                 shadeHeaderController,
+                sosPanelStatusBarController,
                 shadeInteractor,
                 fragmentService,
                 delayableExecutor,
@@ -404,6 +406,7 @@ class NotificationsQSContainerControllerLegacyTest : SysuiTestCase() {
                 navigationModeController,
                 mLauncherProxyService,
                 shadeHeaderController,
+                sosPanelStatusBarController,
                 shadeInteractor,
                 fragmentService,
                 delayableExecutor,

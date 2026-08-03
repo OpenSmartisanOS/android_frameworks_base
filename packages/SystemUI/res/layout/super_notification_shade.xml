@@ -76,6 +76,70 @@
         android:clipToPadding="false"
         />
 
+    <include layout="@layout/sos_shade_header" />
+
+    <include layout="@layout/sos_shade_page_switch" />
+
+    <FrameLayout
+        android:id="@+id/sos_shade_clear_all_container"
+        android:layout_width="match_parent"
+        android:layout_height="65dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/sos_shade_action_margin_bottom"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/sos_shade_clear_all_button"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_gravity="center"
+            android:background="@null"
+            android:clickable="true"
+            android:contentDescription="@string/accessibility_clear_all"
+            android:focusable="true"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/sos_clear_all_bg"
+            android:tint="@null"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/sos_shade_settings_container"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/sos_shade_action_margin_bottom"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/sos_shade_settings_button"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:background="@null"
+            android:clickable="true"
+            android:contentDescription="@string/sos_shade_settings"
+            android:focusable="true"
+            android:padding="0dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/sos_settings_button_bg"
+            android:tint="@null" />
+    </FrameLayout>
+
+    <View
+        android:id="@+id/sos_qs_navbar_scrim"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sos_qs_navbar_scrim_height"
+        android:layout_gravity="bottom"
+        android:background="@drawable/sos_qs_navbar_scrim"
+        android:importantForAccessibility="no"
+        android:visibility="invisible" />
+
     <include layout="@layout/brightness_mirror_container" />
 
     <com.android.systemui.scrim.ScrimView

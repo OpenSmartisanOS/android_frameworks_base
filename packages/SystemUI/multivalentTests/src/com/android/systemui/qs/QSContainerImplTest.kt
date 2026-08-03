@@ -9,6 +9,7 @@ import com.android.systemui.res.R
 import com.android.systemui.SysuiTestCase
 import com.android.systemui.qs.customize.QSCustomizer
 import com.android.systemui.util.mockito.eq
+import com.google.common.truth.Truth.assertThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -69,5 +70,15 @@ class QSContainerImplTest : SysuiTestCase() {
                 anyInt(),
                 eq(originalPadding)
             )
+    }
+
+    @Test
+    fun sosLegacyShade_containerUsesFullHeight() {
+        overrideResource(R.bool.config_sos_legacy_shade, true)
+
+        qsContainer.setHeightOverride(1000)
+        qsContainer.setExpansion(0.25f)
+
+        assertThat(qsContainer.bottom).isEqualTo(1000)
     }
 }

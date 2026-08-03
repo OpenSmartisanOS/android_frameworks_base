@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.android.systemui.shade.SosCloseDragHandle
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sos_shade_page_switch"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="gone">
+
+    <FrameLayout
+        android:id="@+id/sos_shade_close_handle"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sos_shade_close_handle_height"
+        android:background="@drawable/sos_status_bar_close">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/sos_shade_switch_height"
+            android:layout_marginHorizontal="12dp"
+            android:layout_marginTop="12dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/sos_shade_notifications_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/sos_notification_switch_btn_bg"
+                android:clickable="true"
+                android:contentDescription="@string/sos_shade_notifications"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:duplicateParentState="true"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/sos_notification_switch_btn_icon"
+                    android:tint="@null" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:importantForAccessibility="no"
+                    android:singleLine="true"
+                    android:text="@string/sos_shade_notifications"
+                    android:textColor="#66000000"
+                    android:textSize="@dimen/sos_shade_switch_text_size" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/sos_shade_quick_settings_button"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:background="@drawable/sos_widget_switch_btn_bg"
+                android:clickable="true"
+                android:contentDescription="@string/sos_shade_quick_settings"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:duplicateParentState="true"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/sos_widget_switch_btn_icon"
+                    android:tint="@null" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="marquee"
+                    android:importantForAccessibility="no"
+                    android:singleLine="true"
+                    android:text="@string/sos_shade_quick_settings"
+                    android:textColor="#66000000"
+                    android:textSize="@dimen/sos_shade_switch_text_size" />
+            </LinearLayout>
+        </LinearLayout>
+    </FrameLayout>
+</com.android.systemui.shade.SosCloseDragHandle>

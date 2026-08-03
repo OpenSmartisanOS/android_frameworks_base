@@ -528,7 +528,10 @@ public class QSImpl implements QS, CommandQueue.Callbacks, StatusBarStateControl
 
     public void setBrightnessMirrorController(
             @Nullable MirrorController brightnessMirrorController) {
-        mQSPanelController.setBrightnessMirror(brightnessMirrorController);
+        mQSPanelController.setBrightnessMirror(
+                getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                        ? null
+                        : brightnessMirrorController);
     }
 
     @Override
@@ -657,6 +660,10 @@ public class QSImpl implements QS, CommandQueue.Callbacks, StatusBarStateControl
     @Override
     public void setQsExpansion(float expansion, float panelExpansionFraction,
             float proposedTranslation, float squishinessFraction) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            setSosQsExpansion(expansion, panelExpansionFraction);
+            return;
+        }
         float headerTranslation = mTransitioningToFullShade ? 0 : proposedTranslation;
         float alphaProgress = calculateAlphaProgress(panelExpansionFraction);
         setAlphaAnimationProgress(alphaProgress);
@@ -745,6 +752,55 @@ public class QSImpl implements QS, CommandQueue.Callbacks, StatusBarStateControl
         } else {
             mQsMediaHost.setSquishFraction(mSquishinessFraction);
         }
+        updateMediaPositions();
+    }
+
+    private void setSosQsExpansion(float expansion, float panelExpansionFraction) {
+        final float officialExpansion = expansion > 0f ? 1f : 0f;
+        setAlphaAnimationProgress(officialExpansion);
+        getView().setTranslationY(0f);
+        mContainer.setExpansion(officialExpansion);
+
+        int currentHeight = getView().getHeight();
+        if (officialExpansion == mLastQSExpansion
+                && mLastViewHeight == currentHeight
+                && mLastPanelFraction == panelExpansionFraction
+                && mSquishinessFraction == 1f
+                && mLastHeaderTranslation == 0f) {
+            return;
+        }
+        mLastHeaderTranslation = 0f;
+        mLastPanelFraction = panelExpansionFraction;
+        mSquishinessFraction = 1f;
+        mLastQSExpansion = officialExpansion;
+        mLastKeyguardAndExpanded = false;
+        mLastViewHeight = currentHeight;
+
+        mQSPanelController.setIsOnKeyguard(isKeyguardState());
+        mFooter.setExpansion(officialExpansion);
+        if (mQSFooterActionsViewModel != null) {
+            mQSFooterActionsViewModel.onQuickSettingsExpansionChanged(officialExpansion,
+                    mInSplitShade);
+        }
+        mQSPanelController.setRevealExpansion(officialExpansion);
+        mQSPanelController.getTileLayout().setExpansion(officialExpansion, 0f);
+        mQuickQSPanelController.getTileLayout().setExpansion(officialExpansion, 0f);
+
+        if (!SceneContainerFlag.isEnabled()) {
+            mQSPanelScrollView.setTranslationY(0f);
+            if (officialExpansion == 0f) {
+                mQSPanelScrollView.setScrollY(0);
+            }
+        }
+        updateQsBounds();
+
+        if (mQSSquishinessController != null) {
+            mQSSquishinessController.setSquishiness(1f);
+        }
+        if (mQSAnimator != null) {
+            mQSAnimator.setPosition(officialExpansion);
+        }
+        mQsMediaHost.setSquishFraction(1f);
         updateMediaPositions();
     }
 

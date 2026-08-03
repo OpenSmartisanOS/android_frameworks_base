@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/sos_shade_header"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/sos_qs_header_outer_height"
+    android:background="@color/sos_qs_panel_background"
+    android:visibility="gone">
+
+    <include layout="@layout/sos_panel_status_bar" />
+
+    <RelativeLayout
+        android:id="@+id/sos_shade_header_content"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sos_qs_header_height"
+        android:background="@drawable/notification_header_panel_bg">
+
+        <TextClock
+            android:id="@+id/sos_shade_header_time"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:format12Hour="h:mm"
+            android:format24Hour="k:mm"
+            android:fontFamily="sans-serif-light"
+            android:gravity="center"
+            android:paddingStart="20dp"
+            android:paddingTop="4dp"
+            android:textColor="#80000000"
+            android:textSize="@dimen/sos_qs_header_time_size" />
+
+        <TextClock
+            android:id="@+id/sos_shade_header_date"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_toEndOf="@id/sos_shade_header_time"
+            android:layout_toStartOf="@id/sos_shade_header_search_container"
+            android:format12Hour="EEE  M月d日"
+            android:format24Hour="EEE  M月d日"
+            android:gravity="center_vertical"
+            android:paddingStart="11dp"
+            android:paddingTop="4dp"
+            android:textColor="#66000000"
+            android:textSize="12sp" />
+
+        <LinearLayout
+            android:id="@+id/sos_shade_header_search_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentEnd="true"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="2dp"
+                android:layout_height="30dp"
+                android:background="@drawable/statusbar_expand_header_search_line"
+                android:importantForAccessibility="no" />
+
+            <ImageButton
+                android:id="@+id/sos_shade_header_search"
+                android:layout_width="48dp"
+                android:layout_height="30dp"
+                android:background="@drawable/statusbar_expand_header_search"
+                android:contentDescription="@string/sos_shade_search"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:padding="0dp" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/sos_shade_header_shadow"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/sos_qs_header_height"
+        android:background="@drawable/notification_header_panel_shadow" />
+</FrameLayout>

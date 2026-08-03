@@ -136,7 +136,8 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
 
     @Override
     public void dispatchDraw(Canvas canvas) {
-        if (!mFancyClippingPath.isEmpty()) {
+        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && !mFancyClippingPath.isEmpty()) {
             canvas.translate(0, -getTranslationY());
             canvas.clipOutPath(mFancyClippingPath);
             canvas.translate(0, getTranslationY());
@@ -190,9 +191,14 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
 
     void updateResources(QSPanelController qsPanelController,
             QuickStatusBarHeaderController quickStatusBarHeaderController) {
-        int topPadding = QSUtils.getQsHeaderSystemIconsAreaHeight(mContext);
-        if (!LargeScreenUtils.shouldUseLargeScreenShadeHeader(mContext.getResources())) {
-            topPadding = LargeScreenHeaderHelper.getLargeScreenHeaderHeight(mContext);
+        int topPadding;
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            topPadding = getResources().getDimensionPixelSize(R.dimen.sos_qs_header_outer_height);
+        } else {
+            topPadding = QSUtils.getQsHeaderSystemIconsAreaHeight(mContext);
+            if (!LargeScreenUtils.shouldUseLargeScreenShadeHeader(mContext.getResources())) {
+                topPadding = LargeScreenHeaderHelper.getLargeScreenHeaderHeight(mContext);
+            }
         }
         if (mQSPanelContainer != null) {
             mQSPanelContainer.setPaddingRelative(
@@ -242,6 +248,9 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
 
     protected int calculateContainerHeight() {
         int heightOverride = mHeightOverride != -1 ? mHeightOverride : getMeasuredHeight();
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            return mQSCustomizer.isCustomizing() ? mQSCustomizer.getHeight() : heightOverride;
+        }
         // Need to add the dragHandle height so touches will be intercepted by it.
         return mQSCustomizer.isCustomizing() ? mQSCustomizer.getHeight()
                 : Math.round(mQsExpansion * (heightOverride - mHeader.getHeight()))
@@ -344,6 +353,12 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
      */
     public void setFancyClipping(int leftInset, int top, int rightInset, int bottom, int radius,
             boolean enabled, boolean fullWidth) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mClippingEnabled = false;
+            mFancyClippingPath.reset();
+            invalidate();
+            return;
+        }
         boolean updatePath = false;
         if (mFancyClippingRadii[0] != radius) {
             mFancyClippingRadii[0] = radius;
@@ -386,7 +401,8 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
     protected boolean isTransformedTouchPointInView(float x, float y,
             View child, PointF outLocalPoint) {
         // Prevent touches outside the clipped area from propagating to a child in that area.
-        if (mClippingEnabled && y + getTranslationY() > mFancyClippingTop) {
+        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && mClippingEnabled && y + getTranslationY() > mFancyClippingTop) {
             return false;
         }
         return super.isTransformedTouchPointInView(x, y, child, outLocalPoint);
@@ -394,7 +410,7 @@ public class QSContainerImpl extends FrameLayout implements Dumpable {
 
     private void updateClippingPath() {
         mFancyClippingPath.reset();
-        if (!mClippingEnabled) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade) || !mClippingEnabled) {
             invalidate();
             return;
         }

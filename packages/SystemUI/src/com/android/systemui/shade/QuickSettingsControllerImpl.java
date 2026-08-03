@@ -190,6 +190,7 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     private int mDisplayRightInset = 0; // in pixels
     private int mDisplayLeftInset = 0; // in pixels
     private boolean mSplitShadeEnabled;
+    private boolean mSosQuickSettingsPage;
     /**
      * The padding between the start of notifications and the qs boundary on the lockscreen.
      * On lockscreen, notifications aren't inset this extra amount, but we still want the
@@ -431,6 +432,29 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     @VisibleForTesting
     void setQs(QS qs) {
         mQs = qs;
+    }
+
+    void setSosQuickSettingsPage(boolean quickSettingsPage) {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
+        if (mSosQuickSettingsPage == quickSettingsPage) {
+            return;
+        }
+        mSosQuickSettingsPage = quickSettingsPage;
+        updateSosExpansionFromShade();
+    }
+
+    private void updateSosExpansionFromShade() {
+        final float expansion = mSosQuickSettingsPage
+                ? Math.max(0f, Math.min(1f, mShadeExpandedFraction))
+                : 0f;
+        final int minHeight = getMinExpansionHeight();
+        final int maxHeight = getMaxExpansionHeight();
+        mExpansionHeight = minHeight + expansion * (maxHeight - minHeight);
+        mFullyExpanded = mSosQuickSettingsPage && expansion == 1f && maxHeight != 0;
+        setExpanded(mSosQuickSettingsPage && expansion > 0f);
+        updateExpansion();
     }
 
     void setExpansionHeightListener(ExpansionHeightListener listener) {
@@ -872,6 +896,10 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
 
     /** update Qs height state */
     void setExpansionHeight(float height) {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            updateSosExpansionFromShade();
+            return;
+        }
         if (mExpansionHeight == height) {
             return;
         }
@@ -1022,6 +1050,9 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
         mShadeExpandedHeight = expandedHeight;
         mShadeExpandedFraction = expandedFraction;
         mMediaHierarchyManager.setShadeExpandedFraction(expandedFraction);
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            updateSosExpansionFromShade();
+        }
     }
 
     @VisibleForTesting
@@ -1084,6 +1115,32 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     /** update expanded state of QS */
     void updateExpansion() {
         if (mQs == null) return;
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            boolean qsVisible = mSosQuickSettingsPage && mShadeExpandedFraction > 0f;
+            float qsExpansionFraction = qsVisible ? 1f : 0f;
+            mQs.setExpanded(qsVisible);
+            mQs.setQsExpansion(
+                    qsExpansionFraction,
+                    qsVisible ? 1f : 0f,
+                    0f,
+                    1f
+            );
+            mMediaHierarchyManager.setQsExpansion(qsExpansionFraction);
+            int qsPanelBottomY = calculateBottomPosition(qsExpansionFraction);
+            mScrimController.setQsPosition(qsExpansionFraction, qsPanelBottomY);
+            if (!SceneContainerFlag.isEnabled()) {
+                mNotificationStackScrollLayoutController.setQsExpansionFraction(0f);
+            }
+            mDepthController.setQsPanelExpansion(qsExpansionFraction);
+            mStatusBarKeyguardViewManager.setQsExpansion(qsExpansionFraction);
+            mShadeRepository.setQsExpansion(qsExpansionFraction);
+            mShadeHeaderController.setShadeExpandedFraction(mShadeExpandedFraction);
+            mShadeHeaderController.setQsExpandedFraction(qsExpansionFraction);
+            mShadeHeaderController.setQsVisible(qsVisible);
+            mLightBarController.setQsExpanded(qsVisible);
+            setQsFullScreen(false);
+            return;
+        }
         final float squishiness;
         if ((isExpandImmediate() || getExpanded()) && !mSplitShadeEnabled) {
             squishiness = 1;
@@ -1178,6 +1235,9 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
 
     /** Calculate fraction of current QS expansion state */
     float computeExpansionFraction() {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return mSosQuickSettingsPage ? 1f : 0f;
+        }
         if (mAnimatingHiddenFromCollapsed) {
             // When hiding QS from collapsed state, the expansion can sometimes temporarily
             // be larger than 0 because of the timing, leading to flickers.
@@ -1237,6 +1297,23 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
      * as well based on the bounds of the shade and QS state.
      */
     void setClippingBounds() {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            if (isQsFragmentCreated()) {
+                mVisible = mSosQuickSettingsPage && mShadeExpandedFraction > 0f;
+                mQs.setQsVisible(mVisible);
+                if (mEnableClipping) {
+                    mQs.setFancyClipping(
+                            mDisplayLeftInset,
+                            0,
+                            mDisplayRightInset,
+                            mQsFrame.getHeight(),
+                            0,
+                            false,
+                            mIsFullWidth);
+                }
+            }
+            return;
+        }
         float qsExpansionFraction = computeExpansionFraction();
         final int qsPanelBottomY = calculateBottomPosition(qsExpansionFraction);
         int top = calculateTopClippingBound(qsPanelBottomY);
@@ -1682,6 +1759,9 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     /** handles touches in Qs panel area */
     boolean handleTouch(MotionEvent event, boolean isFullyCollapsed,
             boolean isShadeOrQsHeightAnimationRunning) {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return false;
+        }
         if (isSplitShadeAndTouchXOutsideQs(event.getX())) {
             mShadeLog.logMotionEvent(event, "handleQsTouch: touch outside QS");
             return false;
@@ -1848,6 +1928,9 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
 
     /** intercepts touches on Qs panel area. */
     boolean onIntercept(MotionEvent event) {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return false;
+        }
         int pointerIndex = event.findPointerIndex(mTrackingPointer);
         if (pointerIndex < 0) {
             pointerIndex = 0;

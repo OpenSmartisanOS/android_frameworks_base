@@ -349,6 +349,10 @@ public final class NotificationPanelViewController implements
     private CentralSurfaces mCentralSurfaces;
     private HeadsUpManager mHeadsUpManager;
     private float mExpandedHeight = 0;
+    private boolean mSosPageSelectionExplicit;
+    private boolean mSosOneFingerExpansion = true;
+    private boolean mSosAutoPageSelectedForCurrentExpansion;
+    private float mSosLockscreenShadeExpansion;
     /** The current squish amount for the predictive back animation */
     private float mCurrentBackProgress = 0.0f;
     private boolean mExpanding;
@@ -916,6 +920,28 @@ public final class NotificationPanelViewController implements
                         .getKeyguardStatusBarViewController();
         mKeyguardStatusBarViewController.init();
         mNotificationContainerParent = mView.findViewById(R.id.notification_container_parent);
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mNotificationContainerParent.setSosPageChangedListener(
+                    quickSettings -> {
+                        mSosPageSelectionExplicit = true;
+                        mQsController.setSosQuickSettingsPage(quickSettings);
+                    });
+            // setSosQuickSettingsPage() can resolve the Lazy<NotificationPanelViewController>.
+            // Defer the initial page selection until this scoped controller has finished
+            // construction, otherwise Dagger recursively creates a second instance.
+            mView.post(() -> {
+                resetSosShadePage(false);
+                updateSosChromeForExpansion();
+            });
+            collectFlow(mView,
+                    mActiveNotificationsInteractor.getAreAnyNotificationsPresent(),
+                    this::onSosActiveNotificationsChanged,
+                    mMainDispatcher);
+            collectFlow(mView,
+                    mShadeRepository.getLockscreenShadeExpansion(),
+                    this::onSosLockscreenShadeExpansionChanged,
+                    mMainDispatcher);
+        }
         mNotificationStackScrollLayoutController.setOnHeightChangedListener(
                 new NsslHeightChangedListener());
         mNotificationStackScrollLayoutController.setOnEmptySpaceClickListener(
@@ -1369,7 +1395,90 @@ public final class NotificationPanelViewController implements
         mView.animate().cancel();
     }
 
+    private void resetSosShadePage(boolean animate) {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                || mNotificationContainerParent == null) {
+            return;
+        }
+        setSosQuickSettingsPage(
+                !(mActiveNotificationsInteractor.getAreAnyNotificationsPresentValue()
+                        && mSosOneFingerExpansion),
+                animate);
+        mSosAutoPageSelectedForCurrentExpansion = true;
+    }
+
+    private void onSosActiveNotificationsChanged(Boolean hasNotifications) {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                || mNotificationContainerParent == null
+                || mSosPageSelectionExplicit
+                || !isSosCollapsedForAutoPageSelection()) {
+            return;
+        }
+        mSosAutoPageSelectedForCurrentExpansion = false;
+        resetSosShadePage(false);
+    }
+
+    private void onSosLockscreenShadeExpansionChanged(Float expansion) {
+        mSosLockscreenShadeExpansion = expansion != null ? expansion : 0f;
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
+        updateSosChromeForExpansion();
+    }
+
+    private boolean isSosCollapsedForAutoPageSelection() {
+        if (mBarState == KEYGUARD) {
+            return mSosLockscreenShadeExpansion <= 0f && mCurrentPanelState == STATE_CLOSED;
+        }
+        return mCurrentPanelState == STATE_CLOSED || isFullyCollapsed();
+    }
+
+    private void setSosQuickSettingsPage(boolean quickSettings, boolean animate) {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                || mNotificationContainerParent == null) {
+            return;
+        }
+        mNotificationContainerParent.setSosQuickSettingsPage(quickSettings, animate);
+        mQsController.setSosQuickSettingsPage(quickSettings);
+    }
+
+    private void updateSosChromeForExpansion() {
+        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                || mNotificationContainerParent == null) {
+            return;
+        }
+        // A16's transition distance changes with the active page and notification content. It is
+        // not a window-space Y coordinate (on a short notification stack it can end halfway down
+        // the display). Smartisan's chrome follows the physical panel edge, so project the common
+        // expansion fraction onto NotificationPanelView's actual height instead.
+        final int panelHeight = mView.getHeight();
+        final float chromeMaxHeight =
+                panelHeight > 0 ? panelHeight : getMaxPanelTransitionDistance();
+        if (mBarState == KEYGUARD) {
+            mQsController.setSosQuickSettingsPage(false);
+            mNotificationContainerParent.setSosExpansion(
+                    0f, chromeMaxHeight, false /* shadeContentAllowed */);
+            return;
+        }
+        final float sosExpandedFraction = mExpandedFraction;
+        final float chromeExpandedHeight =
+                panelHeight > 0 ? sosExpandedFraction * panelHeight : mExpandedHeight;
+        mNotificationContainerParent.setSosExpansion(
+                chromeExpandedHeight,
+                chromeMaxHeight,
+                !mStatusBarStateController.isDozing());
+    }
+
     public void expandToQs() {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                && mNotificationContainerParent != null) {
+            mSosPageSelectionExplicit = true;
+            setSosQuickSettingsPage(true, true);
+            if (isFullyCollapsed()) {
+                expand(true /* animate */);
+            }
+            return;
+        }
         if (mQsController.isExpansionEnabled()) {
             mQsController.setExpandImmediate(true);
             setShowShelfOnly(true);
@@ -1399,6 +1508,15 @@ public final class NotificationPanelViewController implements
 
     @Override
     public void expandToNotifications() {
+        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                && mNotificationContainerParent != null) {
+            mSosPageSelectionExplicit = true;
+            setSosQuickSettingsPage(false, true);
+            if (isFullyCollapsed()) {
+                expand(true /* animate */);
+            }
+            return;
+        }
         if (mSplitShadeEnabled && (isShadeFullyExpanded() || isExpandingOrCollapsing())) {
             return;
         }
@@ -1564,6 +1682,15 @@ public final class NotificationPanelViewController implements
 
     private void initDownStates(MotionEvent event) {
         if (event.getActionMasked() == MotionEvent.ACTION_DOWN) {
+            if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                    && isSosCollapsedForAutoPageSelection()
+                    && mNotificationContainerParent != null) {
+                mSosOneFingerExpansion = true;
+                mSosAutoPageSelectedForCurrentExpansion = false;
+                if (!mSosPageSelectionExplicit) {
+                    resetSosShadePage(false);
+                }
+            }
             mDozingOnDown = mDozing;
             mDownX = event.getX();
             mDownY = event.getY();
@@ -1826,8 +1953,14 @@ public final class NotificationPanelViewController implements
 
     void requestScrollerTopPaddingUpdate() {
         if (!SceneContainerFlag.isEnabled()) {
-            float padding = mQsController.calculateNotificationsTopPadding(mIsExpandingOrCollapsing,
-                    getKeyguardNotificationStaticPadding(), mExpandedFraction);
+            float padding;
+            if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                    && mNotificationContainerParent != null) {
+                padding = mNotificationContainerParent.getSosNotificationStackTopPosition();
+            } else {
+                padding = mQsController.calculateNotificationsTopPadding(mIsExpandingOrCollapsing,
+                        getKeyguardNotificationStaticPadding(), mExpandedFraction);
+            }
             mSharedNotificationContainerInteractor.setTopPosition(padding);
         }
 
@@ -3165,6 +3298,7 @@ public final class NotificationPanelViewController implements
                 mAmbientState.setExpansionFraction(mExpandedFraction);
             }
             onHeightUpdated(mExpandedHeight);
+            updateSosChromeForExpansion();
             updateExpansionAndVisibility();
         });
     }
@@ -3596,6 +3730,7 @@ public final class NotificationPanelViewController implements
             // TODO: maybe add a listener for barstate
             mBarState = statusBarState;
             mQsController.setBarState(statusBarState);
+            updateSosChromeForExpansion();
 
             boolean fromShadeToKeyguard = statusBarState == KEYGUARD
                     && (oldState == SHADE || oldState == SHADE_LOCKED);
@@ -3803,6 +3938,15 @@ public final class NotificationPanelViewController implements
             mView.sendAccessibilityEvent(AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED);
         }
         if (state == STATE_OPENING) {
+            if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                    && mNotificationContainerParent != null) {
+                if (mCurrentPanelState == STATE_CLOSED) {
+                    if (!mSosPageSelectionExplicit
+                            && !mSosAutoPageSelectedForCurrentExpansion) {
+                        resetSosShadePage(false);
+                    }
+                }
+            }
             // we need to ignore it on keyguard as this is a false alarm - transition from unlocked
             // to locked will trigger this event and we're not actually in the process of opening
             // the shade, lockscreen is just always expanded
@@ -3815,6 +3959,14 @@ public final class NotificationPanelViewController implements
         }
         if (state == STATE_CLOSED) {
             mQsController.setExpandImmediate(false);
+            if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                    && mNotificationContainerParent != null) {
+                mSosPageSelectionExplicit = false;
+                mSosOneFingerExpansion = true;
+                mSosAutoPageSelectedForCurrentExpansion = false;
+                resetSosShadePage(false);
+                updateSosChromeForExpansion();
+            }
             // Close the status bar in the next frame so we can show the end of the animation.
             mView.post(mMaybeHideExpandedRunnable);
         }
@@ -3965,6 +4117,15 @@ public final class NotificationPanelViewController implements
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
+                    if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                            && event.getPointerCount() == 2
+                            && !isFullyExpanded()
+                            && mNotificationContainerParent != null) {
+                        mSosOneFingerExpansion = false;
+                        mSosAutoPageSelectedForCurrentExpansion = true;
+                        mSosPageSelectionExplicit = true;
+                        setSosQuickSettingsPage(true, false);
+                    }
                     mShadeLog.logMotionEventStatusBarState(event,
                             mStatusBarStateController.getState(),
                             "onInterceptTouchEvent: pointer down action");
@@ -4239,6 +4400,15 @@ public final class NotificationPanelViewController implements
                     }
                     break;
                 case MotionEvent.ACTION_POINTER_DOWN:
+                    if (mResources.getBoolean(R.bool.config_sos_legacy_shade)
+                            && event.getPointerCount() == 2
+                            && !isFullyExpanded()
+                            && mNotificationContainerParent != null) {
+                        mSosOneFingerExpansion = false;
+                        mSosAutoPageSelectedForCurrentExpansion = true;
+                        mSosPageSelectionExplicit = true;
+                        setSosQuickSettingsPage(true, false);
+                    }
                     mShadeLog.logMotionEventStatusBarState(event,
                             mStatusBarStateController.getState(),
                             "handleTouch: pointer down action");

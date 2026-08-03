@@ -34,6 +34,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
+import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 
 @SmallTest
@@ -83,6 +84,19 @@ class NotificationsQuickSettingsContainerTest : SysuiTestCase() {
         underTest.setQSContainerPaddingBottom(padding)
 
         assertThat(qsContainer.paddingBottom).isEqualTo(0)
+    }
+
+    @Test
+    fun sosLegacyShade_qsFrameUsesOfficialPanelTranslationY() {
+        overrideResource(R.bool.config_sos_legacy_shade, true)
+
+        underTest.setSosExpansion(
+            /* expandedHeight= */ 800f,
+            /* maxPanelHeight= */ 1000f,
+            /* shadeContentAllowed= */ true,
+        )
+
+        verify(qsFrame).setTranslationY(-200f)
     }
 
     private fun setUpViews() {

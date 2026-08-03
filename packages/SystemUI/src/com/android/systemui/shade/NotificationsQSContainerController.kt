@@ -48,6 +48,7 @@ import com.android.systemui.util.concurrency.DelayableExecutor
 import dagger.Lazy
 import java.util.function.Consumer
 import javax.inject.Inject
+import kotlin.math.max
 import kotlin.reflect.KMutableProperty0
 
 @VisibleForTesting internal const val INSET_DEBOUNCE_MILLIS = 500L
@@ -60,6 +61,7 @@ constructor(
     private val navigationModeController: NavigationModeController,
     private val launcherProxyService: LauncherProxyService,
     private val shadeHeaderController: ShadeHeaderController,
+    private val sosPanelStatusBarController: SosPanelStatusBarController,
     private val shadeInteractor: ShadeInteractor,
     private val fragmentService: FragmentService,
     @Main private val delayableExecutor: DelayableExecutor,
@@ -83,6 +85,7 @@ constructor(
     private var bottomCutoutInsets = 0
     private var panelMarginHorizontal = 0
     private var topMargin = 0
+    private var sosTopInset = 0
 
     private var isGestureNavigation = true
     private var taskbarVisible = false
@@ -107,6 +110,21 @@ constructor(
                 // when taskbar is visible, stableInsetBottom will include its height
                 stableInsets = insets.stableInsetBottom
                 cutoutInsets = insets.displayCutout?.safeInsetBottom ?: 0
+                if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+                    val shadeTopInset =
+                        insets
+                            .getInsetsIgnoringVisibility(
+                                WindowInsets.Type.statusBars() or
+                                    WindowInsets.Type.displayCutout()
+                            )
+                            .top
+                    if (sosTopInset != shadeTopInset) {
+                        sosTopInset = shadeTopInset
+                        topMargin = shadeTopInset
+                        mView.setSosTopInset(shadeTopInset)
+                        updateConstraints()
+                    }
+                }
                 canceller?.run()
                 canceller = delayableExecutor.executeDelayed(this, INSET_DEBOUNCE_MILLIS)
             }
@@ -139,10 +157,20 @@ constructor(
         mView.setInsetsChangedListener(delayedInsetSetter)
         mView.setQSFragmentAttachedListener { qs: QS -> qs.setContainerController(this) }
         mView.setConfigurationChangedListener { updateResources() }
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            sosPanelStatusBarController.attach(mView.rootView)
+            mView.setSosPanelStatusBarVisibleListener(sosPanelStatusBarController::setVisible)
+            mView.setSosPanelStatusBarTopInsetListener(sosPanelStatusBarController::setTopInset)
+        }
         fragmentService.getFragmentHostManager(mView).addTagListener(QS.TAG, mView)
     }
 
     override fun onViewDetached() {
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mView.setSosPanelStatusBarVisibleListener(null)
+            mView.setSosPanelStatusBarTopInsetListener(null)
+            sosPanelStatusBarController.detach()
+        }
         launcherProxyService.removeCallback(taskbarVisibilityListener)
         mView.removeOnInsetsChangedListener()
         mView.removeQSFragmentAttachedListener()
@@ -163,11 +191,16 @@ constructor(
         panelMarginHorizontal =
             resources.getDimensionPixelSize(R.dimen.notification_panel_margin_horizontal)
         topMargin =
-            if (largeScreenShadeHeaderActive) {
+            if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+                sosTopInset
+            } else if (largeScreenShadeHeaderActive) {
                 largeScreenShadeHeaderHeight
             } else {
                 resources.getDimensionPixelSize(R.dimen.notification_panel_margin_top)
             }
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mView.setSosTopInset(sosTopInset)
+        }
         updateConstraints()
 
         val scrimMarginChanged =
@@ -193,6 +226,9 @@ constructor(
     }
 
     private fun calculateShadeHeaderHeight(): Int {
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return 0
+        }
         val minHeight = resources.getDimensionPixelSize(R.dimen.qs_header_height)
 
         // Following the constraints in xml/qs_header, the total needed height would be the sum of
@@ -227,6 +263,13 @@ constructor(
 
     private fun updateBottomSpacing() {
         val (containerPadding, notificationsMargin, qsContainerPadding) = calculateBottomSpacing()
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mView.setPadding(0, 0, 0, 0)
+            mView.setNotificationsMarginBottom(notificationsMargin)
+            mView.setQSContainerPaddingBottom(0)
+            mView.setSosBottomInset(max(bottomStableInsets, bottomCutoutInsets))
+            return
+        }
         mView.setPadding(0, 0, 0, containerPadding)
         mView.setNotificationsMarginBottom(notificationsMargin)
         mView.setQSContainerPaddingBottom(qsContainerPadding)
@@ -282,6 +325,11 @@ constructor(
     }
 
     private fun setLargeScreenShadeHeaderConstraints(constraintSet: ConstraintSet) {
+        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            constraintSet.constrainHeight(R.id.split_shade_status_bar, 0)
+            constraintSet.setVisibility(R.id.split_shade_status_bar, View.GONE)
+            return
+        }
         if (largeScreenShadeHeaderActive) {
             constraintSet.constrainHeight(R.id.split_shade_status_bar, largeScreenShadeHeaderHeight)
         } else {

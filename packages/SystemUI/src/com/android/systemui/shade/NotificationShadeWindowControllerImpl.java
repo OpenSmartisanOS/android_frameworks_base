@@ -525,6 +525,13 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
     }
 
     private void applyForceShowNavigationFlag(NotificationShadeWindowState state) {
+        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && state.shadeOrQsExpanded
+                && !state.bouncerShowing
+                && !(ENABLE_REMOTE_INPUT && state.remoteInputActive)) {
+            mLpChanged.forciblyShownTypes &= ~WindowInsets.Type.navigationBars();
+            return;
+        }
         if (state.shadeOrQsExpanded || state.bouncerShowing
                 || ENABLE_REMOTE_INPUT && state.remoteInputActive) {
             mLpChanged.forciblyShownTypes |= WindowInsets.Type.navigationBars();
@@ -580,6 +587,12 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
 
     private void applyFitsSystemWindows(NotificationShadeWindowState state) {
         boolean fitsSystemWindows = !state.isKeyguardShowingAndNotOccluded();
+        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && state.shadeOrQsExpanded
+                && !state.bouncerShowing
+                && !(ENABLE_REMOTE_INPUT && state.remoteInputActive)) {
+            fitsSystemWindows = false;
+        }
         if (mWindowRootView != null
                 && mWindowRootView.getFitsSystemWindows() != fitsSystemWindows) {
             mWindowRootView.setFitsSystemWindows(fitsSystemWindows);
@@ -626,6 +639,27 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
         }
     }
 
+    private void applySosNavigationBarBackground(NotificationShadeWindowState state) {
+        if (!mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
+        final boolean useTransparentNavigationBar = state.shadeOrQsExpanded
+                && !state.bouncerShowing
+                && !(ENABLE_REMOTE_INPUT && state.remoteInputActive);
+        if (mWindowRootView == null) {
+            return;
+        }
+        final int edgeToEdgeFlags = View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+        final int currentFlags = mWindowRootView.getSystemUiVisibility();
+        final int newFlags = useTransparentNavigationBar
+                ? currentFlags | edgeToEdgeFlags
+                : currentFlags & ~edgeToEdgeFlags;
+        if (currentFlags != newFlags) {
+            mWindowRootView.setSystemUiVisibility(newFlags);
+        }
+    }
+
     private void applyWindowLayoutParams() {
         if (mDeferWindowLayoutParams == 0 && mLp != null && mLp.copyFrom(mLpChanged) != 0) {
             Trace.beginSection("updateViewLayout");
@@ -657,6 +691,7 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
         applyHasTopUi(state);
         applyNotTouchable(state);
         applyStatusBarColorSpaceAgnosticFlag(state);
+        applySosNavigationBarBackground(state);
         applyWindowLayoutParams();
         notifyStateChangedCallbacks();
     }

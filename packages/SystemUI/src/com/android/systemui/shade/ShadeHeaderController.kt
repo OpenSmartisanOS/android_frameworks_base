@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.ComposeView
 import androidx.constraintlayout.motion.widget.MotionLayout
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.doOnLayout
 import androidx.core.view.isVisible
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -181,6 +182,8 @@ constructor(
     private val date: TextView = header.requireViewById(R.id.date)
     private val iconContainer: StatusIconContainer = header.requireViewById(R.id.statusIcons)
     private val mShadeCarrierGroup: ShadeCarrierGroup = header.requireViewById(R.id.carrier_group)
+    private val systemIconsFrame: View = header.requireViewById(R.id.shade_header_system_icons)
+    private val privacyContainer: View = header.requireViewById(R.id.privacy_container)
     private val systemIconsHoverContainer: View =
         header.requireViewById(R.id.hover_system_icons_container)
 
@@ -238,6 +241,11 @@ constructor(
     /** Expansion fraction of the QQS/QS shade. This is not the expansion between QQS <-> QS. */
     var shadeExpandedFraction = -1f
         set(value) {
+            if (useSosLegacyShade) {
+                field = value
+                header.alpha = 1f
+                return
+            }
             if (qsVisible && field != value) {
                 header.alpha = ShadeInterpolation.getContentAlpha(value)
                 field = value
@@ -248,6 +256,13 @@ constructor(
     /** Expansion fraction of the QQS <-> QS animation. */
     var qsExpandedFraction = -1f
         set(value) {
+            if (useSosLegacyShade) {
+                field = value
+                iconContainer.setQsExpansionTransitioning(false)
+                updatePosition()
+                updateIgnoredSlots()
+                return
+            }
             if (visible && field != value) {
                 field = value
                 iconContainer.setQsExpansionTransitioning(value > 0f && value < 1.0f)
@@ -279,6 +294,9 @@ constructor(
 
     private var singleCarrier = false
 
+    private val useSosLegacyShade: Boolean
+        get() = header.resources.getBoolean(R.bool.config_sos_legacy_shade)
+
     private val demoModeReceiver =
         object : DemoMode {
             override fun demoCommands() = listOf(DemoMode.COMMAND_CLOCK)
@@ -294,6 +312,9 @@ constructor(
     private val chipVisibilityListener: ChipVisibilityListener =
         object : ChipVisibilityListener {
             override fun onChipVisibilityRefreshed(visible: Boolean) {
+                if (useSosLegacyShade) {
+                    return
+                }
                 // If the privacy chip is visible, we hide the status icons and battery remaining
                 // icon, only in QQS.
                 val update =
@@ -305,16 +326,20 @@ constructor(
     private val configurationControllerListener =
         object : ConfigurationController.ConfigurationListener {
             override fun onConfigChanged(newConfig: Configuration?) {
-                val left =
-                    header.resources.getDimensionPixelSize(
-                        R.dimen.large_screen_shade_header_left_padding
+                if (useSosLegacyShade) {
+                    header.setPadding(0, 0, 0, 0)
+                } else {
+                    val left =
+                        header.resources.getDimensionPixelSize(
+                            R.dimen.large_screen_shade_header_left_padding
+                        )
+                    header.setPadding(
+                        left,
+                        header.paddingTop,
+                        header.paddingRight,
+                        header.paddingBottom,
                     )
-                header.setPadding(
-                    left,
-                    header.paddingTop,
-                    header.paddingRight,
-                    header.paddingBottom,
-                )
+                }
                 systemIconsHoverContainer.setPaddingRelative(
                     resources.getDimensionPixelSize(
                         R.dimen.hover_system_icons_container_padding_start
@@ -408,18 +433,25 @@ constructor(
         mShadeCarrierGroupController =
             shadeCarrierGroupControllerBuilder.setShadeCarrierGroup(mShadeCarrierGroup).build()
 
+        if (useSosLegacyShade) {
+            configureSosStatusBarViews()
+        }
         privacyIconsController.onParentVisible()
     }
 
     private fun getBgColor() =
-        if (notificationShadeBlur()) {
+        if (useSosLegacyShade) {
+            android.graphics.Color.BLACK
+        } else if (notificationShadeBlur()) {
             header.context.getColor(R.color.shade_header_text_color_bg)
         } else {
             android.graphics.Color.BLACK
         }
 
     private fun getFgColor() =
-        if (notificationShadeBlur()) {
+        if (useSosLegacyShade) {
+            android.graphics.Color.WHITE
+        } else if (notificationShadeBlur()) {
             header.context.getColor(R.color.shade_header_text_color)
         } else {
             android.graphics.Color.WHITE
@@ -486,7 +518,9 @@ constructor(
         dumpManager.registerDumpable(this)
         configurationController.addCallback(configurationControllerListener)
         demoModeController.addCallback(demoModeReceiver)
-        statusBarIconController.addIconGroup(iconManager)
+        if (!useSosLegacyShade) {
+            statusBarIconController.addIconGroup(iconManager)
+        }
         nextAlarmController.addCallback(nextAlarmCallback)
         systemIconsHoverContainer.setOnHoverListener(
             statusOverlayHoverListenerFactory.createListener(systemIconsHoverContainer)
@@ -499,7 +533,9 @@ constructor(
         dumpManager.unregisterDumpable(this::class.java.simpleName)
         configurationController.removeCallback(configurationControllerListener)
         demoModeController.removeCallback(demoModeReceiver)
-        statusBarIconController.removeIconGroup(iconManager)
+        if (!useSosLegacyShade) {
+            statusBarIconController.removeIconGroup(iconManager)
+        }
         nextAlarmController.removeCallback(nextAlarmCallback)
         systemIconsHoverContainer.setOnHoverListener(null)
     }
@@ -536,6 +572,40 @@ constructor(
         }
     }
 
+    private fun configureSosStatusBarViews() {
+        header.minimumHeight = 0
+        header.alpha = 1f
+        header.setPadding(0, 0, 0, 0)
+        header.visibility = View.GONE
+        clock.visibility = View.GONE
+        date.visibility = View.GONE
+        mShadeCarrierGroup.visibility = View.GONE
+        privacyContainer.visibility = View.GONE
+        systemIconsFrame.visibility = View.GONE
+        systemIconsHoverContainer.visibility = View.GONE
+        iconContainer.visibility = View.GONE
+    }
+
+    private fun updateSosStatusBarConstraints(statusBarHeight: Int, endInset: Int) {
+        configureSosStatusBarViews()
+        val constraintIds =
+            intArrayOf(
+                QQS_HEADER_CONSTRAINT,
+                QS_HEADER_CONSTRAINT,
+                LARGE_SCREEN_HEADER_CONSTRAINT,
+            )
+        for (constraintId in constraintIds) {
+            val constraints = header.getConstraintSet(constraintId)
+            constraints.setVisibility(R.id.clock, View.GONE)
+            constraints.setVisibility(R.id.date, View.GONE)
+            constraints.setVisibility(R.id.carrier_group, View.GONE)
+            constraints.setVisibility(R.id.privacy_container, View.GONE)
+            constraints.setVisibility(R.id.shade_header_system_icons, View.GONE)
+            header.updateState(constraintId, constraints)
+        }
+        header.requestLayout()
+    }
+
     private fun loadConstraints() {
         // Use resources.getXml instead of passing the resource id due to bug b/205018300
         header
@@ -569,6 +639,20 @@ constructor(
     }
 
     private fun updateConstraintsForInsets(view: MotionLayout, insets: WindowInsets) {
+        if (useSosLegacyShade) {
+            val statusBarHeight =
+                insets
+                    .getInsetsIgnoringVisibility(
+                        WindowInsets.Type.statusBars() or WindowInsets.Type.displayCutout()
+                    )
+                    .top
+            val endInset =
+                statusBarContentInsetsProvider
+                    ?.getStatusBarContentInsetsForCurrentRotation()
+                    ?.right ?: 0
+            updateSosStatusBarConstraints(statusBarHeight, endInset)
+            return
+        }
         val insetsProvider = statusBarContentInsetsProvider ?: return
         val cutout = insets.displayCutout.also { this.cutout = it }
 
@@ -618,6 +702,10 @@ constructor(
     }
 
     private fun updateScrollY() {
+        if (useSosLegacyShade) {
+            header.scrollY = 0
+            return
+        }
         if (!largeScreenActive) {
             header.scrollY = qsScrollY
         }
@@ -642,6 +730,12 @@ constructor(
      * be visible any time the QQS/QS shade is open.
      */
     private fun updateVisibility() {
+        if (useSosLegacyShade) {
+            configureSosStatusBarViews()
+            header.visibility = View.GONE
+            visible = false
+            return
+        }
         val visibility =
             if (qsDisabled) {
                 View.GONE
@@ -657,6 +751,14 @@ constructor(
     }
 
     private fun updateTransition() {
+        if (useSosLegacyShade) {
+            header.setTransition(HEADER_TRANSITION_ID)
+            lastInsets?.let { updateConstraintsForInsets(header, it) }
+            header.jumpToState(header.startState)
+            header.progress = 0f
+            header.scrollY = 0
+            return
+        }
         if (largeScreenActive) {
             logInstantEvent("Large screen constraints set")
             header.setTransition(LARGE_SCREEN_HEADER_TRANSITION_ID)
@@ -677,6 +779,10 @@ constructor(
     }
 
     private fun updatePosition() {
+        if (useSosLegacyShade) {
+            header.progress = 0f
+            return
+        }
         if (!largeScreenActive && visible) {
             logInstantEvent("updatePosition: $qsExpandedFraction")
             header.progress = qsExpandedFraction
@@ -689,6 +795,11 @@ constructor(
     }
 
     private fun updateListeners() {
+        if (useSosLegacyShade) {
+            mShadeCarrierGroupController.setListening(false)
+            mShadeCarrierGroupController.setOnSingleCarrierChangedListener(null)
+            return
+        }
         mShadeCarrierGroupController.setListening(visible)
         if (visible) {
             singleCarrier = mShadeCarrierGroupController.isSingleCarrier
@@ -703,6 +814,10 @@ constructor(
     }
 
     private fun updateIgnoredSlots() {
+        if (useSosLegacyShade) {
+            iconContainer.removeIgnoredSlots(carrierIconSlots)
+            return
+        }
         // switching from QQS to QS state halfway through the transition
         if (singleCarrier || (!largeScreenActive && qsExpandedFraction < 0.5)) {
             iconContainer.removeIgnoredSlots(carrierIconSlots)
@@ -713,6 +828,12 @@ constructor(
 
     private fun updateResources() {
         roundedCorners = resources.getDimensionPixelSize(R.dimen.rounded_corner_content_padding)
+        if (useSosLegacyShade) {
+            header.setPadding(0, 0, 0, 0)
+            configureSosStatusBarViews()
+            qsBatteryModeController.updateResources()
+            return
+        }
         val padding = resources.getDimensionPixelSize(R.dimen.qs_panel_padding)
         header.setPadding(padding, header.paddingTop, padding, header.paddingBottom)
         updateQQSPaddings()
