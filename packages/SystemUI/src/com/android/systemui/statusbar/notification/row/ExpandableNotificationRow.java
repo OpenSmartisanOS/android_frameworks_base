@@ -172,6 +172,29 @@ public class ExpandableNotificationRow extends ActivatableNotificationView
         implements PluginListener<NotificationMenuRowPlugin>, SwipeableView,
         NotificationFadeAware.FadeOptimizedNotification {
 
+    @Override
+    protected int getSosBackgroundResource() {
+        if (isSummaryWithChildren() && isGroupExpanded()) {
+            return R.drawable.sos_notification_header_material_bg;
+        }
+        if (isChildInGroup() && isGroupExpanded()) {
+            return isSosLastChildInGroup()
+                    ? R.drawable.sos_notification_child_tail_material_bg
+                    : R.drawable.sos_notification_child_material_bg;
+        }
+        return R.drawable.sos_notification_material_bg;
+    }
+
+    private boolean isSosLastChildInGroup() {
+        if (mNotificationParent == null) {
+            return false;
+        }
+        final List<ExpandableNotificationRow> siblings =
+                mNotificationParent.getAttachedChildren();
+        return siblings != null && !siblings.isEmpty()
+                && siblings.get(siblings.size() - 1) == this;
+    }
+
     private static final String TAG = "ExpandableNotifRow";
     private static final boolean DEBUG_ONMEASURE =
             Compile.IS_DEBUG && Log.isLoggable(TAG, Log.VERBOSE);
@@ -1234,6 +1257,9 @@ public class ExpandableNotificationRow extends ActivatableNotificationView
             mNotificationParent.setMinimumHeightForClipping(0);
         }
         mNotificationParent = isChildInGroup ? parent : null;
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            initBackground();
+        }
         mPrivateLayout.setIsChildInGroup(isChildInGroup);
         mPublicLayout.setIsChildInGroup(isChildInGroup);
 
@@ -4191,6 +4217,25 @@ public class ExpandableNotificationRow extends ActivatableNotificationView
      * Updates the parent and children backgrounds in a group based on the expansion state.
      */
     public void updateBackgroundForGroupState() {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            if (mIsSummaryWithChildren) {
+                mShowNoBackground = false;
+                mChildrenContainer.updateHeaderForExpansion(isGroupExpanded());
+                for (ExpandableNotificationRow child : mChildrenContainer.getAttachedChildren()) {
+                    child.updateBackgroundForGroupState();
+                }
+            } else if (isChildInGroup()) {
+                mShowNoBackground = !isGroupExpanded()
+                        && !mNotificationParent.isGroupExpansionChanging()
+                        && !mNotificationParent.isUserLocked();
+            } else {
+                mShowNoBackground = false;
+            }
+            initBackground();
+            updateOutline();
+            updateBackground();
+            return;
+        }
         if (mIsSummaryWithChildren && isBundle()) {
             // For Bundles we let the BundleHeader show its background permanently. This is
             // possible because collapsed Bundles don't preview their children unlike summaries.

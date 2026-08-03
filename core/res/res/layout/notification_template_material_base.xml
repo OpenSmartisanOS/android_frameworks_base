@@ -20,7 +20,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_weight="1"
-    android:minHeight="@dimen/notification_headerless_min_height"
+    android:minHeight="@dimen/notification_min_height"
     android:tag="base"
     >
 

@@ -22,6 +22,7 @@ import static com.android.systemui.util.ColorUtilKt.hexColorString;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
@@ -59,6 +60,7 @@ public class NotificationBackgroundView extends View implements Dumpable,
     private int mBottomOverlap;
     private int mClipBottomAmount;
     private int mTintColor;
+    private boolean mSosPressed;
     @Nullable private Integer mRippleColor;
     private final float[] mCornerRadii = new float[8];
     private final float[] mFocusOverlayCornerRadii = new float[8];
@@ -274,7 +276,17 @@ public class NotificationBackgroundView extends View implements Dumpable,
         }
         mBackground = background;
         mRippleColor = null;
+        if (mBackground == null) {
+            invalidate();
+            return;
+        }
         mBackground.mutate();
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mBackground.setCallback(this);
+            updateSosColorFilter();
+            invalidate();
+            return;
+        }
         if (mBackground != null) {
             mBackground.setCallback(this);
             setTint(mTintColor);
@@ -300,6 +312,12 @@ public class NotificationBackgroundView extends View implements Dumpable,
     }
 
     public void setTint(int tintColor) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mTintColor = tintColor;
+            updateSosColorFilter();
+            invalidate();
+            return;
+        }
         Drawable baseLayer = getBaseBackgroundLayer();
         if (notificationRowTransparency()) {
             ((GradientDrawable) baseLayer.mutate()).setColor(tintColor);
@@ -383,9 +401,48 @@ public class NotificationBackgroundView extends View implements Dumpable,
     }
 
     public void setState(int[] drawableState) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            boolean pressed = false;
+            for (int state : drawableState) {
+                if (state == android.R.attr.state_pressed) {
+                    pressed = true;
+                    break;
+                }
+            }
+            if (mSosPressed != pressed) {
+                mSosPressed = pressed;
+                updateSosColorFilter();
+                invalidate();
+            }
+        }
         if (mBackground != null && mBackground.isStateful()) {
             mBackground.setState(drawableState);
         }
+    }
+
+    private void updateSosColorFilter() {
+        if (mBackground == null) {
+            return;
+        }
+        if (mTintColor == 0 || mTintColor == mNormalColor) {
+            if (mSosPressed) {
+                mBackground.setColorFilter(
+                        new PorterDuffColorFilter(0x14000000, PorterDuff.Mode.SRC_ATOP));
+            } else {
+                mBackground.clearColorFilter();
+            }
+            return;
+        }
+        final int color =
+                mSosPressed
+                        ? Color.argb(
+                                Color.alpha(mTintColor),
+                                Math.round(Color.red(mTintColor) * 0.92f),
+                                Math.round(Color.green(mTintColor) * 0.92f),
+                                Math.round(Color.blue(mTintColor) * 0.92f))
+                        : mTintColor;
+        mBackground.setColorFilter(
+                new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
     }
 
     public void setRippleColor(int color) {
@@ -410,6 +467,9 @@ public class NotificationBackgroundView extends View implements Dumpable,
      * Sets the current top and bottom radius for this background.
      */
     public void setRadius(float topRoundness, float bottomRoundness) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
         if (topRoundness == mCornerRadii[0] && bottomRoundness == mCornerRadii[4]) {
             return;
         }

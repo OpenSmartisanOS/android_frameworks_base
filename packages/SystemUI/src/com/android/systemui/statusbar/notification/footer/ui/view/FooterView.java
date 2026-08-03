@@ -66,6 +66,8 @@ public class FooterView extends StackScrollerDecorView {
     // The settings & history buttons replace the single manage/history button in the redesign
     private FooterViewButton mSettingsButton;
     private FooterViewButton mHistoryButton;
+    private View mSosClearAllButton;
+    private boolean mSosClearAllVisible;
     private boolean mShouldBeHidden;
     private boolean mIsBlurSupported;
 
@@ -96,6 +98,9 @@ public class FooterView extends StackScrollerDecorView {
 
     /** Whether the "Clear all" button is currently visible. */
     public boolean isClearAllButtonVisible() {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            return mSosClearAllVisible;
+        }
         return isSecondaryVisible();
     }
 
@@ -110,6 +115,10 @@ public class FooterView extends StackScrollerDecorView {
      */
     public void setManageOrHistoryButtonVisible(boolean visible) {
         NotifRedesignFooter.assertInLegacyMode();
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mManageOrHistoryButton.setVisibility(View.GONE);
+            return;
+        }
         mManageOrHistoryButton.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
@@ -118,12 +127,20 @@ public class FooterView extends StackScrollerDecorView {
         if (NotifRedesignFooter.isUnexpectedlyInLegacyMode()) {
             return;
         }
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mSettingsButton.setVisibility(View.GONE);
+            return;
+        }
         mSettingsButton.setVisibility(visible ? View.VISIBLE : View.GONE);
     }
 
     /** Set the visibility of the History button to {@code visible}. */
     public void setHistoryButtonVisible(boolean visible) {
         if (NotifRedesignFooter.isUnexpectedlyInLegacyMode()) {
+            return;
+        }
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mHistoryButton.setVisibility(View.GONE);
             return;
         }
         mHistoryButton.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -135,6 +152,15 @@ public class FooterView extends StackScrollerDecorView {
      */
     public void setClearAllButtonVisible(boolean visible, boolean animate,
             Consumer<Boolean> onAnimationEnded) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mSosClearAllVisible = visible;
+            updateSosClearAllButton();
+            setSecondaryVisible(false, false, null);
+            if (onAnimationEnded != null) {
+                onAnimationEnded.accept(false);
+            }
+            return;
+        }
         setSecondaryVisible(visible, animate, onAnimationEnded);
     }
 
@@ -181,7 +207,8 @@ public class FooterView extends StackScrollerDecorView {
         if (mClearAllButtonTextId == 0) {
             return; // not initialized yet
         }
-        mClearAllButton.setText(getContext().getString(mClearAllButtonTextId));
+        mClearAllButton.setText(getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                ? "" : getContext().getString(mClearAllButtonTextId));
     }
 
     /** Set the accessibility content description for the "Clear all" button. */
@@ -215,7 +242,8 @@ public class FooterView extends StackScrollerDecorView {
         if (mManageOrHistoryButtonTextId == 0) {
             return; // not initialized yet
         }
-        mManageOrHistoryButton.setText(getContext().getString(mManageOrHistoryButtonTextId));
+        mManageOrHistoryButton.setText(getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                ? "" : getContext().getString(mManageOrHistoryButtonTextId));
     }
 
     /** Set the accessibility content description for the "Clear all" button. */
@@ -293,8 +321,50 @@ public class FooterView extends StackScrollerDecorView {
             mManageOrHistoryButton = findViewById(R.id.manage_text);
         }
         mSeenNotifsFooterTextView = findViewById(R.id.unlock_prompt_footer);
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mClearAllButton.setVisibility(View.GONE);
+            if (NotifRedesignFooter.isEnabled()) {
+                mSettingsButton.setVisibility(View.GONE);
+                mHistoryButton.setVisibility(View.GONE);
+            } else {
+                mManageOrHistoryButton.setVisibility(View.GONE);
+            }
+        }
         updateContent();
         updateColors();
+    }
+
+    @Override
+    protected void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            return;
+        }
+        mSosClearAllButton = getRootView().findViewById(R.id.sos_shade_clear_all_button);
+        if (mSosClearAllButton != null) {
+            mSosClearAllButton.setOnClickListener(view -> mClearAllButton.performClick());
+        }
+        updateSosClearAllButton();
+    }
+
+    @Override
+    protected void onDetachedFromWindow() {
+        if (mSosClearAllButton != null) {
+            mSosClearAllButton.setOnClickListener(null);
+            mSosClearAllButton.setVisibility(View.GONE);
+            mSosClearAllButton = null;
+        }
+        super.onDetachedFromWindow();
+    }
+
+    private void updateSosClearAllButton() {
+        if (mSosClearAllButton == null) {
+            return;
+        }
+        mSosClearAllButton.setVisibility(mSosClearAllVisible ? View.VISIBLE : View.GONE);
+        mSosClearAllButton.setAlpha(1f);
+        mSosClearAllButton.setScaleX(1f);
+        mSosClearAllButton.setScaleY(1f);
     }
 
     /** Show a message instead of the footer buttons. */
@@ -379,6 +449,20 @@ public class FooterView extends StackScrollerDecorView {
      */
     public void updateColors() {
         Resources.Theme theme = mContext.getTheme();
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            mClearAllButton.setBackground(theme.getDrawable(R.drawable.sos_clear_all_bg));
+            mClearAllButton.setTextColor(Color.TRANSPARENT);
+            if (NotifRedesignFooter.isEnabled()) {
+                mSettingsButton.setBackground(theme.getDrawable(R.drawable.sos_settings_bg));
+                mSettingsButton.setTextColor(Color.TRANSPARENT);
+                mHistoryButton.setVisibility(View.GONE);
+            } else {
+                mManageOrHistoryButton.setBackground(
+                        theme.getDrawable(R.drawable.sos_settings_bg));
+                mManageOrHistoryButton.setTextColor(Color.TRANSPARENT);
+            }
+            return;
+        }
         final @ColorInt int onSurface = mContext.getColor(
                 com.android.internal.R.color.materialColorOnSurface);
         // Same resource, separate drawables to prevent touch effects from showing on the wrong

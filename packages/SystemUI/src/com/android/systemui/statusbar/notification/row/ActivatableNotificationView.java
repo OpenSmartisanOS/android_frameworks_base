@@ -214,7 +214,15 @@ public abstract class ActivatableNotificationView extends ExpandableOutlineView 
      * be useful in a configuration change.
      */
     protected void initBackground() {
-        mBackgroundNormal.setCustomBackground(R.drawable.notification_material_bg);
+        mBackgroundNormal.setCustomBackground(getResources().getBoolean(
+                R.bool.config_sos_legacy_shade)
+                ? getSosBackgroundResource()
+                : R.drawable.notification_material_bg);
+    }
+
+    /** Allows grouped notification rows to select the corresponding SOS 9-patch. */
+    protected int getSosBackgroundResource() {
+        return R.drawable.sos_notification_material_bg;
     }
 
     protected boolean hideBackground() {

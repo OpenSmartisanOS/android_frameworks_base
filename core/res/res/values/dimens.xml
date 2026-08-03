@@ -250,9 +250,8 @@
     <!-- Default padding for dialogs. -->
     <dimen name="dialog_padding">16dp</dimen>
 
-    <!-- The margin on the start of the content view (accommodates the icon)
-     This represents 16dp for the left margin + 24dp for the icon + 12dp for the right margin -->
-    <dimen name="notification_content_margin_start">52dp</dimen>
+    <!-- Smartisan: 16dp start + 40dp icon + 4dp visual gap. -->
+    <dimen name="notification_content_margin_start">60dp</dimen>
 
     <!-- The margin on the start of the content view (accommodates the icon), 2025 redesign version
      This represents 16dp for the left margin + 40dp for the icon + 16dp for the right margin -->
@@ -287,7 +286,7 @@
     <dimen name="notification_2025_content_margin_end">60dp</dimen>
 
     <!-- The margin on the end of most content views (ignores the expander) -->
-    <dimen name="notification_content_margin_end">16dp</dimen>
+    <dimen name="notification_content_margin_end">12dp</dimen>
 
     <!-- The margin on the end of the top-line content views (accommodates the expander) -->
     <dimen name="notification_heading_margin_end">56dp</dimen>
@@ -299,7 +298,7 @@
     <dimen name="notification_2025_smart_reply_container_margin">10dp</dimen>
 
     <!-- The total height of the notification action list -->
-    <dimen name="notification_action_list_height">60dp</dimen>
+    <dimen name="notification_action_list_height">48dp</dimen>
 
     <!-- The total height of the notification action list (2025 redesign version) -->
     <dimen name="notification_2025_action_list_height">48dp</dimen>
@@ -349,7 +348,7 @@
     <dimen name="emphasized_button_stroke_width">1dp</dimen>
 
     <!-- height of the content margin to accommodate for the header -->
-    <dimen name="notification_content_margin_top">50dp</dimen>
+    <dimen name="notification_content_margin_top">30.8dp</dimen>
 
     <!-- The spacing between the content and the header text above it, scaling with text size.
          This value is chosen so that, taking into account the text spacing for both the text in the
@@ -370,7 +369,7 @@
     <dimen name="notification_progress_margin_horizontal">4dp</dimen>
 
     <!-- height of the notification header -->
-    <dimen name="notification_header_height">56dp</dimen>
+    <dimen name="notification_header_height">50dp</dimen>
 
     <!-- height of the notification header (2025 redesign version) -->
     <dimen name="notification_2025_header_height">72dp</dimen>
@@ -394,14 +393,14 @@
     <dimen name="notification_header_icon_size">18dp</dimen>
 
     <!-- size (width and height) of the circle around the icon in the notification header -->
-    <dimen name="notification_icon_circle_size">24dp</dimen>
+    <dimen name="notification_icon_circle_size">40dp</dimen>
 
     <!-- size (width and height) of the circular icon in the notification header
          (2025 redesign version) -->
     <dimen name="notification_2025_icon_circle_size">40dp</dimen>
 
     <!-- padding between the notification icon and the circle containing it -->
-    <dimen name="notification_icon_circle_padding">4dp</dimen>
+    <dimen name="notification_icon_circle_padding">8dp</dimen>
 
     <!-- padding between the notification icon and the circle containing it
          (2025 redesign version) -->
@@ -501,11 +500,11 @@
 
     <!-- Height of a headerless notification with one line -->
     <!-- 16 * 2 (margins) + 24 (1 line) = 56 (notification) -->
-    <dimen name="notification_headerless_min_height">56dp</dimen>
+    <dimen name="notification_headerless_min_height">64dp</dimen>
 
     <!-- Max height of a collapsed two-line notification -->
     <!-- 20 * 2 (margins) + 24 * 2 (2 lines) = 88 (notification) -->
-    <dimen name="notification_min_height">88dp</dimen>
+    <dimen name="notification_min_height">106dp</dimen>
 
     <!-- The width of the big icons in notifications. -->
     <dimen name="notification_large_icon_width">64dp</dimen>
@@ -975,7 +974,7 @@
     <!-- The maximum width of a big picture in a notification. The images will be reduced to that width in case they are bigger. This value is determined by the standard panel size -->
     <dimen name="notification_big_picture_max_width">416dp</dimen>
     <!-- The size of the right icon -->
-    <dimen name="notification_right_icon_size">48dp</dimen>
+    <dimen name="notification_right_icon_size">36dp</dimen>
     <!-- The margin between the right icon and the content. -->
     <dimen name="notification_right_icon_content_margin">12dp</dimen>
     <!-- The margin between the right icon and the content. (2025 redesign version) -->

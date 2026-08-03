@@ -216,6 +216,13 @@ public class NotificationChildrenContainer extends ViewGroup
                 res.getBoolean(R.bool.config_showDividersWhenGroupNotificationExpanded);
         mHideDividersDuringExpand =
                 res.getBoolean(R.bool.config_hideDividersDuringExpand);
+        if (res.getBoolean(R.bool.config_sos_legacy_shade)) {
+            mChildPadding = 0;
+            mDividerHeight = 0;
+            mDividerAlpha = 0f;
+            mShowDividersWhenExpanded = false;
+            mHideDividersDuringExpand = true;
+        }
         mTranslationForHeader = res.getDimensionPixelOffset(
                 com.android.internal.R.dimen.notification_content_margin)
                 - getCollapsedHeaderMargin();
@@ -1487,6 +1494,15 @@ public class NotificationChildrenContainer extends ViewGroup
      * @param expanded whether the group is expanded.
      */
     public void updateHeaderForExpansion(boolean expanded) {
+        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            if (mGroupHeader != null) {
+                mGroupHeader.setHeaderBackgroundDrawable(null);
+            }
+            if (mBundleHeaderViewModel != null) {
+                mBundleHeaderViewModel.setBackgroundDrawable(null);
+            }
+            return;
+        }
         if (mGroupHeader != null) {
             if (expanded) {
                 ColorDrawable cd = new ColorDrawable();

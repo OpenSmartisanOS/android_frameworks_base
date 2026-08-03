@@ -24,7 +24,8 @@
     <com.android.systemui.statusbar.AlphaOptimizedFrameLayout
         android:id="@+id/content"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingBottom="0dp">
         <TextView
             android:id="@+id/unlock_prompt_footer"
             android:layout_width="wrap_content"
@@ -43,34 +44,34 @@
             <com.android.systemui.statusbar.notification.row.FooterViewButton
                 style="@style/TextAppearance.NotificationFooterButton"
                 android:id="@+id/manage_text"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
-                android:layout_marginTop="12dp"
-                android:layout_marginStart="16dp"
-                app:layout_constraintHorizontal_bias="0.0"
-                app:layout_constraintHorizontal_chainStyle="spread_inside"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/dismiss_text"
-                android:background="@drawable/notif_footer_btn_background"
-                android:focusable="true"
-                android:contentDescription="@string/manage_notifications_history_text"
-                android:text="@string/manage_notifications_history_text"
-                />
-            <com.android.systemui.statusbar.notification.row.FooterViewButton
-                style="@style/TextAppearance.NotificationFooterButton"
-                android:id="@+id/dismiss_text"
-                android:layout_width="wrap_content"
-                android:layout_height="48dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:layout_marginTop="12dp"
                 android:layout_marginEnd="16dp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintStart_toEndOf="@id/manage_text"
-                android:background="@drawable/notif_footer_btn_background"
+                android:background="@drawable/sos_settings_bg"
+                android:focusable="true"
+                android:contentDescription="@string/manage_notifications_history_text"
+                android:text="@string/manage_notifications_history_text"
+                android:textColor="@android:color/transparent"
+                android:textSize="0sp"
+                />
+            <com.android.systemui.statusbar.notification.row.FooterViewButton
+                style="@style/TextAppearance.NotificationFooterButton"
+                android:id="@+id/dismiss_text"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:layout_marginTop="12dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:background="@drawable/sos_clear_all_bg"
                 android:focusable="true"
                 android:contentDescription="@string/accessibility_clear_all"
                 android:text="@string/clear_all_notifications_text"
+                android:textColor="@android:color/transparent"
+                android:textSize="0sp"
                 />
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.android.systemui.statusbar.AlphaOptimizedFrameLayout>
