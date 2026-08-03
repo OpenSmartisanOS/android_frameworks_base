@@ -1,4 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <bool name="config_sos_colored_notification_count">true</bool>
+
+    <string-array name="sos_notification_call_packages" translatable="false">
+        <item>com.android.server.telecom</item>
+        <item>com.android.phone</item>
+        <item>com.android.dialer</item>
+        <item>com.google.android.dialer</item>
+    </string-array>
+
+    <string-array name="sos_notification_messaging_packages" translatable="false">
+        <item>com.android.mms</item>
+        <item>com.android.messaging</item>
+        <item>com.google.android.apps.messaging</item>
+    </string-array>
+
+    <string-array name="sos_notification_email_packages" translatable="false">
+        <item>com.android.email</item>
+        <item>com.android.exchange</item>
+        <item>com.google.android.gm</item>
+    </string-array>
+
+    <string-array name="sos_notification_android_packages" translatable="false">
+        <item>android</item>
+    </string-array>
+
+    <string-array name="sos_notification_systemui_packages" translatable="false">
+        <item>com.android.systemui</item>
+    </string-array>
+
+    <string-array name="sos_notification_hidden_packages" translatable="false">
+        <item>com.android.incallui</item>
+    </string-array>
+
+    <string-array name="sos_notification_social_packages" translatable="false">
+        <item>com.tencent.mm</item>
+        <item>com.tencent.mobileqq</item>
+        <item>com.sina.weibo</item>
+        <item>com.whatsapp</item>
+        <item>com.facebook.katana</item>
+        <item>com.facebook.orca</item>
+        <item>com.instagram.android</item>
+        <item>org.telegram.messenger</item>
+        <item>com.twitter.android</item>
+        <item>com.discord</item>
+    </string-array>
+
     <integer name="carrier_network_change_anim_time">1200</integer>
 </resources>

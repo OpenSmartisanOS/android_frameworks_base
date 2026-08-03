@@ -729,12 +729,12 @@
     <dimen name="pull_span_min">25dp</dimen>
 
     <dimen name="qs_corner_radius">28dp</dimen>
-    <dimen name="qs_tile_height">80dp</dimen>
-    <dimen name="qs_tile_margin_horizontal">8dp</dimen>
+    <dimen name="qs_tile_height">@dimen/sos_qs_tile_height</dimen>
+    <dimen name="qs_tile_margin_horizontal">0dp</dimen>
     <dimen name="qs_tile_margin_vertical">@dimen/qs_tile_margin_horizontal</dimen>
     <dimen name="qs_tile_margin_top_bottom">4dp</dimen>
-    <dimen name="qs_brightness_margin_top">8dp</dimen>
-    <dimen name="qs_brightness_margin_bottom">16dp</dimen>
+    <dimen name="qs_brightness_margin_top">6dp</dimen>
+    <dimen name="qs_brightness_margin_bottom">0dp</dimen>
     <dimen name="qqs_layout_margin_top">16dp</dimen>
     <dimen name="qqs_layout_padding_bottom">24dp</dimen>
     <item name="qqs_expand_clock_scale" format="float" type="dimen">2.57</item>
@@ -742,12 +742,12 @@
     <!-- Most of the time it should be the same as notification_side_paddings as it's vertically
          aligned with notifications. The exception is split shade when this value becomes
          independent  -->
-    <dimen name="qs_horizontal_margin">@dimen/notification_side_paddings</dimen>
+    <dimen name="qs_horizontal_margin">@dimen/sos_qs_panel_margin_horizontal</dimen>
 
     <!-- Most of the time it should be the same as notification_shade_content_margin_horizontal as
          it's vertically aligned with notifications. The exception is split shade when this value
          becomes independent  -->
-    <dimen name="qs_content_horizontal_padding">@dimen/notification_shade_content_margin_horizontal</dimen>
+    <dimen name="qs_content_horizontal_padding">@dimen/sos_qs_panel_margin_horizontal</dimen>
 
     <!-- Most of the time it should be the same as notification_side_paddings as it's vertically
         aligned with notifications. That's not the case on large screen when we have either split
@@ -756,7 +756,7 @@
     <dimen name="qs_tiles_page_horizontal_margin">@dimen/notification_side_paddings</dimen>
 
     <dimen name="qs_customize_internal_side_paddings">8dp</dimen>
-    <dimen name="qs_icon_size">20dp</dimen>
+    <dimen name="qs_icon_size">@dimen/sos_qs_tile_icon_size</dimen>
     <dimen name="qs_side_view_size">28dp</dimen>
     <dimen name="qs_label_container_margin">10dp</dimen>
     <dimen name="qs_quick_tile_size">60dp</dimen>
@@ -769,12 +769,12 @@
          Scaled @dimen/qs_page_indicator-width by .4f.
     -->
     <dimen name="qs_page_indicator_dot_width">6.4dp</dimen>
-    <dimen name="qs_tile_text_size">14sp</dimen>
-    <dimen name="qs_panel_padding">16dp</dimen>
+    <dimen name="qs_tile_text_size">@dimen/sos_qs_tile_text_size</dimen>
+    <dimen name="qs_panel_padding">0dp</dimen>
     <dimen name="qs_dual_tile_padding_horizontal">6dp</dimen>
     <dimen name="qs_panel_elevation">4dp</dimen>
-    <dimen name="qs_panel_padding_bottom">@dimen/footer_actions_height</dimen>
-    <dimen name="qs_panel_padding_top">80dp</dimen>
+    <dimen name="qs_panel_padding_bottom">8dp</dimen>
+    <dimen name="qs_panel_padding_top">0dp</dimen>
 
     <!-- Size is in sp because the icon is inlined in text -->
     <dimen name="qs_edit_mode_app_icon">14sp</dimen>

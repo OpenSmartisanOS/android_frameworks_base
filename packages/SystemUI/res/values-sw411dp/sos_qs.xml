@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+         Smartisan R2 resolves its 1080 px panel through the sw432dp resource bucket at 400 dpi.
+         The LG V60 Lineage configuration is sw411dp at 420 dpi, so preserve the original physical
+         pixel geometry in the equivalent bucket instead of scaling the base dp values.
+    -->
+    <dimen name="sos_qs_tile_height">313px</dimen>
+    <dimen name="sos_qs_tile_icon_size">72px</dimen>
+    <dimen name="sos_qs_tile_text_size">12sp</dimen>
+    <dimen name="sos_brightness_height">138px</dimen>
+    <dimen name="sos_brightness_icon_size">66px</dimen>
+    <dimen name="sos_brightness_icon_margin_start">39px</dimen>
+    <dimen name="sos_brightness_icon_margin_end">12px</dimen>
+    <dimen name="sos_brightness_min_margin_start">117px</dimen>
+    <dimen name="sos_brightness_track_margin_start">138px</dimen>
+    <dimen name="sos_brightness_track_margin_end">21px</dimen>
+    <dimen name="sos_brightness_endpoint_width">21px</dimen>
+    <dimen name="sos_brightness_endpoint_height">24px</dimen>
+    <dimen name="sos_brightness_segment_width">21px</dimen>
+    <dimen name="sos_brightness_segment_height">24px</dimen>
+    <dimen name="sos_brightness_segment_expanded_height">63px</dimen>
+</resources>
