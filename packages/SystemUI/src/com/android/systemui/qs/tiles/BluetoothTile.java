@@ -87,6 +87,7 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
 
     private CachedBluetoothDevice mMetadataRegisteredDevice = null;
     private CachedBluetoothDevice mBatteryCallbackRegisteredDevice = null;
+    private int mSosConnectedBatteryLevel = BluetoothDevice.BATTERY_LEVEL_UNKNOWN;
 
     private final Executor mExecutor;
 
@@ -159,7 +160,9 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     }
 
     private void handleClickEvent(@Nullable Expandable expandable) {
-        if (mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG)) {
+        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            toggleBluetooth();
+        } else if (mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG)) {
             mDetailsContentViewModel.get().showDialog(expandable);
         } else {
             // Secondary clicks are header clicks, just toggle.
@@ -255,9 +258,13 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
             state.icon = maybeLoadResourceIcon(R.drawable.qs_bluetooth_icon_off);
             state.state = Tile.STATE_INACTIVE;
         }
+        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            state.icon = ResourceIcon.get(getSosIconRes(enabled, connected, state.isTransient));
+        }
 
         state.expandedAccessibilityClassName = Button.class.getName();
-        state.forceExpandIcon = mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG);
+        state.forceExpandIcon = !mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG);
     }
 
     private void toggleBluetooth() {
@@ -279,6 +286,7 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     @Nullable
     private String getSecondaryLabel(boolean enabled, boolean connecting, boolean connected,
             boolean isTransient) {
+        mSosConnectedBatteryLevel = BluetoothDevice.BATTERY_LEVEL_UNKNOWN;
         if (connecting) {
             return mContext.getString(R.string.quick_settings_connecting);
         }
@@ -323,6 +331,7 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
             }
 
             if (batteryLevel > BluetoothDevice.BATTERY_LEVEL_UNKNOWN) {
+                mSosConnectedBatteryLevel = batteryLevel;
                 return mContext.getString(
                         R.string.quick_settings_bluetooth_secondary_label_battery_level,
                         Utils.formatPercentage(batteryLevel));
@@ -347,6 +356,38 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
         }
 
         return null;
+    }
+
+    private int getSosIconRes(boolean enabled, boolean connected, boolean isTransient) {
+        if (!enabled) {
+            return R.drawable.smartisan_qs_bluetooth_off;
+        }
+        if (!connected || isTransient
+                || mSosConnectedBatteryLevel == BluetoothDevice.BATTERY_LEVEL_UNKNOWN) {
+            return R.drawable.smartisan_qs_bluetooth_on;
+        }
+        switch (Math.min(9, Math.max(0, mSosConnectedBatteryLevel / 10))) {
+            case 0:
+                return R.drawable.smartisan_qs_bluetooth_on_0;
+            case 1:
+                return R.drawable.smartisan_qs_bluetooth_on_1;
+            case 2:
+                return R.drawable.smartisan_qs_bluetooth_on_2;
+            case 3:
+                return R.drawable.smartisan_qs_bluetooth_on_3;
+            case 4:
+                return R.drawable.smartisan_qs_bluetooth_on_4;
+            case 5:
+                return R.drawable.smartisan_qs_bluetooth_on_5;
+            case 6:
+                return R.drawable.smartisan_qs_bluetooth_on_6;
+            case 7:
+                return R.drawable.smartisan_qs_bluetooth_on_7;
+            case 8:
+                return R.drawable.smartisan_qs_bluetooth_on_8;
+            default:
+                return R.drawable.smartisan_qs_bluetooth_on_9;
+        }
     }
 
     @Override

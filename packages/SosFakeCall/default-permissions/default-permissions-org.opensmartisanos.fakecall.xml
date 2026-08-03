@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<exceptions>
+    <exception package="org.opensmartisanos.fakecall">
+        <permission name="android.permission.POST_NOTIFICATIONS" fixed="true" />
+        <permission name="android.permission.READ_PHONE_STATE" fixed="true" />
+    </exception>
+</exceptions>

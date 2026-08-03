@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">模拟来电</string>
+    <string name="notification_channel_name">模拟来电</string>
+    <string name="schedule_channel_name">模拟来电倒计时</string>
+    <string name="incoming_call">来电</string>
+    <string name="default_caller_name">未知号码</string>
+    <string name="default_caller_number">10086</string>
+    <string name="answer">接听</string>
+    <string name="decline">挂断</string>
+    <string name="connected">通话中</string>
+    <string name="fake_call_scheduled_countdown">将在 %1$d 秒后来电</string>
+    <string name="cancel">取消</string>
+    <string name="settings_title">模拟来电设置</string>
+    <string name="caller_name">来电人</string>
+    <string name="caller_number">号码</string>
+    <string name="delay">延时</string>
+    <string name="ringtone">铃声</string>
+    <string name="default_ringtone">默认铃声</string>
+    <string name="save">保存</string>
+    <string name="saved">已保存</string>
+
+    <string-array name="fake_call_delay_entries">
+        <item>5 秒</item>
+        <item>10 秒</item>
+        <item>30 秒</item>
+        <item>1 分钟</item>
+    </string-array>
+</resources>

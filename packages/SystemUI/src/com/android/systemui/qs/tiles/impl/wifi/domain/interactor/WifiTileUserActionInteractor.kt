@@ -16,6 +16,7 @@
 
 package com.android.systemui.qs.tiles.impl.wifi.domain.interactor
 
+import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import com.android.systemui.animation.Expandable
@@ -26,6 +27,8 @@ import com.android.systemui.qs.tiles.base.domain.model.QSTileInput
 import com.android.systemui.qs.tiles.base.shared.model.QSTileUserAction
 import com.android.systemui.qs.tiles.dialog.InternetDialogManager
 import com.android.systemui.qs.tiles.impl.wifi.domain.model.WifiTileModel
+import com.android.systemui.res.R
+import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.statusbar.connectivity.AccessPointController
 import com.android.systemui.statusbar.pipeline.shared.ui.model.WifiToggleState
 import com.android.systemui.statusbar.pipeline.wifi.data.repository.WifiRepository
@@ -38,6 +41,7 @@ class WifiTileUserActionInteractor
 @Inject
 constructor(
     @Main private val mainContext: CoroutineContext,
+    @ShadeDisplayAware private val context: Context,
     private val internetDialogManager: InternetDialogManager,
     private val accessPointController: AccessPointController,
     private val wifiRepository: WifiRepository,
@@ -61,6 +65,10 @@ constructor(
         }
 
     suspend fun handleClick(expandable: Expandable?) {
+        if (context.resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            handleSecondaryClick(expandable)
+            return
+        }
         withContext(mainContext) {
             internetDialogManager.create(
                 aboveStatusBar = true,

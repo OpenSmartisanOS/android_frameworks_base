@@ -23,5 +23,5 @@ import dagger.Module;
 /**
  * Module for QS dependencies for AOSP inclusion
  */
-@Module(includes = { PanelsModule.class, QSModuleBase.class })
+@Module(includes = { PanelsModule.class, QSModuleBase.class, SosQsModule.class })
 public interface QSModule { }

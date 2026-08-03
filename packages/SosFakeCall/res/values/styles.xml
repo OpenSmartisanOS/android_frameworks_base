@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.SosFakeCall" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowShowWhenLocked">true</item>
+        <item name="android:windowTurnScreenOn">true</item>
+        <item name="android:windowDisablePreview">true</item>
+        <item name="android:colorAccent">#FFFFFFFF</item>
+        <item name="android:navigationBarColor">#FF111318</item>
+        <item name="android:statusBarColor">#FF111318</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+</resources>

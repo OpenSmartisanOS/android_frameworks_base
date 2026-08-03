@@ -1,0 +1,33 @@
+java_library {
+    name: "sos-fakecall-aidl",
+    srcs: ["aidl/**/*.aidl"],
+    aidl: {
+        local_include_dirs: ["aidl"],
+    },
+    sdk_version: "system_current",
+}
+
+android_app {
+    name: "SosFakeCall",
+    manifest: "AndroidManifest.xml",
+    srcs: ["src/**/*.java"],
+    static_libs: ["sos-fakecall-aidl"],
+    resource_dirs: ["res"],
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+    system_ext_specific: true,
+    required: ["default-permissions-org.opensmartisanos.fakecall"],
+    optimize: {
+        enabled: true,
+        shrink: true,
+        optimize: true,
+    },
+}
+
+prebuilt_etc {
+    name: "default-permissions-org.opensmartisanos.fakecall",
+    src: "default-permissions/default-permissions-org.opensmartisanos.fakecall.xml",
+    sub_dir: "default-permissions",
+    system_ext_specific: true,
+}

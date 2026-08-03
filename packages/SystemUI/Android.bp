@@ -518,6 +518,7 @@ android_library {
         "//frameworks/libs/systemui:compilelib",
         "com.android.systemui.pods-api-aosp-handheld",
         "SystemUI-res",
+        "sos-fakecall-aidl",
         "WifiTrackerLib",
         "WindowManager-Shell",
         "PlatformAnimationLib",
@@ -839,6 +840,7 @@ android_library {
         "com.android.systemui.pods-api-aosp-handheld",
         "com.android.systemui.pods-impl-aosp-handheld",
         "SystemUI-tests-base",
+        "sos-fakecall-aidl",
         "androidx.test.uiautomator_uiautomator",
         "androidx.core_core-animation-testing",
         "androidx.lifecycle_lifecycle-runtime-testing",
@@ -872,6 +874,7 @@ android_library {
     ],
     javacflags: [
         "-Adagger.useBindingGraphFix=ENABLED",
+        "-Aroom.schemaLocation=frameworks/base/packages/SystemUI/schemas",
     ],
 
     aaptflags: [
@@ -1130,5 +1133,6 @@ android_app {
     },
     required: [
         "privapp_whitelist_com.android.systemui",
+        "SosFakeCall",
     ],
 }

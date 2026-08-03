@@ -131,6 +131,17 @@ public class ScreenRecordTile extends QSTileImpl<QSTile.BooleanState>
 
     @Override
     protected void handleClick(@Nullable Expandable expandable) {
+        if (mController.isStarting() || mController.isRecording()) {
+            // The new toolbar is only the entry point for a fresh recording. Once a countdown or
+            // recording is active, the tile must remain the stop/cancel affordance.
+            if (mController.isStarting()) {
+                cancelCountdown();
+            } else {
+                stopRecording();
+            }
+            refreshState();
+            return;
+        }
         if (ScreenCaptureRecordFeaturesInteractor.INSTANCE.getShouldShowNewToolbar()) {
             UserHandle userHandle = UserHandle.of(getCurrentTileUser());
 

@@ -73,6 +73,7 @@ class WifiTileUserActionInteractorTest : SysuiTestCase() {
         underTest =
             WifiTileUserActionInteractor(
                 testScope.coroutineContext,
+                context,
                 internetDialogManager,
                 accessPointController,
                 wifiRepository,

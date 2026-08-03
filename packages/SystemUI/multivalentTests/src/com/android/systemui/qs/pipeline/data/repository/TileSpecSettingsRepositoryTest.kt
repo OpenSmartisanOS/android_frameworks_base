@@ -61,6 +61,7 @@ class TileSpecSettingsRepositoryTest : SysuiTestCase() {
                     secureSettings,
                     hsum,
                     logger,
+                    context,
                     testScope.backgroundScope,
                     testDispatcher,
                 )

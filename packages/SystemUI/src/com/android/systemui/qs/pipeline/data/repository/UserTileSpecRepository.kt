@@ -1,6 +1,7 @@
 package com.android.systemui.qs.pipeline.data.repository
 
 import android.annotation.UserIdInt
+import android.content.Context
 import android.database.ContentObserver
 import android.provider.Settings
 import com.android.app.tracing.coroutines.launchTraced as launch
@@ -12,6 +13,7 @@ import com.android.systemui.qs.pipeline.data.model.RestoreData
 import com.android.systemui.qs.pipeline.shared.TileSpec
 import com.android.systemui.qs.pipeline.shared.TilesUpgradePath
 import com.android.systemui.qs.pipeline.shared.logging.QSPipelineLogger
+import com.android.systemui.res.R
 import com.android.systemui.user.domain.interactor.HeadlessSystemUserMode
 import com.android.systemui.util.settings.SecureSettings
 import dagger.assisted.Assisted
@@ -49,6 +51,7 @@ constructor(
     private val secureSettings: SecureSettings,
     private val hsum: HeadlessSystemUserMode,
     private val logger: QSPipelineLogger,
+    @Application private val context: Context,
     @Application private val applicationScope: CoroutineScope,
     @Background private val backgroundDispatcher: CoroutineDispatcher,
 ) {
@@ -171,12 +174,114 @@ constructor(
 
     private suspend fun loadTilesFromSettingsAndParse(userId: Int): List<TileSpec> {
         val loadedTiles = loadTilesFromSettings(userId)
+        if (!context.resources.getBoolean(R.bool.config_sos_legacy_shade)) {
+            return finishLoadingTiles(loadedTiles, userId)
+        }
+
+        val layoutVersion =
+            secureSettings.getIntForUser(SOS_LAYOUT_VERSION_SETTING, 0, userId)
+        if (layoutVersion == 0) {
+            val legacyTiles = loadLegacySosTiles(userId)
+            val migratedCurrentTiles = migrateSosTiles(loadedTiles)
+            val initialTiles =
+                when {
+                    legacyTiles.isNotEmpty() -> legacyTiles
+                    migratedCurrentTiles.isNotEmpty() -> migratedCurrentTiles
+                    else -> SOS_DEFAULT_TILES
+                }
+            if (initialTiles != loadedTiles) {
+                storeTiles(userId, initialTiles)
+            }
+            secureSettings.putIntForUser(
+                SOS_LAYOUT_VERSION_SETTING,
+                SOS_LAYOUT_VERSION,
+                userId,
+            )
+            _tilesUpgradePath.send(
+                if (legacyTiles.isNotEmpty() || loadedTiles.isNotEmpty()) {
+                    TilesUpgradePath.ReadFromSettings(initialTiles.toSet())
+                } else {
+                    TilesUpgradePath.DefaultSet
+                }
+            )
+            return initialTiles
+        }
+        val migratedTiles =
+            if (layoutVersion < SOS_LAYOUT_VERSION) {
+                migrateSosTiles(loadedTiles).also {
+                    if (it != loadedTiles) {
+                        storeTiles(userId, it)
+                    }
+                    secureSettings.putIntForUser(
+                        SOS_LAYOUT_VERSION_SETTING,
+                        SOS_LAYOUT_VERSION,
+                        userId,
+                    )
+                }
+            } else {
+                loadedTiles
+            }
+        return finishLoadingTiles(migratedTiles, userId)
+    }
+
+    private suspend fun finishLoadingTiles(
+        loadedTiles: List<TileSpec>,
+        userId: Int,
+    ): List<TileSpec> {
         if (loadedTiles.isNotEmpty()) {
             _tilesUpgradePath.send(TilesUpgradePath.ReadFromSettings(loadedTiles.toSet()))
         } else {
             _tilesUpgradePath.send(TilesUpgradePath.DefaultSet)
         }
         return parseTileSpecs(loadedTiles, userId)
+    }
+
+    private fun migrateSosTilesV2(tiles: List<TileSpec>): List<TileSpec> =
+        tiles
+            .mapNotNull { tile ->
+                when {
+                    tile.spec in SOS_V2_DROPPED_SPECS -> null
+                    tile.spec in SOS_V2_SPEC_ALIASES ->
+                        TileSpec.create(SOS_V2_SPEC_ALIASES.getValue(tile.spec))
+                    else -> tile
+                }
+            }
+            .distinct()
+
+    private fun migrateSosTiles(tiles: List<TileSpec>): List<TileSpec> {
+        val migrated = migrateSosTilesV2(tiles)
+        return if (migrated.map(TileSpec::spec) in SOS_INCOMPLETE_GENERATED_LAYOUTS) {
+            // Early development builds registered only fourteen generated entries. Replace those
+            // exact known layouts with the complete original 4x5 order without disturbing a
+            // genuinely user-customized list.
+            SOS_DEFAULT_TILES
+        } else {
+            migrated
+        }
+    }
+
+    private fun loadLegacySosTiles(userId: Int): List<TileSpec> {
+        val resolver = context.contentResolver
+        val primary =
+            Settings.System.getStringForUser(
+                resolver,
+                SOS_LEGACY_TILE_SETTING,
+                userId,
+            )
+        val additional =
+            Settings.System.getStringForUser(
+                resolver,
+                SOS_LEGACY_ADDITIONAL_TILE_SETTING,
+                userId,
+            )
+        return sequenceOf(primary, additional)
+            .filterNotNull()
+            .flatMap { it.split('|').asSequence() }
+            .map(String::trim)
+            .filter(String::isNotEmpty)
+            .map(TileSpec::create)
+            .toList()
+            .let(::migrateSosTiles)
     }
 
     private suspend fun loadTilesFromSettings(userId: Int): List<TileSpec> {
@@ -257,10 +362,113 @@ constructor(
 
     companion object {
         private const val SETTING = Settings.Secure.QS_TILES
+        private const val SOS_LAYOUT_VERSION_SETTING = "sos_qs_layout_version"
+        private const val SOS_LAYOUT_VERSION = 4
+        private const val SOS_LEGACY_TILE_SETTING = "expanded_widget_buttons"
+        private const val SOS_LEGACY_ADDITIONAL_TILE_SETTING =
+            "expanded_widget_buttons_additional"
         private const val DELIMITER = TilesSettingConverter.DELIMITER
         // We want a small buffer in case multiple changes come in at the same time (sometimes
         // happens in first start. This should be enough to not lose changes.
         private const val CHANGES_BUFFER_SIZE = 10
+
+        private val SOS_DEFAULT_TILES =
+            listOf(
+                    "airplane",
+                    "wifi",
+                    "cell",
+                    "vpn",
+                    "hotspot",
+                    "bt",
+                    "sos_disable_buttons",
+                    "location",
+                    "flashlight",
+                    "rotation",
+                    "screenrecord",
+                    "battery",
+                    "sos_screenshot",
+                    "sos_vibrate",
+                    "sos_mute",
+                    "nfc",
+                    "caffeine",
+                    "sos_lock_screen",
+                    "sos_protect_eyes",
+                    "sos_fake_call",
+                )
+                .map(TileSpec::create)
+
+        private val SOS_INCOMPLETE_GENERATED_LAYOUTS =
+            setOf(
+                listOf(
+                    "airplane",
+                    "wifi",
+                    "cell",
+                    "vpn",
+                    "hotspot",
+                    "bt",
+                    "location",
+                    "flashlight",
+                    "rotation",
+                    "screenrecord",
+                    "battery",
+                    "nfc",
+                    "caffeine",
+                    "sos_fake_call",
+                ),
+                listOf(
+                    "airplane",
+                    "wifi",
+                    "cell",
+                    "vpn",
+                    "hotspot",
+                    "bt",
+                    "location",
+                    "flashlight",
+                    "rotation",
+                    "screenrecord",
+                    "battery",
+                    "nfc",
+                    "caffeine",
+                    "sos_protect_eyes",
+                ),
+            )
+
+        private val SOS_V2_SPEC_ALIASES =
+            mapOf(
+                "toggleAirplane" to "airplane",
+                "toggleAutoRotate" to "rotation",
+                "toggleBluetooth" to "bt",
+                "toggleDisableButtons" to "sos_disable_buttons",
+                "toggleFakeCall" to "sos_fake_call",
+                "toggleFlashlight" to "flashlight",
+                "toggleGPS" to "location",
+                "toggleKeepScreenOn" to "caffeine",
+                "toggleLockScreen" to "sos_lock_screen",
+                "toggleMobileData" to "cell",
+                "toggleMute" to "sos_mute",
+                "toggleNFC" to "nfc",
+                "togglepowersave" to "battery",
+                "toggleProtectEyes" to "sos_protect_eyes",
+                "toggleReadingMode" to "reading_mode",
+                "toggleRealtimeSubtitle" to "hearing_devices",
+                "togglerrecordscreen" to "screenrecord",
+                "toggleScreenShot" to "sos_screenshot",
+                "toggleVibrate" to "sos_vibrate",
+                "toggleVpn" to "vpn",
+                "toggleWifi" to "wifi",
+                "toggleWifiAp" to "hotspot",
+                "toggleWirelessTNT" to "cast",
+                "disable_buttons" to "sos_disable_buttons",
+                "screenshot" to "sos_screenshot",
+                "vibration" to "sos_vibrate",
+                "silent" to "sos_mute",
+                "lock" to "sos_lock_screen",
+                "eyes" to "sos_protect_eyes",
+                "fake_call" to "sos_fake_call",
+                "night" to "sos_protect_eyes",
+            )
+
+        private val SOS_V2_DROPPED_SPECS = setOf("toggleAutoBrightness")
 
         private fun String.toTilesList() = TilesSettingConverter.toTilesList(this)
 

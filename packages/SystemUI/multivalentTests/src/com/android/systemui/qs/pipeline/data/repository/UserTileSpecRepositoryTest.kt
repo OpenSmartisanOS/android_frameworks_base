@@ -61,6 +61,7 @@ class UserTileSpecRepositoryTest(flags: FlagsParameterization) : SysuiTestCase()
                 secureSettings,
                 hsum,
                 logger,
+                context,
                 testScope.backgroundScope,
                 testDispatcher,
             )
@@ -87,6 +88,7 @@ class UserTileSpecRepositoryTest(flags: FlagsParameterization) : SysuiTestCase()
                     secureSettings,
                     hsum,
                     logger,
+                    context,
                     testScope.backgroundScope,
                     testDispatcher,
                 )
@@ -108,6 +110,7 @@ class UserTileSpecRepositoryTest(flags: FlagsParameterization) : SysuiTestCase()
                     secureSettings,
                     hsum,
                     logger,
+                    context,
                     testScope.backgroundScope,
                     testDispatcher,
                 )
