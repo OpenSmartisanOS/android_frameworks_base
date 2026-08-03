@@ -50,7 +50,9 @@ import com.android.systemui.dagger.GlobalRootComponent;
 import com.android.systemui.dagger.SysUIComponent;
 import com.android.systemui.dump.DumpManager;
 import com.android.systemui.process.ProcessWrapper;
+import com.android.systemui.qs.flags.QSComposeFragment;
 import com.android.systemui.res.R;
+import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.statusbar.phone.ConfigurationForwarder;
 import com.android.systemui.util.NotificationChannels;
 import com.android.wm.shell.dagger.HasWMComponent;
@@ -107,6 +109,10 @@ public class SystemUIApplicationImpl extends SystemUIApplication implements
     @Override
     public void attachBaseContext(Context base) {
         super.attachBaseContext(base);
+        if (base.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+            SceneContainerFlag.isEnabledOnVariant = false;
+            QSComposeFragment.isEnabledOnVariant = false;
+        }
     }
 
     protected GlobalRootComponent getRootComponent() {

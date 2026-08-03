@@ -197,31 +197,38 @@ public class QSPanel extends LinearLayout implements Tunable {
         }
     }
 
-    /**
-     * Add brightness view above the tile layout.
-     *
-     * Used to add the brightness slider after construction.
-     */
+    /** Used to add the brightness slider after construction. */
     public void setBrightnessView(@NonNull View view) {
+        final boolean useSosOrder =
+                mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade);
         if (mBrightnessView != null) {
             removeView(mBrightnessView);
             mChildrenLayoutTop.remove(mBrightnessView);
-            mMovableContentStartIndex--;
+            if (!useSosOrder) {
+                mMovableContentStartIndex--;
+            }
         }
-        addView(view, 0);
+        if (useSosOrder) {
+            // Smartisan's notification-panel QS is ordered as tiles, page indicator, brightness.
+            // Keep movableContentStartIndex at zero so every subsequent layout switch keeps the
+            // tile layout and its footer ahead of this fixed trailing slider.
+            addView(view);
+        } else {
+            addView(view, 0);
+            mMovableContentStartIndex++;
+        }
         mBrightnessView = view;
 
         setBrightnessViewMargin();
-
-        mMovableContentStartIndex++;
     }
 
     private void setBrightnessViewMargin() {
         if (mBrightnessView != null) {
             MarginLayoutParams lp = (MarginLayoutParams) mBrightnessView.getLayoutParams();
             // For Brightness Slider to extend its boundary to draw focus background
-            int offset = getResources()
-                    .getDimensionPixelSize(R.dimen.rounded_slider_boundary_offset);
+            int offset = getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                    ? 0
+                    : getResources().getDimensionPixelSize(R.dimen.rounded_slider_boundary_offset);
             lp.topMargin = mContext.getResources()
                     .getDimensionPixelSize(R.dimen.qs_brightness_margin_top) - offset;
             lp.bottomMargin = mContext.getResources()

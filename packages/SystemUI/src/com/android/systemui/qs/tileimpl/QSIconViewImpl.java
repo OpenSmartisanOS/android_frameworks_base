@@ -27,6 +27,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.drawable.Animatable;
 import android.graphics.drawable.Animatable2;
 import android.graphics.drawable.Animatable2.AnimationCallback;
 import android.graphics.drawable.Drawable;
@@ -175,6 +176,13 @@ public class QSIconViewImpl extends QSIconView {
                     // Sends animator to end of animation. Needs to be called after calling start.
                     a.stop();
                 }
+            } else if (d instanceof Animatable) {
+                Animatable a = (Animatable) d;
+                if (shouldAnimate) {
+                    a.start();
+                } else {
+                    a.stop();
+                }
             }
         }
     }
@@ -184,6 +192,17 @@ public class QSIconViewImpl extends QSIconView {
     }
 
     protected void setIcon(ImageView iv, QSTile.State state, boolean allowAnimations) {
+        if (useSosTileArtwork()) {
+            mColorAnimator.cancel();
+            mScheduledIconChangeTransactionId = ICON_APPLIED_TRANSACTION_ID;
+            mState = state.state;
+            mDisabledByPolicy = state.disabledByPolicy;
+            iv.setImageTintList(null);
+            iv.clearColorFilter();
+            mTint = 0;
+            updateIcon(iv, state, false);
+            return;
+        }
         if (state.state != mState || state.disabledByPolicy != mDisabledByPolicy) {
             int color = getColor(state);
             mState = state.state;
@@ -240,6 +259,10 @@ public class QSIconViewImpl extends QSIconView {
     public void setTint(ImageView iv, int color) {
         iv.setImageTintList(ColorStateList.valueOf(color));
         mTint = color;
+    }
+
+    private boolean useSosTileArtwork() {
+        return getContext().getResources().getBoolean(R.bool.config_sos_legacy_shade);
     }
 
     protected int getIconMeasureMode() {

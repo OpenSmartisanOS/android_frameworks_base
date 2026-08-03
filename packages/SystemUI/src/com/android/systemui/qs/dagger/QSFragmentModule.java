@@ -33,13 +33,15 @@ public interface QSFragmentModule {
     @Provides
     @Named(QSScopeModule.QS_USING_MEDIA_PLAYER)
     static boolean providesQSUsingMediaPlayer(Context context) {
-        return useQsMediaPlayer(context);
+        return !context.getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && useQsMediaPlayer(context);
     }
 
     @Provides
     @Named(QSScopeModule.QS_USING_COLLAPSED_LANDSCAPE_MEDIA)
     static boolean providesQSUsingCollapsedLandscapeMedia(Context context) {
-        return context.getResources().getBoolean(
-                R.bool.config_quickSettingsMediaLandscapeCollapsed);
+        return !context.getResources().getBoolean(R.bool.config_sos_legacy_shade)
+                && context.getResources().getBoolean(
+                        R.bool.config_quickSettingsMediaLandscapeCollapsed);
     }
 }

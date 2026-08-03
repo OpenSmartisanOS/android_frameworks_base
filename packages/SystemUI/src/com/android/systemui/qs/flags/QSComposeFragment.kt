@@ -26,6 +26,14 @@ object QSComposeFragment {
     /** The aconfig flag name */
     const val FLAG_NAME = Flags.FLAG_QS_UI_REFACTOR_COMPOSE_FRAGMENT
 
+    /**
+     * Whether the current SystemUI variant supports the Compose QS fragment.
+     *
+     * Smartisan's legacy shade disables this during application initialization without changing
+     * the flag behavior for other products or flag-parameterized tests.
+     */
+    @JvmField var isEnabledOnVariant: Boolean = true
+
     /** A token used for dependency declaration */
     val token: FlagToken
         get() = FlagToken(FLAG_NAME, isEnabled)
@@ -33,7 +41,7 @@ object QSComposeFragment {
     /** Is the refactor enabled */
     @JvmStatic
     inline val isEnabled
-        get() = Flags.qsUiRefactorComposeFragment()
+        get() = Flags.qsUiRefactorComposeFragment() && isEnabledOnVariant
 
     /**
      * Called to ensure code is only run when the flag is enabled. This protects users from the

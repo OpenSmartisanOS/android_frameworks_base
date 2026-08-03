@@ -19,7 +19,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clipToPadding="false"
-    android:clipChildren="false">
+    android:clipChildren="false"
+    android:background="@color/sos_qs_panel_background">
 
     <com.android.systemui.qs.NonInterceptingScrollView
         android:id="@+id/expanded_qs_scroll_view"
@@ -41,7 +42,9 @@
             android:clipToPadding="false"
             android:clipChildren="false">
 
-            <include layout="@layout/qs_footer_impl" />
+            <include
+                layout="@layout/qs_footer_impl"
+                android:visibility="gone" />
         </com.android.systemui.qs.QSPanel>
     </com.android.systemui.qs.NonInterceptingScrollView>
 
@@ -49,8 +52,9 @@
 
     <androidx.compose.ui.platform.ComposeView
         android:id="@+id/qs_footer_actions"
-        android:layout_height="@dimen/footer_actions_height"
+        android:layout_height="0dp"
         android:layout_width="match_parent"
+        android:visibility="gone"
         android:layout_gravity="bottom"
         android:elevation="@dimen/qs_panel_elevation" />
 
