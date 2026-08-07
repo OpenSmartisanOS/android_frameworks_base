@@ -2168,7 +2168,19 @@ public interface WindowManager extends ViewManager {
                 @ViewDebug.IntToString(from = TYPE_NOTIFICATION_SHADE,
                         to = "NOTIFICATION_SHADE"),
                 @ViewDebug.IntToString(from = TYPE_STATUS_BAR_ADDITIONAL,
-                        to = "STATUS_BAR_ADDITIONAL")
+                        to = "STATUS_BAR_ADDITIONAL"),
+                @ViewDebug.IntToString(from = TYPE_SIDEBAR_TOOLS_SIDE_AREA,
+                        to = "SIDEBAR_TOOLS_SIDE_AREA"),
+                @ViewDebug.IntToString(from = TYPE_SIDEBAR_TOOLS,
+                        to = "SIDEBAR_TOOLS"),
+                @ViewDebug.IntToString(from = TYPE_SIDEBAR_DIALOG,
+                        to = "SIDEBAR_DIALOG"),
+                @ViewDebug.IntToString(from = TYPE_PC_SIDE_BAR_LKP,
+                        to = "PC_SIDE_BAR_LKP"),
+                @ViewDebug.IntToString(from = TYPE_PC_REV_TOP_BAR_LKP,
+                        to = "PC_REV_TOP_BAR_LKP"),
+                @ViewDebug.IntToString(from = TYPE_IDEA_PILLS,
+                        to = "IDEA_PILLS")
         })
         @WindowType
         public int type;
@@ -2590,6 +2602,37 @@ public interface WindowManager extends ViewManager {
          */
         public static final int TYPE_STATUS_BAR_ADDITIONAL = FIRST_SYSTEM_WINDOW + 41;
 
+        /** @hide Smartisan legacy overlay window. */
+        public static final int TYPE_SMARTISAN_APPLICATION_OVERLAY = 2050;
+        /** @hide Smartisan OneStep side hit target. */
+        public static final int TYPE_SIDEBAR_TOOLS_SIDE_AREA = 2051;
+        /** @hide Smartisan OneStep visible tool window. */
+        public static final int TYPE_SIDEBAR_TOOLS = 2052;
+        /** @hide Smartisan OneStep dialog window. */
+        public static final int TYPE_SIDEBAR_DIALOG = 2053;
+        /** @hide Smartisan rounded-corner overlay. */
+        public static final int TYPE_ROUND_CORNER_OVERLAY = 2054;
+        /** @hide Smartisan screenshot overlay. */
+        public static final int TYPE_SCREENSHOT_EXT = 2055;
+        /** @hide Smartisan context-menu overlay. */
+        public static final int TYPE_SMARTISAN_CONTEXT_MENU = 2056;
+        /** @hide Smartisan desktop dock. */
+        public static final int TYPE_DOCK_WINDOW = 2057;
+        /** @hide Smartisan recents overlay. */
+        public static final int TYPE_RECENT_PSP = 2058;
+        /** @hide Smartisan back-gesture indicator. */
+        public static final int TYPE_BACK_INDICATOR = 2059;
+        /** @hide Smartisan dream overlay. */
+        public static final int TYPE_DREAM_OVERLAY = 2060;
+        /** @hide Smartisan desktop OneStep side bar. */
+        public static final int TYPE_PC_SIDE_BAR_LKP = 2061;
+        /** @hide Smartisan desktop OneStep top bar. */
+        public static final int TYPE_PC_REV_TOP_BAR_LKP = 2062;
+        /** @hide Smartisan Idea Pills overlay. */
+        public static final int TYPE_IDEA_PILLS = 2063;
+        /** @hide Smartisan dream activity window. */
+        public static final int TYPE_DREAM_ACTIVITY = 2064;
+
         /**
          * End of types of system windows.
          */
@@ -2653,6 +2696,21 @@ public interface WindowManager extends ViewManager {
                 TYPE_ACCESSIBILITY_MAGNIFICATION_OVERLAY,
                 TYPE_NOTIFICATION_SHADE,
                 TYPE_STATUS_BAR_ADDITIONAL,
+                TYPE_SMARTISAN_APPLICATION_OVERLAY,
+                TYPE_SIDEBAR_TOOLS_SIDE_AREA,
+                TYPE_SIDEBAR_TOOLS,
+                TYPE_SIDEBAR_DIALOG,
+                TYPE_ROUND_CORNER_OVERLAY,
+                TYPE_SCREENSHOT_EXT,
+                TYPE_SMARTISAN_CONTEXT_MENU,
+                TYPE_DOCK_WINDOW,
+                TYPE_RECENT_PSP,
+                TYPE_BACK_INDICATOR,
+                TYPE_DREAM_OVERLAY,
+                TYPE_PC_SIDE_BAR_LKP,
+                TYPE_PC_REV_TOP_BAR_LKP,
+                TYPE_IDEA_PILLS,
+                TYPE_DREAM_ACTIVITY,
                 // TODO(b/398759994): Rename to TYPE_INVALID
                 INVALID_WINDOW_TYPE,
         })
@@ -4708,6 +4766,15 @@ public interface WindowManager extends ViewManager {
          */
         public final InsetsFlags insetsFlags = new InsetsFlags();
 
+        /** Smartisan-compatible extension data kept separate from AOSP private flags. @hide */
+        private final WindowManagerSmtEx.LayoutParamsSmtEx mSmtEx =
+                new WindowManagerSmtEx.LayoutParamsSmtEx(this);
+
+        /** @hide */
+        public WindowManagerSmtEx.LayoutParamsSmtEx getSmtEx() {
+            return mSmtEx;
+        }
+
         private @InsetsType int mFitInsetsTypes = Type.systemBars();
         private @InsetsSide int mFitInsetsSides = Side.all();
         private boolean mFitInsetsIgnoringVisibility = false;
@@ -5322,6 +5389,7 @@ public interface WindowManager extends ViewManager {
                 out.writeBoolean(mFrameRateBoostOnTouch);
                 out.writeBoolean(mIsFrameRatePowerSavingsBalanced);
             }
+            mSmtEx.writeToParcel(out, parcelableFlags);
         }
 
         public static final @android.annotation.NonNull Parcelable.Creator<LayoutParams> CREATOR
@@ -5398,6 +5466,7 @@ public interface WindowManager extends ViewManager {
                 mFrameRateBoostOnTouch = in.readBoolean();
                 mIsFrameRatePowerSavingsBalanced = in.readBoolean();
             }
+            mSmtEx.init(in);
         }
 
         @SuppressWarnings({"PointlessBitwiseExpression"})
@@ -5745,6 +5814,8 @@ public interface WindowManager extends ViewManager {
                 mIsFrameRatePowerSavingsBalanced = o.mIsFrameRatePowerSavingsBalanced;
                 changes |= LAYOUT_CHANGED;
             }
+
+            changes |= mSmtEx.copyFrom(o.mSmtEx);
 
             return changes;
         }

@@ -36,6 +36,7 @@ public class MergedConfiguration implements Parcelable {
     private final Configuration mGlobalConfig = new Configuration();
     private final Configuration mOverrideConfig = new Configuration();
     private final Configuration mMergedConfig = new Configuration();
+    private final MergedConfigurationSmtEx mSmtEx = new MergedConfigurationSmtEx();
 
     public MergedConfiguration() {
     }
@@ -49,8 +50,7 @@ public class MergedConfiguration implements Parcelable {
     }
 
     public MergedConfiguration(MergedConfiguration mergedConfiguration) {
-        setConfiguration(mergedConfiguration.getGlobalConfiguration(),
-                mergedConfiguration.getOverrideConfiguration());
+        setTo(mergedConfiguration);
     }
 
     private MergedConfiguration(Parcel in) {
@@ -62,12 +62,14 @@ public class MergedConfiguration implements Parcelable {
         mGlobalConfig.writeToParcel(dest, flags);
         mOverrideConfig.writeToParcel(dest, flags);
         mMergedConfig.writeToParcel(dest, flags);
+        mSmtEx.writeToParcel(dest, flags);
     }
 
     public void readFromParcel(Parcel source) {
         mGlobalConfig.readFromParcel(source);
         mOverrideConfig.readFromParcel(source);
         mMergedConfig.readFromParcel(source);
+        mSmtEx.readFromParcel(source);
     }
 
     @Override
@@ -121,12 +123,20 @@ public class MergedConfiguration implements Parcelable {
 
     public void setTo(MergedConfiguration config) {
         setConfiguration(config.mGlobalConfig, config.mOverrideConfig);
+        mSmtEx.setTo(config.mSmtEx);
     }
 
     public void unset() {
         mGlobalConfig.unset();
         mOverrideConfig.unset();
+        mSmtEx.reset();
         updateMergedConfig();
+    }
+
+    /** Returns the Smartisan window configuration extensions. @hide */
+    @NonNull
+    public MergedConfigurationSmtEx getSmtEx() {
+        return mSmtEx;
     }
 
     /**

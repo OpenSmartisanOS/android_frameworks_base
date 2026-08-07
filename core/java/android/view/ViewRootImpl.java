@@ -209,6 +209,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.MessageQueue;
+import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.RemoteException;
@@ -903,6 +904,7 @@ public final class ViewRootImpl implements ViewParent,
     private final MergedConfiguration mLastReportedMergedConfiguration = new MergedConfiguration();
     /** Configurations waiting to be applied. */
     private final MergedConfiguration mPendingMergedConfiguration = new MergedConfiguration();
+    private final ViewRootImplSmtEx mSmtEx;
 
     /** Non-{@code null} if {@link #mActivityConfigCallback} is not {@code null}. */
     @Nullable
@@ -1303,6 +1305,7 @@ public final class ViewRootImpl implements ViewParent,
         mWinFrame = new Rect();
         mLastLayoutFrame = new Rect();
         mWindow = new W(this);
+        mSmtEx = new ViewRootImplSmtEx(this);
         mLeashToken = new Binder();
         mTargetSdkVersion = context.getApplicationInfo().targetSdkVersion;
         mViewVisibility = View.GONE;
@@ -1369,6 +1372,11 @@ public final class ViewRootImpl implements ViewParent,
             preInitBufferAllocator();
             sPreInitializedBufferAllocator = true;
         }
+    }
+
+    /** Returns the Smartisan compatibility extension for this root. @hide */
+    public ViewRootImplSmtEx getSmtEx() {
+        return mSmtEx;
     }
 
     public static void addFirstDrawHandler(Runnable callback) {
@@ -6737,6 +6745,7 @@ public final class ViewRootImpl implements ViewParent,
         if (mergedConfiguration == null) {
             throw new IllegalArgumentException("No merged config provided.");
         }
+        mSmtEx.onRelayoutWindow(mergedConfiguration);
 
         final int lastRotation = mLastReportedMergedConfiguration.getMergedConfiguration()
                 .windowConfiguration.getRotation();
@@ -8043,6 +8052,7 @@ public final class ViewRootImpl implements ViewParent,
                 // Remember the touch position for possible drag-initiation.
                 mLastTouchPoint.x = event.getRawX();
                 mLastTouchPoint.y = event.getRawY();
+                mSmtEx.noteLastTouchPoint(event);
                 mLastTouchSource = event.getSource();
                 mLastTouchDeviceId = event.getDeviceId();
                 mLastTouchPointerId = event.getPointerId(0);
@@ -9734,6 +9744,7 @@ public final class ViewRootImpl implements ViewParent,
             }
             mInvCompatScale = 1f / mTmpFrames.compatScale;
             CompatibilityInfo.applyOverrideIfNeeded(mPendingMergedConfiguration, getDisplayId());
+            mSmtEx.onRelayoutWindow(mPendingMergedConfiguration);
             handleInsetsControlChanged(mTempInsets, mRelayoutResult.activeControls);
         }
 
@@ -11015,6 +11026,10 @@ public final class ViewRootImpl implements ViewParent,
      */
     @VisibleForTesting
     public void processRawInputEvent(InputEvent event) {
+        if (mSmtEx.filterForScreenDim(event)) {
+            mInputEventReceiver.finishInputEvent(event, true);
+            return;
+        }
         List<InputEvent> processedEvents = null;
         if (mInputCompatHandler != null) {
             Trace.traceBegin(Trace.TRACE_TAG_VIEW, "processInputEventForCompatibility");
@@ -11872,6 +11887,16 @@ public final class ViewRootImpl implements ViewParent,
         W(ViewRootImpl viewAncestor) {
             mViewAncestor = new WeakReference<ViewRootImpl>(viewAncestor);
             mWindowSession = viewAncestor.mWindowSession;
+        }
+
+        @Override
+        public boolean onTransact(int code, Parcel data, Parcel reply, int flags)
+                throws RemoteException {
+            final ViewRootImpl viewAncestor = mViewAncestor.get();
+            if (viewAncestor != null && viewAncestor.mSmtEx.onTransact(code, data, reply, flags)) {
+                return true;
+            }
+            return super.onTransact(code, data, reply, flags);
         }
 
         @Override

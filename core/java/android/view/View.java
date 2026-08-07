@@ -907,6 +907,15 @@ import java.util.function.Predicate;
 @UiThread
 public class View implements Drawable.Callback, KeyEvent.Callback,
         AccessibilityEventSource {
+
+    private ViewSmtEx mSmtEx;
+
+    /** Returns the legacy Smartisan compatibility extension for this view. @hide */
+    public ViewSmtEx getSmtEx() {
+        if (mSmtEx == null) mSmtEx = new ViewSmtEx(this);
+        return mSmtEx;
+    }
+
     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
     private static final boolean DBG = false;
 
