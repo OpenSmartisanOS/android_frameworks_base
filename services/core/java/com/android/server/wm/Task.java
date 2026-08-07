@@ -2270,6 +2270,13 @@ class Task extends TaskFragment {
 
     void adjustForMinimalTaskDimensions(@NonNull Rect bounds, @NonNull Rect previousBounds,
             @NonNull Configuration parentConfig) {
+        // OneStep presents an ordinary portrait task through a scaled TaskView surface. During
+        // adoption there can be one configuration pass before Shell installs the full-size
+        // logical bounds. Do not let the generic 220dp freeform minimum expand that transient
+        // bound past the narrow OneStep slot (and off the physical display).
+        if (mWmService.isOneStepTaskEmbedded(mTaskId)) {
+            return;
+        }
         // If the task has no requested minimal size, we'd like to enforce a minimal size
         // so that the user can not render the task fragment too small to manipulate. We don't need
         // to do this for the root pinned task as the bounds are controlled by the system.
@@ -2972,6 +2979,24 @@ class Task extends TaskFragment {
         // Display won't rotate for the orientation request if the Task/TaskDisplayArea
         // can't specify orientation.
         return canSpecifyOrientation() && getDisplayArea().canSpecifyOrientation(orientation);
+    }
+
+    @Override
+    int getOrientation(@ScreenOrientation int candidate) {
+        if (mWmService.isOneStepTaskEmbedded(mTaskId)) {
+            // A side card renders a portrait logical configuration, but must never rotate the
+            // physical display or override the orientation requested by the main task.
+            return candidate;
+        }
+        return super.getOrientation(candidate);
+    }
+
+    @Override
+    boolean isTopActivityFocusable() {
+        if (mWmService.isOneStepTaskEmbedded(mTaskId)) {
+            return false;
+        }
+        return super.isTopActivityFocusable();
     }
 
     @Override
@@ -3759,6 +3784,17 @@ class Task extends TaskFragment {
     Task asTask() {
         // I'm a task!
         return this;
+    }
+
+    @Override
+    boolean shouldMagnifyForSidebar() {
+        if (mWmService.isOneStepTaskEmbedded(mTaskId)) return false;
+        return super.shouldMagnifyForSidebar();
+    }
+
+    @Override
+    boolean isSidebarMagnificationExcludedSubtree() {
+        return mWmService.isOneStepTaskEmbedded(mTaskId);
     }
 
     ActivityRecord isInTask(ActivityRecord r) {

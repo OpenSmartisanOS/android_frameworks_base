@@ -1085,7 +1085,9 @@ final class TaskDisplayArea extends DisplayArea<WindowContainer> {
      * find a focusable and visible root task from the top of root tasks in this display.
      */
     Task getFocusedRootTask() {
-        if (mPreferredTopFocusableRootTask != null) {
+        if (mPreferredTopFocusableRootTask != null
+                && !mWmService.isOneStepTaskEmbedded(
+                        mPreferredTopFocusableRootTask.mTaskId)) {
             return mPreferredTopFocusableRootTask;
         }
 
@@ -1100,6 +1102,9 @@ final class TaskDisplayArea extends DisplayArea<WindowContainer> {
             }
 
             final Task rootTask = mChildren.get(i).asTask();
+            if (mWmService.isOneStepTaskEmbedded(rootTask.mTaskId)) {
+                continue;
+            }
             if (rootTask.isFocusableAndVisible()) {
                 return rootTask;
             }
@@ -1126,6 +1131,9 @@ final class TaskDisplayArea extends DisplayArea<WindowContainer> {
 
             final Task rootTask = mChildren.get(i).asTask();
             if (ignoreCurrent && rootTask == currentFocus) {
+                continue;
+            }
+            if (mWmService.isOneStepTaskEmbedded(rootTask.mTaskId)) {
                 continue;
             }
             if (!rootTask.isFocusableAndVisible()) {

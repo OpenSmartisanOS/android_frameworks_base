@@ -1649,9 +1649,23 @@ class ActivityStarter {
         final Task targetTask = r.getTask() != null
                 ? r.getTask()
                 : mTargetTask;
-        if (startedActivityRootTask == null || targetTask == null || !targetTask.isAttached()) {
+        if (targetTask == null || !targetTask.isAttached()) {
             return;
         }
+
+        // A deep link can add a new Activity to an already embedded task and return START_SUCCESS.
+        // Factory OneStep delivers the Intent first, then releases that exact task to the main
+        // area. Explicit document launches keep Android's separate-task semantics.
+        if ((result == START_SUCCESS || result == START_TASK_TO_FRONT
+                || result == START_DELIVERED_TO_TOP)
+                && (mLaunchFlags & (FLAG_ACTIVITY_NEW_DOCUMENT | FLAG_ACTIVITY_MULTIPLE_TASK)) == 0
+                && mService.mWindowManager.isOneStepTaskEmbedded(targetTask.mTaskId)) {
+            final ActivityRecord top = targetTask.getTopNonFinishingActivity();
+            mService.mWindowManager.onOneStepTaskReopenedByOthers(targetTask.mTaskId,
+                    top != null ? top.packageName : r.packageName);
+        }
+
+        if (startedActivityRootTask == null) return;
 
         if (result == START_TASK_TO_FRONT || result == START_DELIVERED_TO_TOP) {
             // The activity was already running so it wasn't started, but either brought to the

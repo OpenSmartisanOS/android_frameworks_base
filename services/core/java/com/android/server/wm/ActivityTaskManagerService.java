@@ -2401,6 +2401,11 @@ public class ActivityTaskManagerService extends IActivityTaskManager.Stub {
                     : null;
             mTaskSupervisor.findTaskToMoveToFront(task, flags, realOptions, "moveTaskToFront",
                     false /* forceNonResizable */);
+            if (mWindowManager.isOneStepTaskEmbedded(task.mTaskId)) {
+                final ActivityRecord top = task.getTopNonFinishingActivity();
+                mWindowManager.onOneStepTaskReopenedByOthers(task.mTaskId,
+                        top != null ? top.packageName : null);
+            }
         } finally {
             Binder.restoreCallingIdentity(origId);
         }

@@ -1364,6 +1364,13 @@ class TaskFragment extends WindowContainer<WindowContainer> {
         }
         final WindowContainer<?> parent = getParent();
         final Task thisTask = asTask();
+        if (thisTask != null && thisTask.mWmService.isOneStepTaskEmbedded(thisTask.mTaskId)) {
+            // Smartisan ActivityStackView tasks are composed above the ordinary fullscreen task
+            // but do not participate in its occlusion/focus calculation. Their physical card
+            // surface is clipped by SystemUI; logically they must remain visible so Android does
+            // not destroy the app surface whenever Home or another fullscreen task is selected.
+            return TASK_FRAGMENT_VISIBILITY_VISIBLE;
+        }
         if (thisTask != null && parent.asTask() == null
                 && mTransitionController.isTransientVisible(thisTask)) {
             // Keep transient-hide root tasks visible. Non-root tasks still follow standard rule.
@@ -1911,6 +1918,12 @@ class TaskFragment extends WindowContainer<WindowContainer> {
      * @param starting The currently starting activity or {@code null} if there is none.
      */
     boolean canBeResumed(@Nullable ActivityRecord starting) {
+        final Task task = asTask();
+        if (task != null && task.mWmService.isOneStepTaskEmbedded(task.mTaskId)) {
+            // Preserve the original multi-resume behavior for live cards. The task itself is
+            // non-focusable, so this cannot steal display focus or keyboard input.
+            return getVisibility(starting) == TASK_FRAGMENT_VISIBILITY_VISIBLE;
+        }
         // No need to resume activity in TaskFragment that is not visible.
         return isTopActivityFocusable()
                 && getVisibility(starting) == TASK_FRAGMENT_VISIBILITY_VISIBLE;
