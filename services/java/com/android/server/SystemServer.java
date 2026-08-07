@@ -313,6 +313,7 @@ import com.android.server.wallpapereffectsgeneration.WallpaperEffectsGenerationM
 import com.android.server.wearable.WearableSensingManagerService;
 import com.android.server.webkit.WebViewUpdateService;
 import com.android.server.wm.ActivityTaskManagerService;
+import com.android.server.wm.SidebarManagerService;
 import com.android.server.wm.WindowManagerGlobalLock;
 import com.android.server.wm.WindowManagerService;
 
@@ -1730,6 +1731,13 @@ public final class SystemServer implements Dumpable {
             ServiceManager.addService(Context.WINDOW_SERVICE, wm, /* allowIsolated= */ false,
                     DUMP_FLAG_PRIORITY_CRITICAL | DUMP_FLAG_PRIORITY_HIGH
                             | DUMP_FLAG_PROTO);
+
+            t.traceBegin("StartSidebarManagerService");
+            final SidebarManagerService sidebarManager = new SidebarManagerService(context, wm);
+            wm.setSidebarManagerService(sidebarManager);
+            ServiceManager.addService("sidebar", sidebarManager, /* allowIsolated= */ false,
+                    DUMP_FLAG_PRIORITY_HIGH);
+            t.traceEnd();
             t.traceEnd();
 
             t.traceBegin("SetWindowManagerService");
