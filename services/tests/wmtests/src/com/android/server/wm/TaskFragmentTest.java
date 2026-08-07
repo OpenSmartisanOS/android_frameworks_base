@@ -358,6 +358,25 @@ public class TaskFragmentTest extends WindowTestsBase {
     }
 
     @Test
+    public void testVisibility_oneStepTaskBehindOpaqueFullscreenTask_remainsVisible() {
+        final Task cardTask = createTask(mDisplayContent.getDefaultTaskDisplayArea(),
+                WINDOWING_MODE_MULTI_WINDOW, ACTIVITY_TYPE_STANDARD);
+        createActivityRecord(cardTask);
+        final Task mainTask = createTask(mDisplayContent.getDefaultTaskDisplayArea(),
+                WINDOWING_MODE_FULLSCREEN, ACTIVITY_TYPE_STANDARD);
+        final ActivityRecord mainActivity = createActivityRecord(mainTask);
+        mainActivity.setOccludesParent(true);
+
+        mWm.setOneStepTaskEmbedded(cardTask.mTaskId, true);
+        try {
+            assertEquals(TASK_FRAGMENT_VISIBILITY_VISIBLE,
+                    cardTask.getVisibility(mainActivity /* starting */));
+        } finally {
+            mWm.setOneStepTaskEmbedded(cardTask.mTaskId, false);
+        }
+    }
+
+    @Test
     public void testVisibility_behindTranslucentTaskFillingParentBounds_visibleBehindTranslucent() {
         // A fullscreen task with an opaque activity.
         final Task bottomTask = createTask(mDisplayContent.getDefaultTaskDisplayArea(),

@@ -137,6 +137,33 @@ android_test {
     ],
 }
 
+// Keep the OneStep state-machine coverage buildable independently from the very
+// large WmTests target.  Device branches sometimes carry unrelated policy tests
+// that lag framework API changes; those must not hide regressions in OneStep's
+// three-slot task store.
+android_test {
+    name: "OneStepWmTests",
+    srcs: [
+        "src/com/android/server/wm/OneStepTaskStoreTests.java",
+    ],
+    static_libs: [
+        "androidx.test.runner",
+        "platform-test-annotations",
+        "services.core",
+        "truth",
+    ],
+    libs: [
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
+    ],
+    platform_apis: true,
+    test_suites: ["device-tests"],
+    certificate: "platform",
+    optimize: {
+        enabled: false,
+    },
+}
+
 test_module_config {
     name: "WmTests_server_policy_Presubmit",
     base: "WmTests",
