@@ -21,6 +21,8 @@ import static android.view.WindowManager.TRANSIT_CLOSE;
 import static android.view.WindowManager.TRANSIT_OPEN;
 import static android.view.WindowManager.TRANSIT_TO_BACK;
 import static android.view.WindowManager.TRANSIT_TO_FRONT;
+import static android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW;
+import static android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED;
 
 import static com.android.wm.shell.Flags.FLAG_ENABLE_BUBBLE_ANYTHING;
 import static com.android.wm.shell.Flags.FLAG_ENABLE_CREATE_ANY_BUBBLE;
@@ -154,6 +156,84 @@ public class TaskViewTransitionsTest extends ShellTestCase {
     }
 
     @Test
+    public void swapTaskViewToFullscreen_changesBothTasksInOneTransition() {
+        final WindowContainerToken replacementToken = new MockToken().token();
+        final ActivityManager.RunningTaskInfo replacement =
+                createMockTaskInfo(2718, replacementToken);
+        final Rect cardBounds = new Rect(0, 400, 267, 979);
+        when(mOrganizer.getRunningTaskInfo(replacement.taskId)).thenReturn(replacement);
+        when(mTaskViewTaskController.getTaskBounds()).thenReturn(cardBounds);
+
+        mTaskViewTransitions.swapTaskViewToFullscreen(
+                mTaskViewTaskController, replacement.taskId);
+
+        verify(mOrganizer).addListenerForTaskId(mTaskViewTaskController, replacement.taskId);
+        final TaskViewTransitions.PendingTransition pending = mTaskViewTransitions.findPending(
+                mTaskViewTaskController, TRANSIT_CHANGE);
+        assertThat(pending).isNotNull();
+        assertThat(pending.mPromotedTaskId).isEqualTo(mTaskInfo.taskId);
+        assertThat(pending.mReplacementTaskId).isEqualTo(replacement.taskId);
+        assertThat(pending.mWct.getChanges().get(mToken.asBinder()).getWindowingMode())
+                .isEqualTo(WINDOWING_MODE_UNDEFINED);
+        final WindowContainerTransaction.Change replacementChange =
+                pending.mWct.getChanges().get(replacementToken.asBinder());
+        assertThat(replacementChange.getWindowingMode()).isEqualTo(WINDOWING_MODE_MULTI_WINDOW);
+        assertThat(replacementChange.getConfiguration().windowConfiguration.getBounds())
+                .isEqualTo(cardBounds);
+        assertThat(replacementChange.getInterceptBackPressed()).isTrue();
+    }
+
+    @Test
+    public void swapOneStepTask_restoresMainFocusAndMakesReplacementDisplayOnly() {
+        final WindowContainerToken replacementToken = new MockToken().token();
+        final ActivityManager.RunningTaskInfo replacement =
+                createMockTaskInfo(2718, replacementToken);
+        when(mOrganizer.getRunningTaskInfo(replacement.taskId)).thenReturn(replacement);
+        when(mTaskViewTaskController.getTaskBounds()).thenReturn(
+                new Rect(0, 400, 267, 979));
+        when(mTaskViewTaskController.isOneStepTaskView()).thenReturn(true);
+
+        mTaskViewTransitions.swapTaskViewToFullscreen(
+                mTaskViewTaskController, replacement.taskId);
+
+        final TaskViewTransitions.PendingTransition pending = mTaskViewTransitions.findPending(
+                mTaskViewTaskController, TRANSIT_CHANGE);
+        final WindowContainerTransaction.Change promotedChange =
+                pending.mWct.getChanges().get(mToken.asBinder());
+        final WindowContainerTransaction.Change replacementChange =
+                pending.mWct.getChanges().get(replacementToken.asBinder());
+        assertThat(promotedChange.getFocusable()).isTrue();
+        assertThat(replacementChange.getFocusable()).isFalse();
+        assertThat(promotedChange.getConfiguration().windowConfiguration.isAlwaysOnTop()).isFalse();
+        assertThat(replacementChange.getConfiguration().windowConfiguration.isAlwaysOnTop())
+                .isTrue();
+    }
+
+    @Test
+    public void swapTaskViewToFullscreen_aborted_removesOnlyReplacementListener() {
+        final WindowContainerToken replacementToken = new MockToken().token();
+        final ActivityManager.RunningTaskInfo replacement =
+                createMockTaskInfo(2718, replacementToken);
+        when(mOrganizer.getRunningTaskInfo(replacement.taskId)).thenReturn(replacement);
+        when(mOrganizer.getRunningTaskInfo(mTaskInfo.taskId)).thenReturn(mTaskInfo);
+        when(mTaskViewTaskController.getTaskBounds()).thenReturn(new Rect(0, 400, 267, 979));
+
+        mTaskViewTransitions.swapTaskViewToFullscreen(
+                mTaskViewTaskController, replacement.taskId);
+        final TaskViewTransitions.PendingTransition pending = mTaskViewTransitions.findPending(
+                mTaskViewTaskController, TRANSIT_CHANGE);
+        assertThat(pending).isNotNull();
+
+        mTaskViewTransitions.onTransitionConsumed(pending.mClaimed, true /* aborted */,
+                new SurfaceControl.Transaction());
+
+        verify(mOrganizer).removeListenerForTaskId(
+                mTaskViewTaskController, replacement.taskId);
+        verify(mTaskViewTaskController).notifyTaskSwapFailed(
+                mTaskInfo.taskId, replacement.taskId);
+    }
+
+    @Test
     public void testSetTaskBounds_taskNotVisible_noTransaction() {
         mTaskViewTransitions.setTaskViewVisible(mTaskViewTaskController, false);
         mTaskViewTransitions.setTaskBounds(mTaskViewTaskController,
@@ -251,6 +331,28 @@ public class TaskViewTransitionsTest extends ShellTestCase {
         mTaskViewTransitions.unregisterTaskView(mTaskViewTaskController);
 
         mTaskViewTransitions.setTaskViewVisible(mTaskViewTaskController, false);
+    }
+
+    @Test
+    public void testBringTaskViewToFront_alreadyVisible_stillQueuesRecoveryTransition() {
+        final TaskViewRepository.TaskViewState state =
+                mTaskViewRepository.byTaskView(mTaskViewTaskController);
+        state.mVisible = true;
+        state.mBounds.set(0, 0, 100, 200);
+
+        mTaskViewTransitions.bringTaskViewToFront(mTaskViewTaskController);
+
+        final TaskViewTransitions.PendingTransition pending =
+                mTaskViewTransitions.findPending(mTaskViewTaskController, TRANSIT_TO_FRONT);
+        assertThat(pending).isNotNull();
+        final WindowContainerTransaction.Change change =
+                pending.mWct.getChanges().get(mToken.asBinder());
+        assertThat(change).isNotNull();
+        assertThat(change.getHidden()).isFalse();
+        assertThat(change.getConfiguration().windowConfiguration.getBounds())
+                .isEqualTo(new Rect(0, 0, 100, 200));
+        assertThat(pending.mWct.getHierarchyOps()).hasSize(1);
+        assertThat(pending.mWct.getHierarchyOps().get(0).getToTop()).isTrue();
     }
 
     @Test

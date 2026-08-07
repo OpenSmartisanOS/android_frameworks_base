@@ -281,6 +281,25 @@ public class TaskViewTest extends ShellTestCase {
     }
 
     @Test
+    public void testSurfaceDestroyed_oneStepTask_staysLogicallyVisible() {
+        mTaskView.setOneStepTaskView(true);
+        final SurfaceHolder holder = mock(SurfaceHolder.class);
+        mTaskView.surfaceCreated(holder);
+        final WindowContainerTransaction wct = new WindowContainerTransaction();
+        mTaskViewTransitions.prepareOpenAnimation(mTaskViewTaskController, true /* newTask */,
+                new SurfaceControl.Transaction(), new SurfaceControl.Transaction(), mTaskInfo,
+                mLeash, wct);
+        reset(mTaskViewTransitions, mViewListener);
+
+        mTaskView.surfaceDestroyed(holder);
+        verify(mTaskViewTransitions, never()).setTaskViewVisible(
+                eq(mTaskViewTaskController), eq(false));
+
+        mTaskViewTaskController.prepareHideAnimation(new SurfaceControl.Transaction());
+        verify(mViewListener).onTaskVisibilityChanged(eq(mTaskInfo.taskId), eq(true));
+    }
+
+    @Test
     public void testOnReleased() {
         WindowContainerTransaction wct = new WindowContainerTransaction();
         mTaskViewTransitions.prepareOpenAnimation(mTaskViewTaskController, true /* newTask */,
