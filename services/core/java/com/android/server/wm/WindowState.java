@@ -125,6 +125,8 @@ import static android.view.WindowManager.LayoutParams.TYPE_PRIORITY_PHONE;
 import static android.view.WindowManager.LayoutParams.TYPE_PRIVATE_PRESENTATION;
 import static android.view.WindowManager.LayoutParams.TYPE_SCREENSHOT;
 import static android.view.WindowManager.LayoutParams.TYPE_SEARCH_BAR;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS_SIDE_AREA;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR_ADDITIONAL;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR_SUB_PANEL;
@@ -3695,6 +3697,11 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
                 outActivityWindowInfo.set(mLastReportedActivityWindowInfo);
             }
         }
+        outMergedConfiguration.getSmtEx().apply(
+                mDisplayContent.getMagnificationSpecSmtForWindow(this));
+        if (outMergedConfiguration != mLastReportedConfiguration) {
+            mLastReportedConfiguration.getSmtEx().setTo(outMergedConfiguration.getSmtEx());
+        }
         if (!mWmService.mAlwaysSeqId) {
             mLastConfigReportedToClient = true;
         }
@@ -5124,6 +5131,24 @@ class WindowState extends WindowContainer<WindowState> implements WindowManagerP
             return false;
         }
         return true;
+    }
+
+    @Override
+    boolean shouldMagnifyForSidebar() {
+        // The factory implementation transforms the outer "sidebar-animation-leash" display
+        // area, whose type range is [0, TYPE_SIDEBAR_TOOLS). That deliberately includes status
+        // and navigation bars, notification shade, IME and wallpaper while excluding the shared
+        // 2051/2052 layer. This predicate now controls only client zoom dispatch; Surface
+        // transforms are applied once to the outer DisplayArea.
+        if (mAttrs.type >= TYPE_SIDEBAR_TOOLS
+                || mAttrs.type == TYPE_SIDEBAR_TOOLS_SIDE_AREA
+                || (mAttrs.privateFlags & PRIVATE_FLAG_NOT_MAGNIFIABLE) != 0
+                || "com.smartisanos.sidebar".equals(mAttrs.packageName)) {
+            return false;
+        }
+        final Task task = getTask();
+        if (task != null && mWmService.isOneStepTaskEmbedded(task.mTaskId)) return false;
+        return mSurfaceControl != null;
     }
 
     private boolean isStartingWindowAssociatedToTask() {

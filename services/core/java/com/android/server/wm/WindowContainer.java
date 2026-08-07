@@ -2607,6 +2607,24 @@ class WindowContainer<E extends WindowContainer> extends ConfigurationContainer<
         return true;
     }
 
+    /** @return whether this subtree may be transformed by Smartisan OneStep. */
+    boolean shouldMagnifyForSidebar() {
+        if (mSurfaceControl == null) {
+            return false;
+        }
+        for (int i = 0; i < mChildren.size(); i++) {
+            if (!mChildren.get(i).shouldMagnifyForSidebar()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Whether this container and every descendant must stay outside the OneStep transform. */
+    boolean isSidebarMagnificationExcludedSubtree() {
+        return false;
+    }
+
     /**
      * Assigns the layer for this container in the given transaction.  The assignment only happens
      * if the current state allows assigning layers (ie. outside of a transition) and if the layers

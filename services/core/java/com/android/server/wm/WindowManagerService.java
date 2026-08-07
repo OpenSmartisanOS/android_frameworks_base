@@ -163,6 +163,8 @@ import static com.android.window.flags.Flags.setScPropertiesInClient;
 
 import android.Manifest;
 import android.Manifest.permission;
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.annotation.EnforcePermission;
 import android.annotation.IntDef;
@@ -254,6 +256,7 @@ import android.util.MergedConfiguration;
 import android.util.Pair;
 import android.util.Slog;
 import android.util.SparseArray;
+import android.util.SparseBooleanArray;
 import android.util.SparseIntArray;
 import android.util.TypedValue;
 import android.util.proto.ProtoOutputStream;
@@ -291,6 +294,7 @@ import android.view.InsetsState;
 import android.view.KeyEvent;
 import android.view.KeyboardShortcutGroup;
 import android.view.MagnificationSpec;
+import android.view.MagnificationSpecSmt;
 import android.view.RemoteAnimationAdapter;
 import android.view.ScrollCaptureResponse;
 import android.view.Surface;
@@ -307,8 +311,10 @@ import android.view.WindowManager.DisplayImePolicy;
 import android.view.WindowManager.LayoutParams;
 import android.view.WindowManager.RemoveContentMode;
 import android.view.WindowManagerGlobal;
+import android.view.WindowManagerSmtEx;
 import android.view.WindowManagerPolicyConstants.PointerEventListener;
 import android.view.WindowRelayoutResult;
+import android.view.animation.PathInterpolator;
 import android.view.displayhash.DisplayHash;
 import android.view.displayhash.VerifiedDisplayHash;
 import android.view.inputmethod.ImeTracker;
@@ -714,6 +720,32 @@ public class WindowManagerService extends IWindowManager.Stub
     // Cache whether to Magnify the IME.
     private boolean mMagnifyIme = false;
     private boolean mIsMouseOrKeyboardConnected = false;
+
+    /** Smartisan OneStep service, installed by system server. */
+    private SidebarManagerService mSidebarManagerService;
+    @GuardedBy("mGlobalLock")
+    private int mSidebarAnimationGeneration;
+    private static final int ONE_STEP_ANIM_IDLE = 0;
+    private static final int ONE_STEP_ANIM_ENTER = 1;
+    private static final int ONE_STEP_ANIM_EXIT = 2;
+    private static final int ONE_STEP_ANIM_SWITCH = 3;
+    private static final int ONE_STEP_ANIM_SAFE_RESET = 4;
+    @GuardedBy("mGlobalLock")
+    private int mOneStepAnimationState = ONE_STEP_ANIM_IDLE;
+    @GuardedBy("mGlobalLock")
+    private String mLastOneStepAnimationTerminal = "none";
+    @GuardedBy("mGlobalLock")
+    private final SparseBooleanArray mOneStepEmbeddedTasks = new SparseBooleanArray();
+    @GuardedBy("mGlobalLock")
+    private final SparseArray<IWindow> mOneStepFakeFocusedWindows = new SparseArray<>();
+    @GuardedBy("mGlobalLock")
+    private long mOneStepFullscreenTransitionRequestId = -1;
+    @GuardedBy("mGlobalLock")
+    private int mOneStepFullscreenTransitionGeneration;
+    @GuardedBy("mGlobalLock")
+    private SurfaceControl mOneStepHiddenStatusBarSurface;
+    @GuardedBy("mGlobalLock")
+    private SurfaceControl mOneStepHiddenImeSurface;
 
     /** Dump of the windows and app tokens at the time of the last ANR. Cleared after
      * LAST_ANR_LIFETIME_DURATION_MSECS */
@@ -1612,6 +1644,39 @@ public class WindowManagerService extends IWindowManager.Stub
     public boolean onTransact(int code, Parcel data, Parcel reply, int flags)
             throws RemoteException {
         try {
+            if (code == WindowManagerSmtEx.IWINDOWMANAGER_REQUEST_MAGNIFICATIONSPEC) {
+                data.enforceInterface("android.view.IWindowManager");
+                final SidebarManagerService sidebarManager = mSidebarManagerService;
+                if (sidebarManager == null) {
+                    throw new IllegalStateException("Sidebar service is not ready");
+                }
+                sidebarManager.enforceSidebarPermission();
+                final MagnificationSpecSmt spec = MagnificationSpecSmt.CREATOR
+                        .createFromParcel(data);
+                final boolean applied;
+                try {
+                    applied = setMagnificationSpecSmt(spec);
+                } finally {
+                    spec.recycle();
+                }
+                reply.writeNoException();
+                // Smartisan's original transaction uses a byte, rather than Parcel#writeBoolean.
+                reply.writeByte(applied ? (byte) 1 : (byte) 0);
+                return true;
+            }
+            if (code == WindowManagerSmtEx.IWINDOWMANAGER_REQUEST_ZOOM_TO_SIDEBAR) {
+                data.enforceInterface("android.view.IWindowManager");
+                final SidebarManagerService sidebarManager = mSidebarManagerService;
+                if (sidebarManager == null) {
+                    throw new IllegalStateException("Sidebar service is not ready");
+                }
+                sidebarManager.enforceSidebarPermission();
+                final int mode = data.readInt();
+                final int reason = data.readInt();
+                sidebarManager.requestZoom(mode, reason);
+                reply.writeNoException();
+                return true;
+            }
             return super.onTransact(code, data, reply, flags);
         } catch (RuntimeException e) {
             // The window manager only throws security exceptions, so let's
@@ -1620,6 +1685,311 @@ public class WindowManagerService extends IWindowManager.Stub
                 ProtoLog.wtf(WM_ERROR, "Window Manager Crash %s", e);
             }
             throw e;
+        }
+    }
+
+    public void setSidebarManagerService(SidebarManagerService service) {
+        mSidebarManagerService = service;
+    }
+
+    int getOneStepModeForGesture() {
+        final SidebarManagerService service = mSidebarManagerService;
+        return service != null ? service.getModeForSystemGesture()
+                : MagnificationSpecSmt.TYPE_ZOOM_INVALID;
+    }
+
+    int getOneStepSceneGenerationForGesture() {
+        synchronized (mGlobalLock) {
+            return mSidebarAnimationGeneration;
+        }
+    }
+
+    boolean canEnterOneStepFromGesture() {
+        final SidebarManagerService service = mSidebarManagerService;
+        return service != null && service.canEnterSidebarMode();
+    }
+
+    void requestOneStepFromGesture(int mode, int reason) {
+        final SidebarManagerService service = mSidebarManagerService;
+        if (service != null) service.requestZoomFromSystemGesture(mode, reason);
+    }
+
+    void cancelCurrentTouchForOneStep() {
+        final long identity = Binder.clearCallingIdentity();
+        try {
+            mInputManager.cancelCurrentTouch();
+        } finally {
+            Binder.restoreCallingIdentity(identity);
+        }
+    }
+
+    void onDefaultDisplayConfigurationChanged(int orientation, Rect bounds) {
+        final SidebarManagerService service = mSidebarManagerService;
+        if (service != null) {
+            service.onDefaultDisplayConfigurationChanged(orientation, bounds);
+        }
+    }
+
+    /**
+     * Reports that an ordinary activity launch tried to reopen a task currently owned by a
+     * OneStep TaskView. The service always handles this asynchronously so callers may invoke it
+     * while holding the WM global lock without creating a WM -> SystemUI Binder lock inversion.
+     */
+    void onOneStepTaskReopenedByOthers(int taskId, String packageName) {
+        final SidebarManagerService service = mSidebarManagerService;
+        if (service != null) {
+            service.onOneStepTaskReopenedByOthers(taskId, packageName);
+        }
+    }
+
+    void setOneStepTaskEmbedded(int taskId, boolean embedded) {
+        if (taskId < 0) return;
+        final ArrayList<IWindow> taskWindows = new ArrayList<>();
+        final IWindow oldFakeFocus;
+        final IWindow newFakeFocus;
+        final MagnificationSpecSmt clientSpec;
+        synchronized (mGlobalLock) {
+            oldFakeFocus = mOneStepFakeFocusedWindows.get(taskId);
+            final DisplayContent display = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            final boolean sceneVisible = display != null && display.hasCommittedOneStepScene();
+            if (embedded) {
+                mOneStepEmbeddedTasks.put(taskId, true);
+                final Task task = mRoot.anyTaskForId(taskId);
+                if (task != null) {
+                    task.setFocusable(false);
+                    final WindowState fakeFocus = sceneVisible
+                            ? task.getWindow(window -> window.mClient != null
+                                    && window.mActivityRecord != null
+                                    && (window.isVisibleRequested() || window.isVisible()))
+                            : null;
+                    newFakeFocus = fakeFocus != null ? fakeFocus.mClient : null;
+                    if (newFakeFocus != null) {
+                        mOneStepFakeFocusedWindows.put(taskId, newFakeFocus);
+                    } else {
+                        mOneStepFakeFocusedWindows.remove(taskId);
+                    }
+                } else {
+                    newFakeFocus = null;
+                    mOneStepFakeFocusedWindows.remove(taskId);
+                }
+            } else {
+                mOneStepEmbeddedTasks.delete(taskId);
+                mOneStepFakeFocusedWindows.remove(taskId);
+                newFakeFocus = null;
+            }
+            if (display != null) {
+                display.reapplyMagnificationSpec();
+                display.forAllWindows(window -> {
+                    final Task task = window.getTask();
+                    if (task != null && task.mTaskId == taskId && window.mClient != null) {
+                        taskWindows.add(window.mClient);
+                    }
+                }, true /* traverseTopToBottom */);
+                // ActivityStackView cards have a client-only fake focus. Recompute every real
+                // authority immediately so stale TaskView focus cannot control IME or system bars.
+                updateFocusedWindowLocked(UPDATE_FOCUS_NORMAL, true /* updateInputWindows */);
+                final WindowState realFocus = display.mCurrentFocus;
+                if (realFocus != null && realFocus.mActivityRecord != null
+                        && !isOneStepTaskEmbeddedWindowLocked(realFocus)) {
+                    display.setFocusedApp(realFocus.mActivityRecord);
+                }
+                display.computeImeLayeringTarget(true /* update */);
+                display.updateImeInputAndControlTarget(realFocus);
+                display.getDisplayPolicy().updateSystemBarAttributes();
+                display.getInputMonitor().updateInputWindowsLw(true /* force */);
+                display.scheduleAnimation();
+            }
+            if (embedded || display == null) {
+                clientSpec = MagnificationSpecSmt.obtain();
+                clientSpec.clear();
+            } else {
+                final MagnificationSpecSmt activeSpec =
+                        display.copyCommittedMagnificationSpecSmt();
+                clientSpec = activeSpec != null ? activeSpec : MagnificationSpecSmt.obtain();
+                if (activeSpec == null) clientSpec.clear();
+            }
+        }
+        try {
+            if (oldFakeFocus != null && oldFakeFocus != newFakeFocus) {
+                dispatchOneStepFakeFocus(oldFakeFocus, false);
+            }
+            if (newFakeFocus != null) {
+                dispatchOneStepFakeFocus(newFakeFocus, true);
+            }
+            for (int i = 0; i < taskWindows.size(); i++) {
+                dispatchMagnificationSpecSmt(taskWindows.get(i), clientSpec);
+            }
+        } finally {
+            clientSpec.recycle();
+        }
+    }
+
+    @GuardedBy("mGlobalLock")
+    private boolean isOneStepTaskEmbeddedWindowLocked(@Nullable WindowState window) {
+        final Task task = window != null ? window.getTask() : null;
+        return task != null && mOneStepEmbeddedTasks.get(task.mTaskId);
+    }
+
+    private static void dispatchOneStepFakeFocus(IWindow window, boolean focused) {
+        final Parcel data = Parcel.obtain();
+        try {
+            data.writeInterfaceToken("android.view.IWindow");
+            data.writeBoolean(focused);
+            window.asBinder().transact(
+                    WindowManagerSmtEx.IWINDOW_DISPATCH_ONE_STEP_FAKE_FOCUS,
+                    data, null, IBinder.FLAG_ONEWAY);
+        } catch (RemoteException | RuntimeException e) {
+            Slog.w(TAG_WM, "Unable to dispatch OneStep fake focus", e);
+        } finally {
+            data.recycle();
+        }
+    }
+
+    boolean isOneStepTaskEmbedded(int taskId) {
+        synchronized (mGlobalLock) {
+            return mOneStepEmbeddedTasks.get(taskId);
+        }
+    }
+
+    /**
+     * Factory ActivityStackView hides these two surfaces while a side task is promoted to the
+     * main scene. Tie the suppression to our FIFO request instead of a blind delay so aborted and
+     * timed-out Shell transitions cannot leave either surface transparent.
+     */
+    void beginOneStepTaskToFullscreenTransition(long requestId) {
+        if (requestId <= 0) return;
+        synchronized (mGlobalLock) {
+            ++mOneStepFullscreenTransitionGeneration;
+            restoreOneStepTransientSurfacesLocked();
+            mOneStepFullscreenTransitionRequestId = requestId;
+
+            final DisplayContent display = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (display == null) return;
+            final SurfaceControl.Transaction transaction = mTransactionFactory.get();
+            final WindowState statusBar = display.getDisplayPolicy().getStatusBar();
+            if (statusBar != null && isValidSurface(statusBar.getSurfaceControl())) {
+                mOneStepHiddenStatusBarSurface = statusBar.getSurfaceControl();
+                transaction.setAlpha(mOneStepHiddenStatusBarSurface, 0f);
+            }
+            final DisplayArea.Tokens imeContainer = display.getImeContainer();
+            if (imeContainer != null && isValidSurface(imeContainer.getSurfaceControl())) {
+                mOneStepHiddenImeSurface = imeContainer.getSurfaceControl();
+                transaction.setAlpha(mOneStepHiddenImeSurface, 0f);
+            }
+            transaction.apply();
+        }
+    }
+
+    void finishOneStepTaskToFullscreenTransition(long requestId) {
+        synchronized (mGlobalLock) {
+            if (requestId <= 0 || requestId != mOneStepFullscreenTransitionRequestId) return;
+            ++mOneStepFullscreenTransitionGeneration;
+            restoreOneStepTransientSurfacesLocked();
+        }
+    }
+
+    void cancelOneStepTaskToFullscreenTransition() {
+        synchronized (mGlobalLock) {
+            if (mOneStepFullscreenTransitionRequestId == -1) return;
+            ++mOneStepFullscreenTransitionGeneration;
+            restoreOneStepTransientSurfacesLocked();
+        }
+    }
+
+    @GuardedBy("mGlobalLock")
+    private void restoreOneStepTransientSurfacesLocked() {
+        if (mOneStepFullscreenTransitionRequestId == -1
+                && mOneStepHiddenStatusBarSurface == null
+                && mOneStepHiddenImeSurface == null) {
+            return;
+        }
+        final SurfaceControl.Transaction transaction = mTransactionFactory.get();
+        boolean changed = false;
+        if (isValidSurface(mOneStepHiddenStatusBarSurface)) {
+            transaction.setAlpha(mOneStepHiddenStatusBarSurface, 1f);
+            changed = true;
+        }
+        if (isValidSurface(mOneStepHiddenImeSurface)) {
+            transaction.setAlpha(mOneStepHiddenImeSurface, 1f);
+            changed = true;
+        }
+
+        // A window/container can be recreated during a Shell transition. Restore the current
+        // surfaces as well as the captured ones, without assuming their identity stayed stable.
+        final DisplayContent display = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+        if (display != null) {
+            final WindowState statusBar = display.getDisplayPolicy().getStatusBar();
+            final SurfaceControl currentStatusBar = statusBar != null
+                    ? statusBar.getSurfaceControl() : null;
+            if (currentStatusBar != mOneStepHiddenStatusBarSurface
+                    && isValidSurface(currentStatusBar)) {
+                transaction.setAlpha(currentStatusBar, 1f);
+                changed = true;
+            }
+            final DisplayArea.Tokens imeContainer = display.getImeContainer();
+            final SurfaceControl currentIme = imeContainer != null
+                    ? imeContainer.getSurfaceControl() : null;
+            if (currentIme != mOneStepHiddenImeSurface && isValidSurface(currentIme)) {
+                transaction.setAlpha(currentIme, 1f);
+                changed = true;
+            }
+        }
+        if (changed) transaction.apply();
+        mOneStepHiddenStatusBarSurface = null;
+        mOneStepHiddenImeSurface = null;
+        mOneStepFullscreenTransitionRequestId = -1;
+    }
+
+    private static boolean isValidSurface(@Nullable SurfaceControl surface) {
+        return surface != null && surface.isValid();
+    }
+
+    String getOneStepDisplayStateForDump() {
+        synchronized (mGlobalLock) {
+            final DisplayContent display = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (display == null) return "display=missing";
+            final List<DisplayArea<? extends WindowContainer>> areas = display.mDisplayAreaPolicy
+                    .getDisplayAreas(DisplayAreaPolicy.FEATURE_ONE_STEP_ANIMATION_LEASH);
+            final List<DisplayArea<? extends WindowContainer>> contentAreas =
+                    display.mDisplayAreaPolicy.getDisplayAreas(
+                            DisplayAreaPolicy.FEATURE_ONE_STEP_CONTENT);
+            final String leash = areas.size() == 1
+                    ? areas.get(0) + " surfaceValid="
+                            + (areas.get(0).getSurfaceControl() != null
+                                    && areas.get(0).getSurfaceControl().isValid())
+                    : "count=" + areas.size();
+            final String content = contentAreas.size() == 1
+                    ? contentAreas.get(0) + " surfaceValid="
+                            + (contentAreas.get(0).getSurfaceControl() != null
+                                    && contentAreas.get(0).getSurfaceControl().isValid())
+                            + " parentIsLeash=" + (areas.size() == 1
+                                    && contentAreas.get(0).getParent() == areas.get(0))
+                    : "count=" + contentAreas.size();
+            final MagnificationSpecSmt spec = display.copyMagnificationSpecSmt();
+            final String specString = String.valueOf(spec);
+            if (spec != null) spec.recycle();
+            final MagnificationSpecSmt committed = display.copyCommittedMagnificationSpecSmt();
+            final String committedString = String.valueOf(committed);
+            if (committed != null) committed.recycle();
+            return "leash=" + leash + " content=" + content + " spec=" + specString
+                    + " committedSpec=" + committedString
+                    + " fakeFocus=" + mOneStepFakeFocusedWindows
+                    + " animationState=" + oneStepAnimationStateToString(
+                            mOneStepAnimationState)
+                    + " animationTerminal=" + mLastOneStepAnimationTerminal
+                    + " fullscreenTransitionRequest="
+                    + mOneStepFullscreenTransitionRequestId
+                    + " generation=" + mOneStepFullscreenTransitionGeneration
+                    + " statusBarSuppressed=" + isValidSurface(
+                            mOneStepHiddenStatusBarSurface)
+                    + " imeSuppressed=" + isValidSurface(mOneStepHiddenImeSurface)
+                    + " currentFocus=" + display.mCurrentFocus
+                    + " focusedApp=" + display.mFocusedApp
+                    + " systemUiControl="
+                    + display.getDisplayPolicy().getSystemUiControllingWindow()
+                    + " topOpaque=" + display.getDisplayPolicy().getTopFullscreenOpaqueWindow()
+                    + " imeLayering=" + display.getImeLayeringTarget()
+                    + " imeInput=" + display.getImeInputTarget();
         }
     }
 
@@ -3510,6 +3880,9 @@ public class WindowManagerService extends IWindowManager.Stub
         synchronized (mGlobalLock) {
             // force a re-application of focused window sysui visibility on each display.
             mRoot.forAllDisplayPolicies(DisplayPolicy::resetSystemBarAttributes);
+        }
+        if (mSidebarManagerService != null) {
+            mSidebarManagerService.onUserSwitched();
         }
     }
 
@@ -5943,6 +6316,9 @@ public class WindowManagerService extends IWindowManager.Stub
         mPolicy.systemReady();
         mRoot.forAllDisplayPolicies(DisplayPolicy::systemReady);
         mSnapshotController.systemReady();
+        if (mSidebarManagerService != null) {
+            mSidebarManagerService.systemReady();
+        }
         UiThread.getHandler().post(mSettingsObserver::loadSettings);
         IVrManager vrManager = IVrManager.Stub.asInterface(
                 ServiceManager.getService(Context.VR_SERVICE));
@@ -9288,6 +9664,330 @@ public class WindowManagerService extends IWindowManager.Stub
         final DisplayContent displayContent = mRoot.getDisplayContent(displayId);
         if (displayContent != null) {
             displayContent.applyMagnificationSpec(spec);
+        }
+    }
+
+    /**
+     * Applies Smartisan OneStep's display transform and reports the same state to every ViewRoot
+     * in the factory sidebar-animation-leash range. The raw client transaction is part of the original
+     * Smartisan ABI and intentionally remains outside IWindow.aidl.
+     */
+    boolean setMagnificationSpecSmt(MagnificationSpecSmt spec) {
+        if (spec == null || !isValidMagnificationSpecSmt(spec)) {
+            return false;
+        }
+
+        final boolean animate = spec.anim && spec.duration > 0;
+        final int generation;
+        boolean invalidScene = false;
+        synchronized (mGlobalLock) {
+            final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (displayContent == null || !displayContent.hasValidOneStepAnimationLeash()
+                    || (!spec.isNop() && !displayContent.hasValidOneStepOverlayTokens())) {
+                if (displayContent != null) displayContent.resetInvalidOneStepScene();
+                restoreOneStepTransientSurfacesLocked();
+                invalidScene = true;
+                generation = ++mSidebarAnimationGeneration;
+                mOneStepAnimationState = ONE_STEP_ANIM_SAFE_RESET;
+                mLastOneStepAnimationTerminal = "generation=" + generation
+                        + " rejected invalid scene";
+            } else {
+                generation = ++mSidebarAnimationGeneration;
+                final MagnificationSpecSmt current = displayContent.copyMagnificationSpecSmt();
+                final int currentType = current != null
+                        ? current.type : MagnificationSpecSmt.TYPE_ZOOM_INVALID;
+                if (current != null) current.recycle();
+                mOneStepAnimationState = spec.isNop() ? ONE_STEP_ANIM_EXIT
+                        : currentType != MagnificationSpecSmt.TYPE_ZOOM_INVALID
+                                && currentType != spec.type
+                                ? ONE_STEP_ANIM_SWITCH : ONE_STEP_ANIM_ENTER;
+                if (!animate) {
+                    if (!displayContent.applyMagnificationSpecSmt(spec)) {
+                        displayContent.resetInvalidOneStepScene();
+                        invalidScene = true;
+                    } else {
+                        mWindowPlacerLocked.requestTraversal();
+                    }
+                }
+            }
+        }
+        if (invalidScene) {
+            sendMagnificationAnimationState(spec, MagnificationSpecSmt.ANIM_CANCEL);
+            if (mSidebarManagerService != null) {
+                mSidebarManagerService.onOneStepSceneInvalid();
+            }
+            return false;
+        }
+
+        sendMagnificationAnimationState(spec, MagnificationSpecSmt.ANIM_START);
+        if (animate && mSidebarManagerService != null) {
+            mSidebarManagerService.onMagnificationSpecAnimationStarted(spec);
+        }
+        if (animate) {
+            final MagnificationSpecSmt target = MagnificationSpecSmt.obtain(spec);
+            // The factory implementation runs the display zoom animator on AnimationThread so
+            // system-server main-thread work cannot turn the reverse exit into a visible jump.
+            mAnimationHandler.post(() -> startMagnificationSpecSmtAnimation(target, generation));
+            mH.postDelayed(() -> handleOneStepAnimationWatchdog(generation), 1_000);
+            return true;
+        }
+        finishMagnificationSpecSmt(spec);
+        return true;
+    }
+
+    private void startMagnificationSpecSmtAnimation(MagnificationSpecSmt target, int generation) {
+        final MagnificationSpecSmt start;
+        synchronized (mGlobalLock) {
+            if (generation != mSidebarAnimationGeneration) {
+                sendMagnificationAnimationState(target, MagnificationSpecSmt.ANIM_CANCEL);
+                if (mSidebarManagerService != null) {
+                    mSidebarManagerService.onMagnificationSpecAnimationCancelled(target);
+                }
+                target.recycle();
+                return;
+            }
+            final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            start = displayContent != null ? displayContent.copyMagnificationSpecSmt() : null;
+        }
+        final MagnificationSpecSmt startSpec = start != null ? start : MagnificationSpecSmt.obtain();
+        if (start == null) startSpec.clear();
+        final ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+        animator.setDuration(target.duration);
+        // Smartisan's original OneStep zoom curve. Keeping this in lockstep with the
+        // side-panel enter/exit animation avoids the panel visibly lagging the app transform.
+        animator.setInterpolator(new PathInterpolator(0.34f, 0.69f, 0.1f, 1.0f));
+        final boolean[] cancelled = new boolean[1];
+        animator.addUpdateListener(animation -> {
+            synchronized (mGlobalLock) {
+                if (generation != mSidebarAnimationGeneration) {
+                    cancelled[0] = true;
+                    animation.cancel();
+                    return;
+                }
+                final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+                if (displayContent == null) {
+                    cancelled[0] = true;
+                    animation.cancel();
+                    return;
+                }
+                final float fraction = animation.getAnimatedFraction();
+                final MagnificationSpecSmt frame = MagnificationSpecSmt.obtain();
+                frame.type = target.type == MagnificationSpecSmt.TYPE_ZOOM_INVALID && fraction < 1f
+                        ? startSpec.type : target.type;
+                frame.scaleX = lerp(startSpec.scaleX, target.scaleX, fraction);
+                frame.scaleY = lerp(startSpec.scaleY, target.scaleY, fraction);
+                frame.offsetX = lerp(startSpec.offsetX, target.offsetX, fraction);
+                frame.offsetY = lerp(startSpec.offsetY, target.offsetY, fraction);
+                frame.cropRect = target.cropRect;
+                if (!displayContent.applyMagnificationSpecSmt(frame)) {
+                    cancelled[0] = true;
+                    frame.recycle();
+                    animation.cancel();
+                    return;
+                }
+                mWindowPlacerLocked.requestTraversal();
+                frame.recycle();
+            }
+        });
+        animator.addListener(new AnimatorListenerAdapter() {
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                cancelled[0] = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (cancelled[0]) {
+                    boolean restoredCommittedScene = false;
+                    boolean sceneInvalid = false;
+                    synchronized (mGlobalLock) {
+                        // A superseding generation owns the same Surface now. Never let the old
+                        // listener overwrite its first frame.
+                        if (generation == mSidebarAnimationGeneration) {
+                            final DisplayContent displayContent =
+                                    mRoot.getDisplayContent(DEFAULT_DISPLAY);
+                            if (displayContent != null
+                                    && displayContent.applyMagnificationSpecSmt(startSpec)) {
+                                mWindowPlacerLocked.requestTraversal();
+                                restoredCommittedScene = true;
+                                mOneStepAnimationState = ONE_STEP_ANIM_IDLE;
+                                mLastOneStepAnimationTerminal = "generation=" + generation
+                                        + " cancelled and restored";
+                            } else {
+                                if (displayContent != null) {
+                                    displayContent.resetInvalidOneStepScene();
+                                }
+                                restoreOneStepTransientSurfacesLocked();
+                                mOneStepAnimationState = ONE_STEP_ANIM_SAFE_RESET;
+                                mLastOneStepAnimationTerminal = "generation=" + generation
+                                        + " cancellation reset invalid scene";
+                                sceneInvalid = true;
+                            }
+                        }
+                    }
+                    sendMagnificationAnimationState(target, MagnificationSpecSmt.ANIM_CANCEL);
+                    if (restoredCommittedScene && mSidebarManagerService != null) {
+                        mSidebarManagerService.onMagnificationSpecAnimationCancelled(target);
+                    } else if (sceneInvalid && mSidebarManagerService != null) {
+                        mSidebarManagerService.onOneStepSceneInvalid();
+                    }
+                } else {
+                    boolean finalApplyFailed = false;
+                    synchronized (mGlobalLock) {
+                        final DisplayContent displayContent =
+                                mRoot.getDisplayContent(DEFAULT_DISPLAY);
+                        if (displayContent != null) {
+                            if (!displayContent.applyMagnificationSpecSmt(target)) {
+                                displayContent.resetInvalidOneStepScene();
+                                restoreOneStepTransientSurfacesLocked();
+                                mOneStepAnimationState = ONE_STEP_ANIM_SAFE_RESET;
+                                mLastOneStepAnimationTerminal = "generation=" + generation
+                                        + " final frame failed";
+                                finalApplyFailed = true;
+                            } else {
+                                mWindowPlacerLocked.requestTraversal();
+                            }
+                        } else {
+                            mOneStepAnimationState = ONE_STEP_ANIM_SAFE_RESET;
+                            mLastOneStepAnimationTerminal = "generation=" + generation
+                                    + " display disappeared";
+                            finalApplyFailed = true;
+                        }
+                    }
+                    if (finalApplyFailed) {
+                        sendMagnificationAnimationState(target,
+                                MagnificationSpecSmt.ANIM_CANCEL);
+                        if (mSidebarManagerService != null) {
+                            mSidebarManagerService.onOneStepSceneInvalid();
+                        }
+                    } else {
+                        finishMagnificationSpecSmt(target);
+                    }
+                }
+                startSpec.recycle();
+                target.recycle();
+            }
+        });
+        animator.start();
+    }
+
+    private void handleOneStepAnimationWatchdog(int generation) {
+        boolean timedOut = false;
+        synchronized (mGlobalLock) {
+            if (generation != mSidebarAnimationGeneration
+                    || mOneStepAnimationState == ONE_STEP_ANIM_IDLE) {
+                return;
+            }
+            ++mSidebarAnimationGeneration;
+            final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (displayContent != null) displayContent.resetInvalidOneStepScene();
+            restoreOneStepTransientSurfacesLocked();
+            mOneStepAnimationState = ONE_STEP_ANIM_SAFE_RESET;
+            mLastOneStepAnimationTerminal = "generation=" + generation + " watchdog timeout";
+            timedOut = true;
+        }
+        if (timedOut && mSidebarManagerService != null) {
+            mSidebarManagerService.onOneStepSceneInvalid();
+        }
+    }
+
+    private static String oneStepAnimationStateToString(int state) {
+        switch (state) {
+            case ONE_STEP_ANIM_ENTER: return "ENTER";
+            case ONE_STEP_ANIM_EXIT: return "EXIT";
+            case ONE_STEP_ANIM_SWITCH: return "SWITCH";
+            case ONE_STEP_ANIM_SAFE_RESET: return "SAFE_RESET";
+            default: return "IDLE";
+        }
+    }
+
+    private static float lerp(float start, float end, float fraction) {
+        return start + (end - start) * fraction;
+    }
+
+    private static boolean isSidebarMode(int mode) {
+        return mode == MagnificationSpecSmt.TYPE_ZOOM_SIDEBAR_IN_LEFT
+                || mode == MagnificationSpecSmt.TYPE_ZOOM_SIDEBAR_IN_RIGHT;
+    }
+
+    private void finishMagnificationSpecSmt(MagnificationSpecSmt spec) {
+        synchronized (mGlobalLock) {
+            final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (displayContent != null) displayContent.commitMagnificationSpecSmt(spec);
+            mOneStepAnimationState = ONE_STEP_ANIM_IDLE;
+            mLastOneStepAnimationTerminal = "committed type=" + spec.type;
+        }
+        dispatchMagnificationSpecSmtToClients(spec);
+        final SidebarManagerService sidebarManager = mSidebarManagerService;
+        if (sidebarManager != null) {
+            sidebarManager.onMagnificationSpecApplied(spec);
+        } else {
+            sendMagnificationAnimationState(spec, MagnificationSpecSmt.ANIM_END);
+        }
+    }
+
+    /** Factory ordering: clients observe only the final committed display transform. */
+    private void dispatchMagnificationSpecSmtToClients(MagnificationSpecSmt spec) {
+        final ArrayList<IWindow> applicationWindows = new ArrayList<>();
+        synchronized (mGlobalLock) {
+            final DisplayContent displayContent = mRoot.getDisplayContent(DEFAULT_DISPLAY);
+            if (displayContent == null) return;
+            displayContent.forAllWindows(window -> {
+                if (window.shouldMagnifyForSidebar() && window.mClient != null) {
+                    applicationWindows.add(window.mClient);
+                }
+            }, true /* traverseTopToBottom */);
+        }
+        for (int i = 0; i < applicationWindows.size(); i++) {
+            dispatchMagnificationSpecSmt(applicationWindows.get(i), spec);
+        }
+    }
+
+    void resetMagnificationSpecSmt() {
+        final MagnificationSpecSmt spec = MagnificationSpecSmt.obtain();
+        try {
+            spec.clear();
+            setMagnificationSpecSmt(spec);
+        } finally {
+            spec.recycle();
+        }
+    }
+
+    private static boolean isValidMagnificationSpecSmt(MagnificationSpecSmt spec) {
+        if (spec.type < MagnificationSpecSmt.TYPE_ZOOM_INVALID
+                || spec.type > MagnificationSpecSmt.TYPE_ZOOM_PINNED) {
+            return false;
+        }
+        return Float.isFinite(spec.scaleX) && spec.scaleX > 0f
+                && Float.isFinite(spec.scaleY) && spec.scaleY > 0f
+                && Float.isFinite(spec.offsetX) && Float.isFinite(spec.offsetY)
+                && spec.duration >= 0;
+    }
+
+    private static void dispatchMagnificationSpecSmt(IWindow window, MagnificationSpecSmt spec) {
+        final Parcel data = Parcel.obtain();
+        try {
+            data.writeInterfaceToken("android.view.IWindow");
+            spec.writeToParcel(data, 0);
+            // This is a notification to the application's ViewRoot. It must not issue a nested
+            // synchronous Binder call while system_server is servicing the task-host callback.
+            // ViewRootImplSmtEx already handles a null reply, matching normal IWindow callbacks.
+            window.asBinder().transact(WindowManagerSmtEx.IWINDOW_DISPATCH_ZOOM_STATE,
+                    data, null, IBinder.FLAG_ONEWAY);
+        } catch (RemoteException | RuntimeException e) {
+            Slog.w(TAG_WM, "Unable to report OneStep state to " + window, e);
+        } finally {
+            data.recycle();
+        }
+    }
+
+    private static void sendMagnificationAnimationState(MagnificationSpecSmt spec, int state) {
+        if (!spec.anim || spec.animCallback == null) return;
+        final Bundle result = new Bundle();
+        result.putInt(MagnificationSpecSmt.SPEC_ANIM_KEY, state);
+        try {
+            spec.animCallback.sendResult(result);
+        } catch (RemoteException ignored) {
         }
     }
 

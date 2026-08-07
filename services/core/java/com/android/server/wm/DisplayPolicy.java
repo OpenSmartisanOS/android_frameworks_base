@@ -241,6 +241,9 @@ public class DisplayPolicy {
 
     // Will be null in client transient mode.
     private SystemGesturesPointerEventListener mSystemGestures;
+    // Default-display policy observer for Smartisan OneStep. It intentionally shares the pointer
+    // stream with mSystemGestures instead of owning/pilfering an InputMonitor channel in SystemUI.
+    private OneStepGestureDetector mOneStepGestures;
 
     final DecorInsets mDecorInsets;
     /** Currently it can only be non-null when physical display switch happens. */
@@ -490,6 +493,12 @@ public class DisplayPolicy {
 
                 @Override
                 public void onSwipeFromTop() {
+                    if (mOneStepGestures != null) {
+                        // Preserve the factory corner gesture. Ordinary top-edge pulls still win
+                        // and cancel thumb/exit tracking so notification shade behavior is intact.
+                        if (mOneStepGestures.isTrackingCornerGesture()) return;
+                        mOneStepGestures.cancelForSystemBar("top");
+                    }
                     synchronized (mLock) {
                         requestTransientBars(mTopGestureHost,
                                 getControllableInsets(mTopGestureHost).top > 0);
@@ -498,6 +507,9 @@ public class DisplayPolicy {
 
                 @Override
                 public void onSwipeFromBottom() {
+                    if (mOneStepGestures != null) {
+                        mOneStepGestures.cancelForSystemBar("bottom");
+                    }
                     synchronized (mLock) {
                         requestTransientBars(mBottomGestureHost,
                                 getControllableInsets(mBottomGestureHost).bottom > 0);
@@ -511,6 +523,10 @@ public class DisplayPolicy {
 
                 @Override
                 public void onSwipeFromRight() {
+                    if (mOneStepGestures != null) {
+                        if (mOneStepGestures.isTrackingCornerGesture()) return;
+                        mOneStepGestures.cancelForSystemBar("right");
+                    }
                     final Region excludedRegion = Region.obtain();
                     synchronized (mLock) {
                         mDisplayContent.calculateSystemGestureExclusion(
@@ -526,6 +542,10 @@ public class DisplayPolicy {
 
                 @Override
                 public void onSwipeFromLeft() {
+                    if (mOneStepGestures != null) {
+                        if (mOneStepGestures.isTrackingCornerGesture()) return;
+                        mOneStepGestures.cancelForSystemBar("left");
+                    }
                     final Region excludedRegion = Region.obtain();
                     synchronized (mLock) {
                         mDisplayContent.calculateSystemGestureExclusion(
@@ -620,6 +640,37 @@ public class DisplayPolicy {
             mSystemGestures = new SystemGesturesPointerEventListener(mUiContext, mHandler,
                     gesturesPointerEventCallbacks);
             displayContent.registerPointerEventListener(mSystemGestures);
+            if (displayContent.isDefaultDisplay) {
+                mOneStepGestures = new OneStepGestureDetector(mContext, mHandler,
+                        new OneStepGestureDetector.Callbacks() {
+                            @Override
+                            public int getCommittedMode() {
+                                return mService.getOneStepModeForGesture();
+                            }
+
+                            @Override
+                            public int getSceneGeneration() {
+                                return mService.getOneStepSceneGenerationForGesture();
+                            }
+
+                            @Override
+                            public boolean canEnter() {
+                                return mService.canEnterOneStepFromGesture();
+                            }
+
+                            @Override
+                            public void cancelCurrentTouch() {
+                                mService.cancelCurrentTouchForOneStep();
+                            }
+
+                            @Override
+                            public void requestMode(int mode, int reason) {
+                                mService.requestOneStepFromGesture(mode, reason);
+                            }
+                        });
+                mOneStepGestures.onDisplayInfoChanged(displayContent.getDisplayInfo());
+                displayContent.registerPointerEventListener(mOneStepGestures);
+            }
         }
         mAppTransitionListener = new WindowManagerInternal.AppTransitionListener(displayId) {
 
@@ -1442,6 +1493,7 @@ public class DisplayPolicy {
     void onDisplayInfoChanged(DisplayInfo info) {
         if (!CLIENT_TRANSIENT) {
             mSystemGestures.onDisplayInfoChanged(info);
+            if (mOneStepGestures != null) mOneStepGestures.onDisplayInfoChanged(info);
         }
     }
 
@@ -1484,6 +1536,10 @@ public class DisplayPolicy {
 
     WindowState getTopFullscreenOpaqueWindow() {
         return mTopFullscreenOpaqueWindowState;
+    }
+
+    WindowState getSystemUiControllingWindow() {
+        return mSystemUiControllingWindow;
     }
 
     boolean isTopLayoutFullscreen() {
@@ -1584,6 +1640,12 @@ public class DisplayPolicy {
         }
         if ((attrs.privateFlags & PRIVATE_FLAG_CONSUME_IME_INSETS) != 0 && win.isVisible()) {
             mImeInsetsConsumed = true;
+        }
+
+        // A live OneStep card is display-only. It must never supply fullscreen/system-bar state;
+        // the main task remains the sole policy authority exactly as in ActivityStackView.
+        if (mDisplayContent.isOneStepEmbeddedWindow(win)) {
+            return;
         }
 
         if (!affectsSystemUi) {
@@ -2596,6 +2658,12 @@ public class DisplayPolicy {
         WindowState winCandidate =
                 mFocusedWindow != null && (isRemoteControlling || fillsDisplayWindowingMode(
                         mFocusedWindow)) ? mFocusedWindow : mTopFullscreenOpaqueWindowState;
+        if (mDisplayContent.isOneStepEmbeddedWindow(winCandidate)) {
+            winCandidate = mTopFullscreenOpaqueWindowState;
+        }
+        if (mDisplayContent.isOneStepEmbeddedWindow(winCandidate)) {
+            winCandidate = null;
+        }
 
         // Immersive mode confirmation should never affect the system bar visibility, otherwise
         // it will unhide the navigation bar and hide itself.
@@ -3200,6 +3268,7 @@ public class DisplayPolicy {
         }
         if (!CLIENT_TRANSIENT) {
             mSystemGestures.dump(pw, prefix);
+            if (mOneStepGestures != null) mOneStepGestures.dump(pw, prefix);
         }
     }
 

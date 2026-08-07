@@ -231,6 +231,7 @@ import android.view.InputWindowHandle;
 import android.view.InsetsSource;
 import android.view.InsetsState;
 import android.view.MagnificationSpec;
+import android.view.MagnificationSpecSmt;
 import android.view.PrivacyIndicatorBounds;
 import android.view.RoundedCorners;
 import android.view.Surface;
@@ -267,6 +268,8 @@ import com.android.server.policy.WindowManagerPolicy;
 import com.android.server.wm.utils.RegionUtils;
 import com.android.server.wm.utils.RotationCache;
 import com.android.server.wm.utils.WmDisplayCutout;
+
+import smartisanos.api.LayoutParamsSmt;
 import com.android.window.flags.Flags;
 
 import java.io.PrintWriter;
@@ -276,6 +279,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -647,6 +651,15 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
     int mLayoutSeq = 0;
 
     private MagnificationSpec mMagnificationSpec;
+    private MagnificationSpecSmt mMagnificationSpecSmt;
+    /** Last fully committed state reported to application clients. Never contains animation frames. */
+    private MagnificationSpecSmt mCommittedMagnificationSpecSmt;
+    private static final float ONE_STEP_SIDEBAR_SCALE = 1f - .253f;
+    private final Matrix mOneStepOverlayMatrix = new Matrix();
+    private final float[] mOneStepOverlayMatrixValues = new float[9];
+    private WindowToken mOneStepTopToken;
+    private WindowToken mOneStepSideToken;
+    private boolean mOneStepLastLeft;
 
     private InputMonitor mInputMonitor;
 
@@ -846,6 +859,9 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
      */
     private final ToBooleanFunction<WindowState> mFindFocusedWindow = w -> {
         final ActivityRecord focusedApp = mFocusedApp;
+        if (isOneStepEmbeddedWindow(w)) {
+            return false;
+        }
         final boolean canReceiveKeys = w.canReceiveKeys();
         ProtoLog.v(WM_DEBUG_FOCUS, "Looking for focus: %s, flags=%d, canReceive=%b, reason=%s",
                 w, w.mAttrs.flags, canReceiveKeys,
@@ -1009,8 +1025,14 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
             Slog.i(TAG_WM, "Checking window @" + w + " fl=0x"
                     + Integer.toHexString(w.mAttrs.flags));
         }
-        return w.canBeImeLayeringTarget();
+        return !isOneStepEmbeddedWindow(w) && w.canBeImeLayeringTarget();
     };
+
+    boolean isOneStepEmbeddedWindow(@Nullable WindowState window) {
+        if (window == null) return false;
+        final Task task = window.getTask();
+        return task != null && mWmService.isOneStepTaskEmbedded(task.mTaskId);
+    }
 
     private final Consumer<WindowState> mApplyPostLayoutPolicy =
             w -> getDisplayPolicy().applyPostLayoutPolicyLw(w, w.mAttrs, w.getParentWindow(),
@@ -2898,6 +2920,10 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
                             .setSubtype(getConfiguration().orientation)
                             .addTaggedData(MetricsEvent.FIELD_DISPLAY_ID, getDisplayId()));
         }
+        if (getDisplayId() == Display.DEFAULT_DISPLAY) {
+            mWmService.onDefaultDisplayConfigurationChanged(
+                    getConfiguration().orientation, new Rect(getBounds()));
+        }
     }
 
     @Override
@@ -4764,6 +4790,9 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
      * IME control target may be computed from the IME input target.
      */
     void updateImeInputAndControlTarget(@Nullable InputTarget target) {
+        if (target != null && isOneStepEmbeddedWindow(target.getWindowState())) {
+            target = null;
+        }
         if (mImeInputTarget != target) {
             ProtoLog.i(WM_DEBUG_IME, "updateImeInputAndControlTarget %s", target);
             setImeInputTarget(target);
@@ -5546,8 +5575,301 @@ class DisplayContent extends RootDisplayArea implements WindowManagerPolicy.Disp
     }
 
     void reapplyMagnificationSpec(Transaction t) {
-        if (mMagnificationSpec != null) {
+        if (mMagnificationSpecSmt != null) {
+            if (!applyOneStepDisplayAreaTransform(t, mMagnificationSpecSmt)
+                    || !applyOneStepOverlayTransforms(t, mMagnificationSpecSmt,
+                            true /* requireTokens */)) {
+                resetInvalidOneStepScene();
+            }
+        } else if (mMagnificationSpec != null) {
             applyMagnificationSpec(t, mMagnificationSpec);
+        }
+    }
+
+    /** Applies or clears the Smartisan OneStep transform on the factory-equivalent window range. */
+    boolean applyMagnificationSpecSmt(MagnificationSpecSmt spec) {
+        final boolean clear = spec == null || spec.isNop();
+        final boolean hadActiveSpec = mMagnificationSpecSmt != null;
+        if (mMagnificationSpecSmt != null) {
+            mMagnificationSpecSmt.recycle();
+            mMagnificationSpecSmt = null;
+        }
+        if (!clear) {
+            mMagnificationSpecSmt = MagnificationSpecSmt.obtain(spec);
+            if (!applyOneStepDisplayAreaTransform(getPendingTransaction(),
+                    mMagnificationSpecSmt)) {
+                mMagnificationSpecSmt.recycle();
+                mMagnificationSpecSmt = null;
+                applyOneStepOverlayTransforms(getPendingTransaction(), null,
+                        false /* requireTokens */);
+                getPendingTransaction().apply();
+                return false;
+            }
+            if (!applyOneStepOverlayTransforms(getPendingTransaction(), mMagnificationSpecSmt,
+                    true /* requireTokens */)) {
+                resetInvalidOneStepScene();
+                return false;
+            }
+        } else {
+            if (!applyOneStepDisplayAreaTransform(getPendingTransaction(), null)) {
+                resetInvalidOneStepScene();
+                return false;
+            }
+            // The original leaves the overlay tokens in their fully counter-transformed,
+            // off-screen reset pose until the clients hide them at the animation callback.
+            if (!applyOneStepOverlayTransforms(getPendingTransaction(), spec,
+                    hadActiveSpec /* requireTokens */)) {
+                resetInvalidOneStepScene();
+                return false;
+            }
+            if (mMagnificationSpec != null) {
+                applyMagnificationSpec(getPendingTransaction(), mMagnificationSpec);
+            }
+        }
+        getPendingTransaction().apply();
+        getInputMonitor().updateInputWindowsLw(true /* force */);
+        scheduleAnimation();
+        return true;
+    }
+
+    boolean hasValidOneStepAnimationLeash() {
+        return getOneStepDisplayAreas() != null;
+    }
+
+    boolean hasValidOneStepOverlayTokens() {
+        final OneStepDisplayAreas areas = getOneStepDisplayAreas();
+        if (areas == null) return false;
+        final WindowToken[] tokens = findOneStepOverlayTokens();
+        return tokens[0] != null && tokens[1] != null
+                && isValidSurface(tokens[0]) && isValidSurface(tokens[1])
+                && !tokens[0].isDescendantOf(areas.leash)
+                && !tokens[1].isDescendantOf(areas.leash);
+    }
+
+    /** Applies OneStep only to the outer factory-equivalent parent DisplayArea. */
+    private boolean applyOneStepDisplayAreaTransform(Transaction t, MagnificationSpecSmt spec) {
+        final OneStepDisplayAreas areas = getOneStepDisplayAreas();
+        if (areas == null) return false;
+        final DisplayArea<? extends WindowContainer> area = areas.leash;
+        final SurfaceControl surface = area.getSurfaceControl();
+        final boolean clear = spec == null || spec.isNop();
+        if (clear) {
+            t.setMatrix(surface, 1f, 0f, 0f, 1f)
+                    .setPosition(surface, area.mLastSurfacePosition.x,
+                            area.mLastSurfacePosition.y)
+                    .setWindowCrop(surface, null);
+        } else {
+            t.setMatrix(surface, spec.scaleX, 0f, 0f, spec.scaleY)
+                    .setPosition(surface, spec.offsetX + area.mLastSurfacePosition.x,
+                            spec.offsetY + area.mLastSurfacePosition.y);
+            if (spec.cropRect != null && !spec.cropRect.isEmpty()) {
+                t.setWindowCrop(surface, spec.cropRect.width(), spec.cropRect.height());
+            } else {
+                t.setWindowCrop(surface, null);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Returns the factory-equivalent outer/inner pair after validating its exact nesting and
+     * surfaces. Applying a partial scene is worse than refusing OneStep because it leaves the
+     * display scaled while one of the trusted overlay windows remains in the wrong coordinate
+     * space.
+     */
+    private OneStepDisplayAreas getOneStepDisplayAreas() {
+        final List<DisplayArea<? extends WindowContainer>> leashAreas = mDisplayAreaPolicy
+                .getDisplayAreas(DisplayAreaPolicy.FEATURE_ONE_STEP_ANIMATION_LEASH);
+        final List<DisplayArea<? extends WindowContainer>> contentAreas = mDisplayAreaPolicy
+                .getDisplayAreas(DisplayAreaPolicy.FEATURE_ONE_STEP_CONTENT);
+        if (leashAreas.size() != 1 || contentAreas.size() != 1) {
+            Slog.w(TAG, "Expected one OneStep DisplayArea pair, found leash="
+                    + leashAreas.size() + " content=" + contentAreas.size());
+            return null;
+        }
+        final DisplayArea<? extends WindowContainer> leash = leashAreas.get(0);
+        final DisplayArea<? extends WindowContainer> content = contentAreas.get(0);
+        if (content.getParent() != leash) {
+            Slog.w(TAG, "Invalid OneStep DisplayArea hierarchy: content parent="
+                    + content.getParent() + " leash=" + leash);
+            return null;
+        }
+        if (!isValidSurface(leash) || !isValidSurface(content)) {
+            Slog.w(TAG, "OneStep DisplayArea pair has an invalid surface");
+            return null;
+        }
+        return new OneStepDisplayAreas(leash, content);
+    }
+
+    private static final class OneStepDisplayAreas {
+        final DisplayArea<? extends WindowContainer> leash;
+        final DisplayArea<? extends WindowContainer> content;
+
+        OneStepDisplayAreas(DisplayArea<? extends WindowContainer> leash,
+                DisplayArea<? extends WindowContainer> content) {
+            this.leash = leash;
+            this.content = content;
+        }
+    }
+
+    private static boolean isValidSurface(DisplayArea<? extends WindowContainer> area) {
+        return area.getSurfaceControl() != null && area.getSurfaceControl().isValid();
+    }
+
+    /** Clears every surviving part of the OneStep scene after hierarchy validation fails. */
+    void resetInvalidOneStepScene() {
+        if (mMagnificationSpecSmt != null) {
+            mMagnificationSpecSmt.recycle();
+            mMagnificationSpecSmt = null;
+        }
+        if (mCommittedMagnificationSpecSmt != null) {
+            mCommittedMagnificationSpecSmt.recycle();
+            mCommittedMagnificationSpecSmt = null;
+        }
+        final Transaction transaction = getPendingTransaction();
+        final List<DisplayArea<? extends WindowContainer>> leashAreas = mDisplayAreaPolicy
+                .getDisplayAreas(DisplayAreaPolicy.FEATURE_ONE_STEP_ANIMATION_LEASH);
+        for (int i = 0; i < leashAreas.size(); i++) {
+            resetOneStepDisplayArea(transaction, leashAreas.get(i));
+        }
+        final List<DisplayArea<? extends WindowContainer>> contentAreas = mDisplayAreaPolicy
+                .getDisplayAreas(DisplayAreaPolicy.FEATURE_ONE_STEP_CONTENT);
+        for (int i = 0; i < contentAreas.size(); i++) {
+            resetOneStepDisplayArea(transaction, contentAreas.get(i));
+        }
+        final WindowToken[] currentOverlays = findOneStepOverlayTokens();
+        resetOneStepOverlayToken(transaction, currentOverlays[0]);
+        resetOneStepOverlayToken(transaction, currentOverlays[1]);
+        applyOneStepOverlayTransforms(transaction, null, false /* requireTokens */);
+        transaction.apply();
+        getInputMonitor().updateInputWindowsLw(true /* force */);
+        scheduleAnimation();
+    }
+
+    private static void resetOneStepDisplayArea(Transaction transaction,
+            DisplayArea<? extends WindowContainer> area) {
+        if (!isValidSurface(area)) return;
+        transaction.setMatrix(area.getSurfaceControl(), 1f, 0f, 0f, 1f)
+                .setPosition(area.getSurfaceControl(), area.mLastSurfacePosition.x,
+                        area.mLastSurfacePosition.y)
+                .setWindowCrop(area.getSurfaceControl(), null);
+    }
+
+    /**
+     * Applies Smartisan's original counter transform to the two OneStep overlay tokens. The
+     * application/status/navigation hierarchy is transformed once by OneStepAnimationLeash;
+     * keeping these matrices in the same transaction prevents a one-frame panel or top-bar jump.
+     */
+    private boolean applyOneStepOverlayTransforms(Transaction t, MagnificationSpecSmt spec,
+            boolean requireTokens) {
+        if (spec == null) {
+            resetOneStepOverlayToken(t, mOneStepTopToken);
+            resetOneStepOverlayToken(t, mOneStepSideToken);
+            mOneStepTopToken = null;
+            mOneStepSideToken = null;
+            return true;
+        }
+        if (spec.type == MagnificationSpecSmt.TYPE_ZOOM_SIDEBAR_IN_LEFT) {
+            mOneStepLastLeft = true;
+        } else if (spec.type == MagnificationSpecSmt.TYPE_ZOOM_SIDEBAR_IN_RIGHT) {
+            mOneStepLastLeft = false;
+        }
+
+        final WindowToken[] overlays = findOneStepOverlayTokens();
+        final WindowToken topToken = overlays[0];
+        final WindowToken sideToken = overlays[1];
+        if (requireTokens && (topToken == null || sideToken == null
+                || !isValidSurface(topToken) || !isValidSurface(sideToken))) {
+            Slog.w(TAG, "OneStep trusted overlay token disappeared during scene transform");
+            return false;
+        }
+        if (mOneStepTopToken != topToken) resetOneStepOverlayToken(t, mOneStepTopToken);
+        if (mOneStepSideToken != sideToken) resetOneStepOverlayToken(t, mOneStepSideToken);
+        mOneStepTopToken = topToken;
+        mOneStepSideToken = sideToken;
+
+        final Rect display = getBounds();
+        final float topHeight = display.height() * (1f - ONE_STEP_SIDEBAR_SCALE);
+        final float currentScale = spec.scaleX > 0f ? spec.scaleX : 1f;
+        if (topToken != null && isValidSurface(topToken)) {
+            final float topY = spec.offsetY - topHeight;
+            mOneStepOverlayMatrix.reset();
+            mOneStepOverlayMatrix.setTranslate(0f, topY);
+            t.setMatrix(topToken.getSurfaceControl(), mOneStepOverlayMatrix,
+                    mOneStepOverlayMatrixValues);
+        }
+        if (sideToken != null && isValidSurface(sideToken)) {
+            final float finalScale = currentScale / ONE_STEP_SIDEBAR_SCALE;
+            final float deltaX = (1f - finalScale) * display.width();
+            final float deltaY = spec.offsetY - topHeight * finalScale;
+            mOneStepOverlayMatrix.reset();
+            mOneStepOverlayMatrix.setScale(finalScale, finalScale);
+            mOneStepOverlayMatrix.postTranslate(
+                    mOneStepLastLeft ? deltaX : 0f, deltaY);
+            t.setMatrix(sideToken.getSurfaceControl(), mOneStepOverlayMatrix,
+                    mOneStepOverlayMatrixValues);
+        }
+        return true;
+    }
+
+    private WindowToken[] findOneStepOverlayTokens() {
+        final WindowState[] windows = new WindowState[2];
+        forAllWindows(window -> {
+            if (windows[0] == null
+                    && (window.mAttrs.privateFlags
+                    & LayoutParamsSmt.SM_PRIVATE_FLAG_SIDEBAR_TOP) != 0) {
+                windows[0] = window;
+            }
+            if (windows[1] == null
+                    && window.mAttrs.type
+                    == WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS_SIDE_AREA
+                    && "OneStepTaskPanel".contentEquals(window.mAttrs.getTitle())) {
+                windows[1] = window;
+            }
+        }, true /* traverseTopToBottom */);
+        return new WindowToken[] {
+                windows[0] != null ? windows[0].mToken : null,
+                windows[1] != null ? windows[1].mToken : null
+        };
+    }
+
+    private static boolean isValidSurface(WindowToken token) {
+        return token.getSurfaceControl() != null && token.getSurfaceControl().isValid();
+    }
+
+    private static void resetOneStepOverlayToken(Transaction t, WindowToken token) {
+        if (token == null || !isValidSurface(token)) return;
+        t.setMatrix(token.getSurfaceControl(), 1f, 0f, 0f, 1f)
+                .setPosition(token.getSurfaceControl(), 0f, 0f);
+    }
+
+    MagnificationSpecSmt getMagnificationSpecSmtForWindow(WindowState window) {
+        return mCommittedMagnificationSpecSmt != null && window.shouldMagnifyForSidebar()
+                ? mCommittedMagnificationSpecSmt : null;
+    }
+
+    MagnificationSpecSmt copyMagnificationSpecSmt() {
+        return mMagnificationSpecSmt != null
+                ? MagnificationSpecSmt.obtain(mMagnificationSpecSmt) : null;
+    }
+
+    MagnificationSpecSmt copyCommittedMagnificationSpecSmt() {
+        return mCommittedMagnificationSpecSmt != null
+                ? MagnificationSpecSmt.obtain(mCommittedMagnificationSpecSmt) : null;
+    }
+
+    boolean hasCommittedOneStepScene() {
+        return mCommittedMagnificationSpecSmt != null
+                && !mCommittedMagnificationSpecSmt.isNop();
+    }
+
+    void commitMagnificationSpecSmt(MagnificationSpecSmt spec) {
+        if (mCommittedMagnificationSpecSmt != null) {
+            mCommittedMagnificationSpecSmt.recycle();
+            mCommittedMagnificationSpecSmt = null;
+        }
+        if (spec != null && !spec.isNop()) {
+            mCommittedMagnificationSpecSmt = MagnificationSpecSmt.obtain(spec);
         }
     }
 

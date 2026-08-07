@@ -25,6 +25,7 @@ import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 import static android.view.WindowManager.LayoutParams.TYPE_NOTIFICATION_SHADE;
 import static android.view.WindowManager.LayoutParams.TYPE_SECURE_SYSTEM_OVERLAY;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR_SUB_PANEL;
 import static android.view.WindowManager.LayoutParams.TYPE_VOLUME_OVERLAY;
@@ -35,6 +36,7 @@ import static android.window.DisplayAreaOrganizer.FEATURE_FULLSCREEN_MAGNIFICATI
 import static android.window.DisplayAreaOrganizer.FEATURE_HIDE_DISPLAY_CUTOUT;
 import static android.window.DisplayAreaOrganizer.FEATURE_IME_PLACEHOLDER;
 import static android.window.DisplayAreaOrganizer.FEATURE_ONE_HANDED;
+import static android.window.DisplayAreaOrganizer.FEATURE_VENDOR_FIRST;
 import static android.window.DisplayAreaOrganizer.FEATURE_WINDOWED_MAGNIFICATION;
 
 import static com.android.server.wm.DisplayAreaPolicyBuilder.Feature;
@@ -56,6 +58,11 @@ import java.util.List;
  * Policy that manages {@link DisplayArea}.
  */
 public abstract class DisplayAreaPolicy {
+    /** Outer factory-equivalent OneStep display area; this is the only transformed surface. */
+    static final int FEATURE_ONE_STEP_ANIMATION_LEASH = FEATURE_VENDOR_FIRST + 1;
+    /** Inner factory-equivalent OneStep content area; this surface always remains identity. */
+    static final int FEATURE_ONE_STEP_CONTENT = FEATURE_VENDOR_FIRST + 2;
+
     /**
      * No corresponding use case yet (see b/154719717). The current implementation still uses
      * {@link WindowState#shouldMagnify}.
@@ -149,7 +156,21 @@ public abstract class DisplayAreaPolicy {
                     .except(TYPE_ACCESSIBILITY_MAGNIFICATION_OVERLAY)
                     // Make the DA dimmable so that the magnify window also mirrors the dim layer.
                     .setNewDisplayAreaSupplier(DisplayArea.Dimmable::new)
-                    .build());
+                    .build())
+                    // Smartisan builds two identically ranged, nested DisplayAreas. 2051 and 2052
+                    // share the TYPE_SIDEBAR_TOOLS policy layer, so excluding 2052 excludes both
+                    // trusted OneStep windows while retaining wallpaper, applications, Launcher,
+                    // system bars and their transition leashes below the outer animation surface.
+                    .addFeature(new Feature.Builder(wmService.mPolicy,
+                            "OneStepAnimationLeash", FEATURE_ONE_STEP_ANIMATION_LEASH)
+                            .upTo(TYPE_SIDEBAR_TOOLS)
+                            .except(TYPE_SIDEBAR_TOOLS)
+                            .build())
+                    .addFeature(new Feature.Builder(wmService.mPolicy,
+                            "OneStepContent", FEATURE_ONE_STEP_CONTENT)
+                            .upTo(TYPE_SIDEBAR_TOOLS)
+                            .except(TYPE_SIDEBAR_TOOLS)
+                            .build());
             if (content.isDefaultDisplay) {
                 // Only default display can have cutout.
                 // See LocalDisplayAdapter.LocalDisplayDevice#getDisplayDeviceInfoLocked.
