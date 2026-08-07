@@ -102,12 +102,12 @@
 
     <!-- The default tiles to display in QuickSettings -->
     <string name="quick_settings_tiles_default" translatable="false">
-        airplane,wifi,cell,vpn,hotspot,bt,sos_disable_buttons,location,flashlight,rotation,screenrecord,battery,sos_screenshot,sos_vibrate,sos_mute,nfc,caffeine,sos_lock_screen,sos_protect_eyes,sos_fake_call
+        airplane,wifi,cell,vpn,hotspot,bt,sos_disable_buttons,location,flashlight,rotation,screenrecord,battery,sos_screenshot,sos_vibrate,sos_mute,nfc,caffeine,sos_lock_screen,sos_protect_eyes,sos_fake_call,custom(com.smartisanos.sidebar/.OneStepTileService)
     </string>
 
     <!-- The default tiles to display in QuickSettings with the new UI -->
     <string name="quick_settings_tiles_new_default" translatable="false">
-        internet,bt,dnd,cast,flashlight,airplane,rotation,wallet,alarm,controls,screenrecord,battery
+        internet,bt,dnd,cast,flashlight,airplane,rotation,wallet,alarm,controls,screenrecord,battery,custom(com.smartisanos.sidebar/.OneStepTileService)
     </string>
 
     <!-- The class path of the Safety Quick Settings Tile -->

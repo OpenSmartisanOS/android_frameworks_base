@@ -1133,6 +1133,7 @@ android_app {
     },
     required: [
         "privapp_whitelist_com.android.systemui",
+        "Sidebar",
         "SosFakeCall",
     ],
 }

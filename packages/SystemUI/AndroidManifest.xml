@@ -24,6 +24,7 @@
 
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="org.opensmartisanos.permission.CONTROL_FAKE_CALL" />
+    <uses-permission android:name="com.smartisanos.sidebar.permission.SYNC_DATA" />
 
     <!-- Used to read wallpaper -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
