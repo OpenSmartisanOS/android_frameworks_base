@@ -76,6 +76,15 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
         /** Called when the task's info has changed. */
         default void onTaskInfoChanged(ActivityManager.RunningTaskInfo taskInfo) {}
 
+        /** Called when an already-running task could not be adopted by this TaskView. */
+        default void onTaskAdoptionFailed(int taskId) {}
+
+        /** Called when an atomic fullscreen/TaskView task swap could not be completed. */
+        default void onTaskSwapFailed(int promotedTaskId, int replacementTaskId) {}
+
+        /** Called when the task could not be moved out of this TaskView to fullscreen. */
+        default void onTaskMoveToFullscreenFailed(int taskId) {}
+
         /** Called when a task is created inside the container. */
         default void onBackPressedOnTaskRoot(int taskId) {}
     }
@@ -90,6 +99,7 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
     private Insets mCaptionInsets;
     private Handler mHandler;
     private boolean mIsMovingWindows;
+    private boolean mTaskInputEnabled = true;
 
     public TaskView(Context context, TaskViewController taskViewController,
             TaskViewTaskController taskViewTaskController) {
@@ -173,6 +183,44 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
         mTaskViewController.moveTaskViewToFullscreen(mTaskViewTaskController);
     }
 
+    public void moveToFullscreen(boolean toFront) {
+        mTaskViewController.moveTaskViewToFullscreen(mTaskViewTaskController, toFront);
+    }
+
+    /**
+     * Atomically moves the current task to fullscreen and places {@code replacementTaskId}
+     * inside this TaskView. A negative replacement id leaves this TaskView empty.
+     */
+    public void swapTaskToFullscreen(int replacementTaskId) {
+        mTaskViewController.swapTaskViewToFullscreen(
+                mTaskViewTaskController, replacementTaskId);
+    }
+
+    /** Brings the embedded task to the front without removing it from TaskView. */
+    public void bringTaskToFront() {
+        mTaskViewController.bringTaskViewToFront(mTaskViewTaskController);
+    }
+
+    /** Keeps a retained OneStep task hidden whenever its trusted side window is hidden. */
+    public void setEmbeddedTaskVisible(boolean visible) {
+        mTaskViewTaskController.setTaskVisible(visible);
+    }
+
+    /** Applies a transient corner radius directly to the embedded task leash. */
+    public void setTaskCornerRadius(float radius) {
+        mTaskViewTaskController.setTaskCornerRadius(radius);
+    }
+
+    /**
+     * Moves an already-running task into this view without relaunching its activity.
+     *
+     * <p>The result is delivered through {@link Listener#onTaskCreated} or
+     * {@link Listener#onTaskRemovalStarted}.</p>
+     */
+    public void adoptTask(int taskId) {
+        mTaskViewController.adoptTask(mTaskViewTaskController, taskId);
+    }
+
     @Override
     public void onTaskInfoChanged(ActivityManager.RunningTaskInfo taskInfo) {
         if (taskInfo.taskDescription != null) {
@@ -186,6 +234,49 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
      */
     public boolean isInitialized() {
         return mTaskViewTaskController.isInitialized();
+    }
+
+    /** Returns whether Shell can safely reparent a task leash into this TaskView now. */
+    public boolean isSurfaceReady() {
+        return mTaskViewTaskController.isSurfaceCreated();
+    }
+
+    /**
+     * Keeps the embedded task configured at {@code logicalBounds}' size while presenting it
+     * scaled inside this view. Passing {@code null} restores regular TaskView sizing.
+     */
+    public void setTaskBoundsOverride(@Nullable Rect logicalBounds) {
+        final boolean changed = mTaskViewTaskController.setTaskBoundsOverride(logicalBounds);
+        if (!isInitialized()) return;
+        if (mTaskViewTaskController.isOneStepTaskView()) {
+            mTaskViewTaskController.setOneStepHostSize(getWidth(), getHeight());
+            if (changed) {
+                final Rect taskBounds = mTaskViewTaskController.getTaskBounds();
+                if (taskBounds != null) {
+                    mTaskViewController.setTaskBounds(mTaskViewTaskController, taskBounds);
+                }
+            }
+            mTaskViewController.updateTaskViewPresentation(mTaskViewTaskController);
+        } else {
+            onLocationChanged();
+        }
+    }
+
+    /** Marks this view as a persistent, display-only Smartisan OneStep task card. */
+    public void setOneStepTaskView(boolean oneStepTaskView) {
+        mTaskViewTaskController.setOneStepTaskView(oneStepTaskView);
+    }
+
+    /** Updates a OneStep card's fixed content rotation and reconfigures only when it changed. */
+    public void setOneStepContentRotation(int rotation) {
+        if (!mTaskViewTaskController.setOneStepContentRotation(rotation) || !isInitialized()) {
+            return;
+        }
+        final Rect taskBounds = mTaskViewTaskController.getTaskBounds();
+        if (taskBounds != null) {
+            mTaskViewController.setTaskBounds(mTaskViewTaskController, taskBounds);
+        }
+        mTaskViewController.updateTaskViewPresentation(mTaskViewTaskController);
     }
 
     @Override
@@ -232,6 +323,13 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
         mObscuredTouchRegion = obscuredRegion;
     }
 
+    /** Enables input routing into this TaskView without changing the embedded task visibility. */
+    public void setTaskInputEnabled(boolean enabled) {
+        if (mTaskInputEnabled == enabled) return;
+        mTaskInputEnabled = enabled;
+        requestLayout();
+    }
+
     /**
      * Sets a region of the task to inset to allow for a caption bar. Currently only top insets
      * are supported.
@@ -262,8 +360,15 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
      * Call when view position or size has changed. Do not call when animating.
      */
     public void onLocationChanged() {
-        getBoundsOnScreen(mTmpRect);
-        mTaskViewController.setTaskBounds(mTaskViewTaskController, mTmpRect);
+        if (mTaskViewTaskController.isOneStepTaskView()) {
+            mTaskViewTaskController.setOneStepHostSize(getWidth(), getHeight());
+            mTaskViewController.updateTaskViewPresentation(mTaskViewTaskController);
+            return;
+        }
+        final Rect taskBounds = mTaskViewTaskController.getTaskBounds();
+        if (taskBounds != null) {
+            mTaskViewController.setTaskBounds(mTaskViewTaskController, taskBounds);
+        }
     }
 
     /**
@@ -301,8 +406,15 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
     @Override
     public void surfaceChanged(@androidx.annotation.NonNull SurfaceHolder holder, int format,
             int width, int height) {
-        getBoundsOnScreen(mTmpRect);
-        mTaskViewController.setTaskBounds(mTaskViewTaskController, mTmpRect);
+        if (mTaskViewTaskController.isOneStepTaskView()) {
+            mTaskViewTaskController.setOneStepHostSize(width, height);
+            mTaskViewController.updateTaskViewPresentation(mTaskViewTaskController);
+            return;
+        }
+        final Rect taskBounds = mTaskViewTaskController.getTaskBounds();
+        if (taskBounds != null) {
+            mTaskViewController.setTaskBounds(mTaskViewTaskController, taskBounds);
+        }
     }
 
     @Override
@@ -312,6 +424,18 @@ public class TaskView extends SurfaceView implements SurfaceHolder.Callback,
 
     @Override
     public void onComputeInternalInsets(ViewTreeObserver.InternalInsetsInfo inoutInfo) {
+        if (!mTaskInputEnabled) {
+            inoutInfo.setTouchableInsets(
+                    ViewTreeObserver.InternalInsetsInfo.TOUCHABLE_INSETS_REGION);
+            // Keep this area owned by the host window so input cannot fall through to the
+            // embedded task. Do not clear the shared region: OneStep has multiple TaskViews in
+            // one 2051 window and its parent listener has already limited input to the side area.
+            getLocationInWindow(mTmpLocation);
+            mTmpRect.set(mTmpLocation[0], mTmpLocation[1],
+                    mTmpLocation[0] + getWidth(), mTmpLocation[1] + getHeight());
+            inoutInfo.touchableRegion.op(mTmpRect, Region.Op.UNION);
+            return;
+        }
         // TODO(b/176854108): Consider to move the logic into gatherTransparentRegions since this
         //   is dependent on the order of listener.
         // If there are multiple TaskViews, we'll set the touchable area as the root-view, then

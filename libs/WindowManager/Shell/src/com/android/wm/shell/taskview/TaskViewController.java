@@ -99,6 +99,9 @@ public interface TaskViewController {
             ActivityManager.RunningTaskInfo taskInfo, SurfaceControl leash,
             @Nullable WindowContainerTransaction wct);
 
+    /** Moves an already-running task into the supplied TaskView. */
+    void adoptTask(@NonNull TaskViewTaskController destination, int taskId);
+
     /**
      * Closes a taskview and removes the task from window manager. This task will not appear in
      * recents.
@@ -111,6 +114,17 @@ public interface TaskViewController {
      */
     void moveTaskViewToFullscreen(@NonNull TaskViewTaskController taskView);
 
+    /** Moves the task out of TaskView and controls whether it becomes the front task. */
+    void moveTaskViewToFullscreen(@NonNull TaskViewTaskController taskView, boolean toFront);
+
+    /** Atomically promotes the TaskView task and embeds the supplied replacement task. */
+    default void swapTaskViewToFullscreen(@NonNull TaskViewTaskController taskView,
+            int replacementTaskId) {
+        final android.app.ActivityManager.RunningTaskInfo taskInfo = taskView.getTaskInfo();
+        taskView.notifyTaskSwapFailed(taskInfo != null ? taskInfo.taskId : -1,
+                replacementTaskId);
+    }
+
     /**
      * Starts a new transition to make the given {@code taskView} visible and optionally change
      * the task order.
@@ -120,6 +134,9 @@ public interface TaskViewController {
      */
     void setTaskViewVisible(TaskViewTaskController taskView, boolean visible);
 
+    /** Makes an embedded task visible and moves it above the other embedded tasks. */
+    void bringTaskViewToFront(TaskViewTaskController taskView);
+
     /**
      * Sets the task bounds to {@code boundsOnScreen}.
      * Usually called when the taskview's position or size has changed.
@@ -127,4 +144,12 @@ public interface TaskViewController {
      * @param boundsOnScreen the on screen bounds of the surface view.
      */
     void setTaskBounds(TaskViewTaskController taskView, Rect boundsOnScreen);
+
+    /**
+     * Reapplies presentation-only state for a TaskView whose task configuration bounds did not
+     * change. OneStep uses this to map a fixed-size task leash into a moving card without
+     * generating a WindowContainer bounds transition for every host layout pass.
+     */
+    default void updateTaskViewPresentation(TaskViewTaskController taskView) {
+    }
 }

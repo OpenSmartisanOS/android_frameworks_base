@@ -31,6 +31,7 @@ import android.graphics.Rect;
 import android.gui.TrustedOverlay;
 import android.os.Binder;
 import android.util.CloseGuard;
+import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.WindowInsets;
 import android.window.WindowContainerToken;
@@ -85,9 +86,31 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
     private boolean mIsInitialized;
     private boolean mNotifiedForInitialized;
     private boolean mHideTaskWithSurface = true;
+    /**
+     * OneStep cards are persistent display-only task surfaces. Unlike a regular TaskView they
+     * must not be hidden or detached merely because another fullscreen task is brought forward,
+     * or because the transparent SystemUI host is temporarily removed while OneStep is closed.
+     */
+    private boolean mOneStepTaskView;
     private TaskView.Listener mListener;
     private Executor mListenerExecutor;
     private Rect mCaptionInsets;
+    private float mTaskCornerRadius;
+    /** Invalidates callbacks queued for a task previously owned by this controller. */
+    private long mTaskLifecycleGeneration;
+    /**
+     * Optional logical task size used by OneStep-style scaled task presentations.
+     *
+     * <p>The task remains configured at this size while its leash is uniformly scaled into the
+     * physical TaskView. Keeping these two geometries separate prevents apps from receiving a
+     * tiny or landscape-like multi-window configuration.</p>
+     */
+    private final Rect mTaskBoundsOverride = new Rect();
+    /** Physical size of the OneStep SurfaceView parent, in that window's local coordinates. */
+    private int mOneStepHostWidth;
+    private int mOneStepHostHeight;
+    /** Rotation of the task content before it was adopted by the portrait OneStep scene. */
+    private int mOneStepContentRotation = Surface.ROTATION_0;
 
     public TaskViewTaskController(Context context, @NonNull ShellTaskOrganizer organizer,
             TaskViewController taskViewController, SyncTransactionQueue syncQueue) {
@@ -119,6 +142,21 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
         mHideTaskWithSurface = hideTaskWithSurface;
     }
 
+    /** Enables the persistent Smartisan OneStep TaskView lifecycle. */
+    public void setOneStepTaskView(boolean oneStepTaskView) {
+        mOneStepTaskView = oneStepTaskView;
+        if (oneStepTaskView) {
+            // Factory ActivityStackView keeps the task, but a hidden sidebar scene must not leave
+            // its activity visible or focusable in WM. Hidden is not removal; the listener and
+            // task survive and are restored when the trusted side window gets a new surface.
+            mHideTaskWithSurface = true;
+        }
+    }
+
+    boolean isOneStepTaskView() {
+        return mOneStepTaskView;
+    }
+
     @VisibleForTesting
     SurfaceControl getTaskLeash() {
         return mTaskLeash;
@@ -147,6 +185,31 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
      */
     public boolean isInitialized() {
         return mIsInitialized;
+    }
+
+    /** Returns whether the TaskView currently has a live SurfaceControl parent. */
+    public boolean isSurfaceCreated() {
+        return mSurfaceCreated && mSurfaceControl != null && mSurfaceControl.isValid();
+    }
+
+    /** Applies and remembers the radius used for the task leash hosted by this TaskView. */
+    public void setTaskCornerRadius(float radius) {
+        final float safeRadius = Math.max(0f, radius);
+        mShellExecutor.execute(() -> {
+            mTaskCornerRadius = safeRadius;
+            if (mTaskLeash == null || !mTaskLeash.isValid()) return;
+            mSyncQueue.runInSync(t -> t.setCornerRadius(mTaskLeash, safeRadius));
+        });
+    }
+
+    /** Explicitly synchronizes the embedded task with the trusted host window visibility. */
+    void setTaskVisible(boolean visible) {
+        if (mTaskToken == null) return;
+        mTaskViewController.setTaskViewVisible(this, visible);
+    }
+
+    float getTaskCornerRadius() {
+        return mTaskCornerRadius;
     }
 
     /** Returns the task token for the task in the TaskView. */
@@ -216,6 +279,8 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
     }
 
     private void resetTaskInfo() {
+        mTaskLifecycleGeneration++;
+        mTaskCornerRadius = 0f;
         mTaskInfo = null;
         mTaskToken = null;
         if (mTaskLeash != null) {
@@ -238,6 +303,10 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
                 + "visible=%b", hashCode(), visible);
         WindowContainerTransaction wct = new WindowContainerTransaction();
         wct.setHidden(mTaskToken, !visible /* hidden */);
+        if (mOneStepTaskView) {
+            wct.setAlwaysOnTop(mTaskToken, visible);
+            wct.setFocusable(mTaskToken, false);
+        }
         if (!visible) {
             wct.reorder(mTaskToken, false /* onTop */);
         }
@@ -286,13 +355,29 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
 
     @Override
     public void onTaskInfoChanged(ActivityManager.RunningTaskInfo taskInfo) {
+        if (mTaskToken == null || taskInfo == null || taskInfo.token == null
+                || !mTaskToken.equals(taskInfo.token) || mTaskInfo == null
+                || mTaskInfo.taskId != taskInfo.taskId) {
+            ProtoLog.d(WM_SHELL_BUBBLES_NOISY,
+                    "TaskController.onTaskInfoChanged(): taskView=%d ignored stale task=%s",
+                    hashCode(), taskInfo);
+            return;
+        }
+        mTaskInfo = taskInfo;
         mTaskViewBase.onTaskInfoChanged(taskInfo);
-        if (BubbleAnythingFlagHelper.enableCreateAnyBubble()) {
-            if (mListener != null) {
-                mListenerExecutor.execute(() -> {
-                    mListener.onTaskInfoChanged(taskInfo);
-                });
-            }
+        if (mListener != null) {
+            final long generation = mTaskLifecycleGeneration;
+            final WindowContainerToken token = mTaskToken;
+            final int taskId = taskInfo.taskId;
+            final TaskView.Listener listener = mListener;
+            mListenerExecutor.execute(() -> {
+                if (generation != mTaskLifecycleGeneration || listener != mListener
+                        || mTaskToken == null || !mTaskToken.equals(token)
+                        || mTaskInfo == null || mTaskInfo.taskId != taskId) {
+                    return;
+                }
+                listener.onTaskInfoChanged(taskInfo);
+            });
         }
     }
 
@@ -341,9 +426,13 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
 
     @Override
     public void dump(@androidx.annotation.NonNull PrintWriter pw, String prefix) {
-        final String innerPrefix = prefix + "  ";
-        final String childPrefix = innerPrefix + "  ";
         pw.println(prefix + this);
+        if (mOneStepTaskView) {
+            pw.println(prefix + "  oneStepLogicalBounds=" + getTaskBounds()
+                    + " contentRotation=" + mOneStepContentRotation
+                    + " host=" + mOneStepHostWidth + "x" + mOneStepHostHeight
+                    + " scale=" + getTaskSurfaceScale());
+        }
     }
 
     @Override
@@ -380,7 +469,13 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
                 // Nothing to update, task is not yet available
                 return;
             }
-            mTaskViewController.setTaskViewVisible(this, true /* visible */);
+            if (mOneStepTaskView) {
+                // Force a transition even when the repository already says visible=true, because
+                // the old SurfaceView parent was destroyed while OneStep was hidden.
+                mTaskViewController.bringTaskViewToFront(this);
+            } else {
+                mTaskViewController.setTaskViewVisible(this, true /* visible */);
+            }
         });
     }
 
@@ -435,6 +530,11 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
                 hashCode());
         mSurfaceCreated = false;
         mSurfaceControl = null;
+        if (mOneStepTaskView && !mHideTaskWithSurface) {
+            // The logical task remains visible and paused in its always-on-top WM layer. A newly
+            // created host surface will reparent the leash through the next bring-to-front pass.
+            return;
+        }
         mShellExecutor.execute(() -> {
             if (mTaskToken == null) {
                 // Nothing to update, task is not yet available
@@ -512,6 +612,87 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
         return mPendingInfo;
     }
 
+    Rect getCurrentBoundsOnScreen() {
+        return mTaskViewBase != null ? mTaskViewBase.getCurrentBoundsOnScreen() : null;
+    }
+
+    boolean setTaskBoundsOverride(@Nullable Rect bounds) {
+        final Rect oldBounds = new Rect(mTaskBoundsOverride);
+        if (bounds == null || bounds.isEmpty()) {
+            mTaskBoundsOverride.setEmpty();
+        } else {
+            mTaskBoundsOverride.set(0, 0, bounds.width(), bounds.height());
+        }
+        return !oldBounds.equals(mTaskBoundsOverride);
+    }
+
+    boolean setOneStepHostSize(int width, int height) {
+        final int safeWidth = Math.max(0, width);
+        final int safeHeight = Math.max(0, height);
+        if (mOneStepHostWidth == safeWidth && mOneStepHostHeight == safeHeight) return false;
+        mOneStepHostWidth = safeWidth;
+        mOneStepHostHeight = safeHeight;
+        return true;
+    }
+
+    boolean setOneStepContentRotation(int rotation) {
+        final int oldRotation = mOneStepContentRotation;
+        switch (rotation) {
+            case Surface.ROTATION_90:
+            case Surface.ROTATION_180:
+            case Surface.ROTATION_270:
+                mOneStepContentRotation = rotation;
+                break;
+            default:
+                mOneStepContentRotation = Surface.ROTATION_0;
+                break;
+        }
+        return oldRotation != mOneStepContentRotation;
+    }
+
+    int getOneStepContentRotation() {
+        return mOneStepContentRotation;
+    }
+
+    boolean hasTaskBoundsOverride() {
+        return !mTaskBoundsOverride.isEmpty();
+    }
+
+    /** Returns task configuration bounds. OneStep bounds always have a stable local origin. */
+    @Nullable Rect getTaskBounds() {
+        if (mOneStepTaskView && !mTaskBoundsOverride.isEmpty()) {
+            if (mOneStepContentRotation == Surface.ROTATION_90
+                    || mOneStepContentRotation == Surface.ROTATION_270) {
+                return new Rect(0, 0, mTaskBoundsOverride.height(),
+                        mTaskBoundsOverride.width());
+            }
+            return new Rect(mTaskBoundsOverride);
+        }
+        final Rect physicalBounds = getCurrentBoundsOnScreen();
+        if (physicalBounds == null) return null;
+        if (mTaskBoundsOverride.isEmpty()) return new Rect(physicalBounds);
+        return new Rect(physicalBounds.left, physicalBounds.top,
+                physicalBounds.left + mTaskBoundsOverride.width(),
+                physicalBounds.top + mTaskBoundsOverride.height());
+    }
+
+    float getTaskSurfaceScale() {
+        if (mOneStepTaskView && !mTaskBoundsOverride.isEmpty()) {
+            // After rotating a landscape source, its presented width is the natural portrait
+            // width stored by the override. Width is the factory's controlling dimension.
+            if (mOneStepHostWidth > 0 && mTaskBoundsOverride.width() > 0) {
+                return (float) mOneStepHostWidth / mTaskBoundsOverride.width();
+            }
+            return mOneStepHostHeight > 0 && mTaskBoundsOverride.height() > 0
+                    ? (float) mOneStepHostHeight / mTaskBoundsOverride.height() : 1f;
+        }
+        final Rect physicalBounds = getCurrentBoundsOnScreen();
+        if (physicalBounds == null || physicalBounds.isEmpty() || mTaskBoundsOverride.isEmpty()) {
+            return 1f;
+        }
+        return (float) physicalBounds.width() / mTaskBoundsOverride.width();
+    }
+
     /**
      * Indicates that the task was not found in the start animation for the transition.
      * In this case we should clean up the task if we have the pending info. If we don't
@@ -524,6 +705,25 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
         mTaskNotFound = true;
         if (mPendingInfo != null) {
             cleanUpPendingTask();
+        }
+    }
+
+    void notifyTaskAdoptionFailed(int taskId) {
+        if (mListener != null) {
+            mListenerExecutor.execute(() -> mListener.onTaskAdoptionFailed(taskId));
+        }
+    }
+
+    void notifyTaskSwapFailed(int promotedTaskId, int replacementTaskId) {
+        if (mListener != null) {
+            mListenerExecutor.execute(
+                    () -> mListener.onTaskSwapFailed(promotedTaskId, replacementTaskId));
+        }
+    }
+
+    void notifyTaskMoveToFullscreenFailed(int taskId) {
+        if (mListener != null) {
+            mListenerExecutor.execute(() -> mListener.onTaskMoveToFullscreenFailed(taskId));
         }
     }
 
@@ -552,11 +752,21 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
 
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "TaskController.prepareHideAnimation(): taskView=%d",
                 hashCode());
-        finishTransaction.reparent(mTaskLeash, null);
+        if (mOneStepTaskView) {
+            // A fullscreen/home transition may still report the non-focusable OneStep task as
+            // TO_BACK. Detaching here destroys the live card even though WM intentionally keeps
+            // the task visible. Keep it under the TaskView surface instead.
+            if (mSurfaceControl != null && mTaskLeash != null && mTaskLeash.isValid()) {
+                finishTransaction.reparent(mTaskLeash, mSurfaceControl).show(mTaskLeash);
+            }
+        } else {
+            finishTransaction.reparent(mTaskLeash, null);
+        }
 
         if (mListener != null) {
             final int taskId = mTaskInfo.taskId;
-            mListener.onTaskVisibilityChanged(taskId, mSurfaceCreated /* visible */);
+            mListener.onTaskVisibilityChanged(taskId,
+                    mOneStepTaskView || mSurfaceCreated /* visible */);
         }
     }
 
@@ -577,6 +787,11 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
      */
     Rect prepareOpen(ActivityManager.RunningTaskInfo taskInfo, SurfaceControl leash) {
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "TaskController.prepareOpen(): taskView=%d", hashCode());
+        mTaskLifecycleGeneration++;
+        if (mOneStepTaskView) {
+            setOneStepContentRotation(
+                    taskInfo.configuration.windowConfiguration.getRotation());
+        }
         mPendingInfo = null;
         mTaskInfo = taskInfo;
         mTaskToken = mTaskInfo.token;
@@ -584,7 +799,7 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
         if (!mSurfaceCreated) {
             return null;
         }
-        return mTaskViewBase.getCurrentBoundsOnScreen();
+        return getTaskBounds();
     }
 
     /** Notify that the associated task has appeared. This will call appropriate listeners. */
@@ -593,14 +808,22 @@ public class TaskViewTaskController implements ShellTaskOrganizer.TaskListener {
         if (mListener != null) {
             final int taskId = mTaskInfo.taskId;
             final ComponentName baseActivity = mTaskInfo.baseActivity;
+            final long generation = mTaskLifecycleGeneration;
+            final WindowContainerToken token = mTaskToken;
+            final TaskView.Listener listener = mListener;
 
             mListenerExecutor.execute(() -> {
+                if (generation != mTaskLifecycleGeneration || listener != mListener
+                        || mTaskToken == null || !mTaskToken.equals(token)
+                        || mTaskInfo == null || mTaskInfo.taskId != taskId) {
+                    return;
+                }
                 if (newTask) {
-                    mListener.onTaskCreated(taskId, baseActivity);
+                    listener.onTaskCreated(taskId, baseActivity);
                 }
                 // Even if newTask, send a visibilityChange if the surface was destroyed.
                 if (!newTask || !mSurfaceCreated) {
-                    mListener.onTaskVisibilityChanged(taskId, mSurfaceCreated /* visible */);
+                    listener.onTaskVisibilityChanged(taskId, mSurfaceCreated /* visible */);
                 }
             });
         }
