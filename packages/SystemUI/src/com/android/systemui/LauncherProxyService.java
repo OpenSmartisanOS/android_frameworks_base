@@ -109,6 +109,7 @@ import com.android.systemui.navigationbar.NavigationModeController;
 import com.android.systemui.navigationbar.views.NavigationBar;
 import com.android.systemui.navigationbar.views.NavigationBarView;
 import com.android.systemui.navigationbar.views.buttons.KeyButtonView;
+import com.android.systemui.onestep.OneStepTaskHost;
 import com.android.systemui.process.ProcessWrapper;
 import com.android.systemui.recents.ScreenPinningRequest;
 import com.android.systemui.scene.domain.interactor.SceneInteractor;
@@ -172,6 +173,7 @@ public class LauncherProxyService implements CallbackController<LauncherProxyLis
     private final PerDisplayRepository<SysUiState> mPerDisplaySysUiStateRepository;
     private final DisplayRepository mDisplayRepository;
     private final HeadlessSystemUserMode mHeadlessSystemUserMode;
+    private final OneStepTaskHost mOneStepTaskHost;
     private SysUiState mDefaultDisplaySysUIState;
     private final Handler mHandler;
     private final Lazy<NavigationBarController> mNavBarControllerLazy;
@@ -536,6 +538,12 @@ public class LauncherProxyService implements CallbackController<LauncherProxyLis
             });
         }
 
+        @Override
+        public void requestTaskToOneStep(int taskId, Rect sourceBounds) {
+            verifyCallerAndClearCallingIdentityPostMain("requestTaskToOneStep", () ->
+                    mOneStepTaskHost.requestTaskFromLauncher(taskId, sourceBounds));
+        }
+
         private void onShadeExpansionGesture(MotionEvent event, String reason) {
             if (!SceneContainerFlag.isEnabled()) {
                 return;
@@ -816,9 +824,11 @@ public class LauncherProxyService implements CallbackController<LauncherProxyLis
             ProcessWrapper processWrapper,
             DisplayRepository displayRepository,
             DesktopState desktopState,
-            HeadlessSystemUserMode headlessSystemUserMode
+            HeadlessSystemUserMode headlessSystemUserMode,
+            OneStepTaskHost oneStepTaskHost
     ) {
         mHeadlessSystemUserMode = headlessSystemUserMode;
+        mOneStepTaskHost = oneStepTaskHost;
         // b/241601880: This component should only be running for primary users or
         // secondaryUsers when visibleBackgroundUsers are supported.
         boolean isSystemUser = processWrapper.isSystemUser();

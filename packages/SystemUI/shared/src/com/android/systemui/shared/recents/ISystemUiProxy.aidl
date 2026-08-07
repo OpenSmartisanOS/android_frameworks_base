@@ -200,5 +200,8 @@ interface ISystemUiProxy {
      */
     oneway void onSleepEvent(in MotionEvent event) = 61;
 
-    // Next id = 62
+    /** Moves an existing Launcher/Recents task into the source-built OneStep panel. */
+    oneway void requestTaskToOneStep(int taskId, in Rect sourceBounds) = 62;
+
+    // Next id = 63
 }
