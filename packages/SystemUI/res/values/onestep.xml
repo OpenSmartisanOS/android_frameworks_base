@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="onestep_title">一步</string>
+    <string name="onestep_factory_title" translatable="false">One Step</string>
+    <string name="onestep_share">拖到这里分享</string>
+    <string name="onestep_task_count">%1$d 个任务</string>
+    <string name="onestep_no_recent_app">没有近期使用的应用程序</string>
+    <string name="onestep_close">退出一步</string>
+    <string name="onestep_settings">一步设置</string>
+    <string name="onestep_previous_task">上一个任务</string>
+</resources>
