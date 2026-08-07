@@ -3895,6 +3895,11 @@ public class BubbleController implements ConfigurationChangeListener,
         }
 
         @Override
+        public void adoptTask(@NonNull TaskViewTaskController destination, int taskId) {
+            mBaseTransitions.adoptTask(destination, taskId);
+        }
+
+        @Override
         public void removeTaskView(@NonNull TaskViewTaskController taskView,
                 @Nullable WindowContainerToken taskToken) {
             mBaseTransitions.removeTaskView(taskView, taskToken);
@@ -3911,6 +3916,12 @@ public class BubbleController implements ConfigurationChangeListener,
                 return;
             }
             mBubbleTransitions.startConvertFromBubble(bub, tinfo);
+        }
+
+        @Override
+        public void moveTaskViewToFullscreen(@NonNull TaskViewTaskController taskView,
+                boolean toFront) {
+            moveTaskViewToFullscreen(taskView);
         }
 
         @Override
@@ -3951,6 +3962,11 @@ public class BubbleController implements ConfigurationChangeListener,
             } else {
                 mBaseTransitions.setTaskViewVisible(taskView, visible);
             }
+        }
+
+        @Override
+        public void bringTaskViewToFront(TaskViewTaskController taskView) {
+            mBaseTransitions.bringTaskViewToFront(taskView);
         }
 
         @Override

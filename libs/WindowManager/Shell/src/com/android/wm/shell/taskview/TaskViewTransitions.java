@@ -16,6 +16,7 @@
 
 package com.android.wm.shell.taskview;
 
+import static android.app.WindowConfiguration.WINDOWING_MODE_FULLSCREEN;
 import static android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW;
 import static android.view.WindowManager.TRANSIT_CHANGE;
 import static android.view.WindowManager.TRANSIT_CLOSE;
@@ -45,6 +46,7 @@ import android.graphics.Rect;
 import android.os.Binder;
 import android.os.IBinder;
 import android.util.Slog;
+import android.view.Surface;
 import android.view.SurfaceControl;
 import android.view.WindowManager;
 import android.window.TransitionInfo;
@@ -105,6 +107,13 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         final @NonNull TaskViewTaskController mTaskView;
         ExternalTransition mExternalTransition;
         IBinder mClaimed;
+        int mAdoptedTaskId = -1;
+        int mPromotedTaskId = -1;
+        int mReplacementTaskId = -1;
+        int mOriginalOneStepRotation = Surface.ROTATION_0;
+        boolean mNotifyTaskRemovalAfterTransition;
+        int mFullscreenTaskId = -1;
+        boolean mFullscreenTaskMatched;
 
         /**
          * This is needed because arbitrary activity launches can still "intrude" into any
@@ -129,6 +138,12 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             pw.print(prefix); pw.println("  transition type: " + mType);
             pw.print(prefix); pw.println("  external transition: " + mExternalTransition);
             pw.print(prefix); pw.println("  claim token: " + mClaimed);
+            pw.print(prefix); pw.println("  notify removal after transition: "
+                    + mNotifyTaskRemovalAfterTransition);
+            pw.print(prefix); pw.println("  fullscreen task: " + mFullscreenTaskId
+                    + " matched=" + mFullscreenTaskMatched);
+            pw.print(prefix); pw.println("  swap: " + mPromotedTaskId + " -> "
+                    + mReplacementTaskId);
         }
     }
 
@@ -332,7 +347,9 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         mShellExecutor.execute(() -> {
             mTaskOrganizer.setPendingLaunchCookieListener(launchCookie, destination);
         });
-        options.setLaunchBounds(launchBounds);
+        final Rect taskBounds = destination.getTaskBounds();
+        options.setLaunchBounds(taskBounds != null && destination.hasTaskBoundsOverride()
+                ? taskBounds : launchBounds);
         options.setLaunchCookie(launchCookie);
         options.setLaunchWindowingMode(WINDOWING_MODE_MULTI_WINDOW);
         options.setRemoveWithTaskOrganizer(true);
@@ -399,6 +416,64 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
     }
 
     @Override
+    public void adoptTask(@NonNull TaskViewTaskController destination, int taskId) {
+        mShellExecutor.execute(() -> {
+            final ActivityManager.RunningTaskInfo taskInfo =
+                    mTaskOrganizer.getRunningTaskInfo(taskId);
+            if (taskInfo != null && destination.isOneStepTaskView()) {
+                destination.setOneStepContentRotation(
+                        taskInfo.configuration.windowConfiguration.getRotation());
+            }
+            final Rect bounds = destination.getTaskBounds();
+            if (taskInfo == null || bounds == null || bounds.isEmpty()
+                    || destination.getTaskToken() != null || !destination.isSurfaceCreated()) {
+                destination.notifyTaskAdoptionFailed(taskId);
+                return;
+            }
+            try {
+                mTaskOrganizer.addListenerForTaskId(destination, taskId);
+                final WindowContainerTransaction wct = new WindowContainerTransaction();
+                wct.setWindowingMode(taskInfo.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW);
+                wct.setBounds(taskInfo.token, bounds);
+                wct.setHidden(taskInfo.token, false);
+                if (destination.isOneStepTaskView()) {
+                    // Original ActivityStackView stacks stay above ordinary fullscreen stacks,
+                    // while never becoming the display focus or controlling system decor.
+                    wct.setAlwaysOnTop(taskInfo.token, true);
+                    wct.setFocusable(taskInfo.token, false);
+                }
+                wct.reorder(taskInfo.token, true /* onTop */);
+                wct.setInterceptBackPressedOnTaskRoot(taskInfo.token, true);
+                wct.setTaskTrimmableFromRecents(taskInfo.token, false);
+                updateVisibilityState(destination, true /* visible */);
+                final PendingTransition pending = new PendingTransition(TRANSIT_CHANGE, wct,
+                        destination, null /* cookie */);
+                pending.mAdoptedTaskId = taskId;
+                mPending.add(pending);
+                startNextTransition();
+            } catch (RuntimeException e) {
+                mPending.removeIf(pending -> pending.mTaskView == destination
+                        && pending.mAdoptedTaskId == taskId);
+                updateVisibilityState(destination, false /* visible */);
+                mTaskOrganizer.removeListener(destination);
+                final WindowContainerTransaction rollback = new WindowContainerTransaction();
+                rollback.setWindowingMode(taskInfo.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+                rollback.setBounds(taskInfo.token, new Rect());
+                rollback.setInterceptBackPressedOnTaskRoot(taskInfo.token, false);
+                rollback.setTaskTrimmableFromRecents(taskInfo.token, true);
+                if (destination.isOneStepTaskView()) {
+                    rollback.setAlwaysOnTop(taskInfo.token, false);
+                    rollback.setFocusable(taskInfo.token, true);
+                }
+                mTaskOrganizer.applyTransaction(rollback);
+                destination.notifyTaskAdoptionFailed(taskId);
+            }
+        });
+    }
+
+    @Override
     public void removeTaskView(@NonNull TaskViewTaskController taskView,
             @Nullable WindowContainerToken taskToken) {
         final WindowContainerToken token = taskToken != null ? taskToken : taskView.getTaskToken();
@@ -422,22 +497,140 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
 
     @Override
     public void moveTaskViewToFullscreen(@NonNull TaskViewTaskController taskView) {
+        moveTaskViewToFullscreen(taskView, true /* toFront */);
+    }
+
+    @Override
+    public void moveTaskViewToFullscreen(@NonNull TaskViewTaskController taskView,
+            boolean toFront) {
         final WindowContainerToken taskToken = taskView.getTaskToken();
-        if (taskToken == null) return;
+        final ActivityManager.RunningTaskInfo taskInfo = taskView.getTaskInfo();
+        if (taskToken == null || taskInfo == null) {
+            taskView.notifyTaskMoveToFullscreenFailed(taskInfo != null ? taskInfo.taskId : -1);
+            return;
+        }
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.moveTaskViewToFullscreen(): taskView=%d",
                 taskView.hashCode());
+        taskView.setTaskCornerRadius(0f);
         final WindowContainerTransaction wct =
                 getExitBubbleTransaction(taskToken, taskView.getCaptionInsetsOwner());
+        wct.setWindowingMode(taskToken,
+                android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+        wct.setBounds(taskToken, new Rect());
+        wct.setInterceptBackPressedOnTaskRoot(taskToken, false);
+        wct.setTaskTrimmableFromRecents(taskToken, true);
+        wct.setAlwaysOnTop(taskToken, false);
+        if (taskView.isOneStepTaskView()) {
+            wct.setFocusable(taskToken, true);
+        }
+        wct.reorder(taskToken, toFront);
         mShellExecutor.execute(() -> {
-            mPending.add(new PendingTransition(TRANSIT_CHANGE, wct, taskView, null /* cookie */));
+            final PendingTransition pending = new PendingTransition(
+                    TRANSIT_CHANGE, wct, taskView, null /* cookie */);
+            pending.mNotifyTaskRemovalAfterTransition = true;
+            pending.mFullscreenTaskId = taskInfo.taskId;
+            mPending.add(pending);
             startNextTransition();
-            taskView.notifyTaskRemovalStarted(taskView.getTaskInfo());
         });
+    }
+
+    @Override
+    public void swapTaskViewToFullscreen(@NonNull TaskViewTaskController taskView,
+            int replacementTaskId) {
+        if (replacementTaskId < 0) {
+            moveTaskViewToFullscreen(taskView, true /* toFront */);
+            return;
+        }
+        mShellExecutor.execute(() -> {
+            final ActivityManager.RunningTaskInfo promoted = taskView.getTaskInfo();
+            final ActivityManager.RunningTaskInfo replacement =
+                    mTaskOrganizer.getRunningTaskInfo(replacementTaskId);
+            final int previousRotation = taskView.getOneStepContentRotation();
+            if (promoted == null || replacement == null || promoted.taskId == replacementTaskId
+                    || !taskView.isSurfaceCreated()) {
+                taskView.notifyTaskSwapFailed(
+                        promoted != null ? promoted.taskId : -1, replacementTaskId);
+                return;
+            }
+            if (taskView.isOneStepTaskView()) {
+                taskView.setOneStepContentRotation(
+                        replacement.configuration.windowConfiguration.getRotation());
+            }
+            final Rect bounds = taskView.getTaskBounds();
+            if (bounds == null || bounds.isEmpty()) {
+                taskView.setOneStepContentRotation(previousRotation);
+                taskView.notifyTaskSwapFailed(promoted.taskId, replacementTaskId);
+                return;
+            }
+            try {
+                mTaskOrganizer.addListenerForTaskId(taskView, replacementTaskId);
+                final WindowContainerTransaction wct = getExitBubbleTransaction(
+                        promoted.token, taskView.getCaptionInsetsOwner());
+                wct.setWindowingMode(promoted.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+                wct.setBounds(promoted.token, new Rect());
+                wct.setInterceptBackPressedOnTaskRoot(promoted.token, false);
+                wct.setTaskTrimmableFromRecents(promoted.token, true);
+                wct.setAlwaysOnTop(promoted.token, false);
+                wct.setFocusable(promoted.token, true);
+
+                wct.setWindowingMode(replacement.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW);
+                wct.setBounds(replacement.token, bounds);
+                wct.setHidden(replacement.token, false);
+                if (taskView.isOneStepTaskView()) {
+                    wct.setAlwaysOnTop(replacement.token, true);
+                    wct.setFocusable(replacement.token, false);
+                }
+                wct.setInterceptBackPressedOnTaskRoot(replacement.token, true);
+                wct.setTaskTrimmableFromRecents(replacement.token, false);
+                wct.reorder(replacement.token, true /* onTop */);
+                // Apply the fullscreen promotion last so it remains the focused main task.
+                wct.reorder(promoted.token, true /* onTop */);
+
+                updateVisibilityState(taskView, true /* visible */);
+                final PendingTransition pending = new PendingTransition(
+                        TRANSIT_CHANGE, wct, taskView, null /* cookie */);
+                pending.mAdoptedTaskId = replacementTaskId;
+                pending.mPromotedTaskId = promoted.taskId;
+                pending.mReplacementTaskId = replacementTaskId;
+                pending.mOriginalOneStepRotation = previousRotation;
+                mPending.add(pending);
+                startNextTransition();
+            } catch (RuntimeException e) {
+                taskView.setOneStepContentRotation(previousRotation);
+                mTaskOrganizer.removeListenerForTaskId(taskView, replacementTaskId);
+                updateVisibilityState(taskView, true /* visible */);
+                taskView.notifyTaskSwapFailed(promoted.taskId, replacementTaskId);
+            }
+        });
+    }
+
+    private void notifyTaskRemovalAfterTransition(PendingTransition pending) {
+        if (pending == null || !pending.mNotifyTaskRemovalAfterTransition) return;
+        pending.mNotifyTaskRemovalAfterTransition = false;
+        final int taskId = pending.mFullscreenTaskId;
+        pending.mFullscreenTaskId = -1;
+        ActivityManager.RunningTaskInfo taskInfo = pending.mTaskView.getTaskInfo();
+        if (taskInfo == null || taskInfo.taskId != taskId) {
+            taskInfo = mTaskOrganizer.getRunningTaskInfo(taskId);
+        }
+        pending.mTaskView.setTaskCornerRadius(0f);
+        if (taskInfo != null) {
+            pending.mTaskView.notifyTaskRemovalStarted(taskInfo);
+        } else {
+            pending.mTaskView.notifyTaskMoveToFullscreenFailed(taskId);
+        }
     }
 
     @Override
     public void setTaskViewVisible(TaskViewTaskController taskView, boolean visible) {
         setTaskViewVisible(taskView, visible, false /* reorder */);
+    }
+
+    @Override
+    public void bringTaskViewToFront(TaskViewTaskController taskView) {
+        setTaskViewVisible(taskView, true /* visible */, true /* reorder */);
     }
 
     /** See {@link #setTaskViewVisible(TaskViewTaskController, boolean, boolean, boolean)}. */
@@ -484,7 +677,14 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             boolean nonBlockingIfPossible, WindowContainerTransaction overrideTransaction) {
         final TaskViewRepository.TaskViewState state = mTaskViewRepo.byTaskView(taskView);
         if (state == null) return;
-        if (state.mVisible == visible) return;
+        // A TaskView SurfaceView can be destroyed and recreated while the embedded task is
+        // retained (OneStep hides its side window on exit).  In that race the repository may
+        // already say visible=true even though WM still has a queued hidden transaction and the
+        // task leash is parented to the old surface.  A deliberate bring-to-front must therefore
+        // be allowed to run again: its transition clears hidden and prepareOpenAnimation reparents
+        // the leash to the newly-created TaskView surface.  Plain duplicate visibility updates
+        // remain no-ops.
+        if (state.mVisible == visible && !(visible && reorder)) return;
         if (taskView.getTaskInfo() == null) {
             // Nothing to update, task is not yet available
             return;
@@ -505,6 +705,10 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                 wct.setAlwaysOnTop(taskView.getTaskInfo().token, visible /* alwaysOnTop */);
             } else {
                 wct.setHidden(taskView.getTaskInfo().token, !visible /* hidden */);
+            }
+            if (taskView.isOneStepTaskView()) {
+                wct.setAlwaysOnTop(taskView.getTaskInfo().token, visible);
+                wct.setFocusable(taskView.getTaskInfo().token, false);
             }
             if (reorder) {
                 wct.reorder(taskView.getTaskInfo().token, visible /* onTop */);
@@ -547,10 +751,11 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
     public void updateBoundsState(TaskViewTaskController taskView, Rect boundsOnScreen) {
         final TaskViewRepository.TaskViewState state = mTaskViewRepo.byTaskView(taskView);
         if (state == null) return;
+        final Rect stableBounds = stableTaskBounds(taskView, boundsOnScreen);
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY,
                 "Transitions.updateBoundsState(): taskView=%d bounds=%s",
-                taskView.hashCode(), boundsOnScreen);
-        state.mBounds.set(boundsOnScreen);
+                taskView.hashCode(), stableBounds);
+        state.mBounds.set(stableBounds);
     }
 
     void updateVisibilityState(TaskViewTaskController taskView, boolean visible) {
@@ -574,14 +779,27 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         });
     }
 
+    @Override
+    public void updateTaskViewPresentation(TaskViewTaskController taskView) {
+        if (!taskView.isOneStepTaskView()) return;
+        mShellExecutor.execute(() -> {
+            final SurfaceControl leash = taskView.getTaskLeash();
+            final SurfaceControl parent = taskView.getSurfaceControl();
+            if (leash == null || !leash.isValid() || parent == null || !parent.isValid()) return;
+            mSyncQueue.runInSync(t -> applyTaskSurfacePresentation(t, leash, taskView,
+                    1 /* fallbackWidth */, 1 /* fallbackHeight */, true /* show */));
+        });
+    }
+
     private void setTaskBoundsInTransition(TaskViewTaskController taskView, Rect boundsOnScreen) {
         final TaskViewRepository.TaskViewState state = mTaskViewRepo.byTaskView(taskView);
-        if (state == null || Objects.equals(boundsOnScreen, state.mBounds)) {
+        final Rect stableBounds = stableTaskBounds(taskView, boundsOnScreen);
+        if (state == null || Objects.equals(stableBounds, state.mBounds)) {
             ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.setTaskBoundsInTransition(): "
                     + "Skipping, same bounds");
             return;
         }
-        state.mBounds.set(boundsOnScreen);
+        state.mBounds.set(stableBounds);
         if (!state.mVisible) {
             // Task view isn't visible, the bounds will next visibility update.
             ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.setTaskBoundsInTransition(): "
@@ -596,13 +814,21 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             return;
         }
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.setTaskBoundsInTransition(): taskView=%d "
-                        + "bounds=%s", taskView.hashCode(), boundsOnScreen);
+                        + "bounds=%s", taskView.hashCode(), stableBounds);
         // If there is a pending redirect transition, it may have a WCT with other operations.
         final WindowContainerTransaction wct = mPendingRedirectTransition != null
                 ? mPendingRedirectTransition.takePendingWct() : new WindowContainerTransaction();
-        wct.setBounds(taskView.getTaskInfo().token, boundsOnScreen);
+        wct.setBounds(taskView.getTaskInfo().token, stableBounds);
         mPending.add(new PendingTransition(TRANSIT_CHANGE, wct, taskView, null /* cookie */));
         startNextTransition();
+    }
+
+    private static Rect stableTaskBounds(TaskViewTaskController taskView, Rect requestedBounds) {
+        if (taskView.isOneStepTaskView()) {
+            final Rect logicalBounds = taskView.getTaskBounds();
+            if (logicalBounds != null && !logicalBounds.isEmpty()) return logicalBounds;
+        }
+        return requestedBounds;
     }
 
     private void startNextTransition() {
@@ -625,6 +851,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                         + "taskView=%d starting the external transition returned a null claim "
                         + "token. it may have already finished. removing it so that it does not "
                         + "block other transitions.", pending.mTaskView.hashCode());
+                rollbackPendingTransition(pending);
                 mPending.remove(pending);
                 startNextTransition();
                 return;
@@ -646,8 +873,158 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.onTransitionConsumed(): taskView=%d "
                 + "consumed type=%s transition=%s aborted=%b", pending.mTaskView.hashCode(),
                 transitTypeToString(pending.mType), transition, aborted);
+        if (aborted) rollbackPendingTransition(pending);
         mPending.remove(pending);
         startNextTransition();
+    }
+
+    private void rollbackPendingTransition(PendingTransition pending) {
+        if (pending == null) return;
+        if (pending.mNotifyTaskRemovalAfterTransition) {
+            rollbackFullscreen(pending);
+        } else {
+            rollbackAdoption(pending);
+        }
+    }
+
+    /** Restores the exact TaskView ownership and WM policy after a failed fullscreen move. */
+    private void rollbackFullscreen(PendingTransition pending) {
+        if (pending == null || !pending.mNotifyTaskRemovalAfterTransition) return;
+        pending.mNotifyTaskRemovalAfterTransition = false;
+        final int taskId = pending.mFullscreenTaskId;
+        pending.mFullscreenTaskId = -1;
+        pending.mFullscreenTaskMatched = false;
+        final TaskViewTaskController taskView = pending.mTaskView;
+        final ActivityManager.RunningTaskInfo taskInfo =
+                mTaskOrganizer.getRunningTaskInfo(taskId);
+        if (taskInfo != null && taskInfo.getWindowingMode() == WINDOWING_MODE_FULLSCREEN) {
+            updateVisibilityState(taskView, false /* visible */);
+            taskView.setTaskCornerRadius(0f);
+            taskView.notifyTaskRemovalStarted(taskInfo);
+            return;
+        }
+        try {
+            if (taskInfo != null) {
+                mTaskOrganizer.addListenerForTaskId(taskView, taskId);
+                final Rect bounds = taskView.getTaskBounds();
+                final WindowContainerTransaction rollback = new WindowContainerTransaction();
+                rollback.setWindowingMode(taskInfo.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW);
+                if (bounds != null && !bounds.isEmpty()) {
+                    rollback.setBounds(taskInfo.token, bounds);
+                }
+                rollback.setHidden(taskInfo.token, false);
+                rollback.setInterceptBackPressedOnTaskRoot(taskInfo.token, true);
+                rollback.setTaskTrimmableFromRecents(taskInfo.token, false);
+                if (taskView.isOneStepTaskView()) {
+                    rollback.setAlwaysOnTop(taskInfo.token, true);
+                    rollback.setFocusable(taskInfo.token, false);
+                }
+                rollback.reorder(taskInfo.token, true /* onTop */);
+                updateVisibilityState(taskView, true /* visible */);
+                mSyncQueue.queue(rollback);
+                mSyncQueue.runInSync(t -> {
+                    final SurfaceControl leash = taskView.getTaskLeash();
+                    final SurfaceControl parent = taskView.getSurfaceControl();
+                    if (leash == null || !leash.isValid() || parent == null
+                            || !parent.isValid()) {
+                        return;
+                    }
+                    final Rect taskBounds = taskInfo.configuration.windowConfiguration.getBounds();
+                    applyTaskSurfacePresentation(t, leash, taskView,
+                            Math.max(1, taskBounds.width()), Math.max(1, taskBounds.height()),
+                            true /* show */);
+                });
+            }
+        } catch (RuntimeException e) {
+            Slog.w(TAG, "Unable to roll back fullscreen OneStep task " + taskId, e);
+        }
+        taskView.notifyTaskMoveToFullscreenFailed(taskId);
+    }
+
+    private void rollbackAdoption(PendingTransition pending) {
+        if (pending == null || pending.mAdoptedTaskId < 0) return;
+        if (pending.mPromotedTaskId >= 0) {
+            rollbackSwap(pending);
+            return;
+        }
+        final int taskId = pending.mAdoptedTaskId;
+        pending.mAdoptedTaskId = -1;
+        updateVisibilityState(pending.mTaskView, false /* visible */);
+        final ActivityManager.RunningTaskInfo taskInfo = mTaskOrganizer.getRunningTaskInfo(taskId);
+        try {
+            mTaskOrganizer.removeListener(pending.mTaskView);
+            if (taskInfo != null) {
+                final WindowContainerTransaction rollback = new WindowContainerTransaction();
+                rollback.setWindowingMode(taskInfo.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+                rollback.setBounds(taskInfo.token, new Rect());
+                rollback.setInterceptBackPressedOnTaskRoot(taskInfo.token, false);
+                rollback.setTaskTrimmableFromRecents(taskInfo.token, true);
+                if (pending.mTaskView.isOneStepTaskView()) {
+                    rollback.setAlwaysOnTop(taskInfo.token, false);
+                    rollback.setFocusable(taskInfo.token, true);
+                }
+                mTaskOrganizer.applyTransaction(rollback);
+            }
+        } catch (RuntimeException e) {
+            Slog.w(TAG, "Unable to fully roll back OneStep task adoption " + taskId, e);
+        }
+        pending.mTaskView.notifyTaskAdoptionFailed(taskId);
+    }
+
+    private void rollbackSwap(PendingTransition pending) {
+        final int promotedTaskId = pending.mPromotedTaskId;
+        final int replacementTaskId = pending.mReplacementTaskId;
+        pending.mTaskView.setOneStepContentRotation(pending.mOriginalOneStepRotation);
+        pending.mAdoptedTaskId = -1;
+        pending.mPromotedTaskId = -1;
+        pending.mReplacementTaskId = -1;
+        try {
+            mTaskOrganizer.removeListenerForTaskId(pending.mTaskView, replacementTaskId);
+            final ActivityManager.RunningTaskInfo promoted =
+                    mTaskOrganizer.getRunningTaskInfo(promotedTaskId);
+            final ActivityManager.RunningTaskInfo replacement =
+                    mTaskOrganizer.getRunningTaskInfo(replacementTaskId);
+            final WindowContainerTransaction rollback = new WindowContainerTransaction();
+            if (promoted != null) {
+                final Rect bounds = pending.mTaskView.getTaskBounds();
+                rollback.setWindowingMode(promoted.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_MULTI_WINDOW);
+                if (bounds != null && !bounds.isEmpty()) rollback.setBounds(promoted.token, bounds);
+                rollback.setHidden(promoted.token, false);
+                rollback.setInterceptBackPressedOnTaskRoot(promoted.token, true);
+                rollback.setTaskTrimmableFromRecents(promoted.token, false);
+                if (pending.mTaskView.isOneStepTaskView()) {
+                    rollback.setAlwaysOnTop(promoted.token, true);
+                    rollback.setFocusable(promoted.token, false);
+                }
+            }
+            if (replacement != null) {
+                rollback.setWindowingMode(replacement.token,
+                        android.app.WindowConfiguration.WINDOWING_MODE_UNDEFINED);
+                rollback.setBounds(replacement.token, new Rect());
+                rollback.setInterceptBackPressedOnTaskRoot(replacement.token, false);
+                rollback.setTaskTrimmableFromRecents(replacement.token, true);
+                if (pending.mTaskView.isOneStepTaskView()) {
+                    rollback.setAlwaysOnTop(replacement.token, false);
+                    rollback.setFocusable(replacement.token, true);
+                }
+            }
+            mTaskOrganizer.applyTransaction(rollback);
+        } catch (RuntimeException e) {
+            Slog.w(TAG, "Unable to fully roll back OneStep task swap", e);
+        }
+        pending.mTaskView.notifyTaskSwapFailed(promotedTaskId, replacementTaskId);
+    }
+
+    private void finishSwap(PendingTransition pending) {
+        if (pending == null || pending.mPromotedTaskId < 0) return;
+        final int promotedTaskId = pending.mPromotedTaskId;
+        pending.mPromotedTaskId = -1;
+        pending.mReplacementTaskId = -1;
+        pending.mAdoptedTaskId = -1;
+        mTaskOrganizer.removeListenerForTaskId(pending.mTaskView, promotedTaskId);
     }
 
     /**
@@ -669,6 +1046,9 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         if (isTaskViewTask(taskInfo)) {
             return true;
         }
+        if (isTaskToTaskView(change, pending)) {
+            return true;
+        }
 
         // In some cases, findTaskView returns null but the change is still a task view:
         if (change.getMode() == TRANSIT_CLOSE) {
@@ -688,10 +1068,33 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
      * into TaskView (e.g task being moved into a bubble)
      */
     private boolean isTaskToTaskView(TransitionInfo.Change change, PendingTransition pending) {
-        return BubbleAnythingFlagHelper.enableCreateAnyBubble()
-                && change.getMode() == TRANSIT_TO_FRONT
-                && pending.mTaskView.getPendingInfo() != null
-                && pending.mTaskView.getPendingInfo().taskId == change.getTaskInfo().taskId;
+        final ActivityManager.RunningTaskInfo taskInfo = change.getTaskInfo();
+        return pending != null && taskInfo != null
+                && (isAdoptedTask(change, pending)
+                        || (BubbleAnythingFlagHelper.enableCreateAnyBubble()
+                        && change.getMode() == TRANSIT_TO_FRONT
+                        && pending.mTaskView.getPendingInfo() != null
+                        && pending.mTaskView.getPendingInfo().taskId == taskInfo.taskId))
+                ;
+    }
+
+    private boolean isAdoptedTask(TransitionInfo.Change change, PendingTransition pending) {
+        final ActivityManager.RunningTaskInfo taskInfo = change.getTaskInfo();
+        return pending != null && pending.mAdoptedTaskId >= 0 && taskInfo != null
+                && pending.mAdoptedTaskId == taskInfo.taskId;
+    }
+
+    private boolean isMovingTaskViewToFullscreen(ActivityManager.RunningTaskInfo taskInfo,
+            TaskViewTaskController taskView, PendingTransition pending) {
+        if (taskInfo == null || taskView == null || pending == null
+                || (!pending.mNotifyTaskRemovalAfterTransition
+                        && pending.mPromotedTaskId != taskInfo.taskId)
+                || pending.mTaskView != taskView) {
+            return false;
+        }
+        if (pending.mPromotedTaskId == taskInfo.taskId) return true;
+        final ActivityManager.RunningTaskInfo currentInfo = taskView.getTaskInfo();
+        return currentInfo != null && currentInfo.taskId == taskInfo.taskId;
     }
 
     @Override
@@ -718,6 +1121,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                                 + "no changes that is managed by TaskViewTransitions. taskView=%d "
                                 + "type=%s transition=%s", pending.mTaskView.hashCode(),
                         transitTypeToString(pending.mType), transition);
+                rollbackPendingTransition(pending);
                 mPending.remove(pending);
                 startNextTransition();
             }
@@ -738,14 +1142,17 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                     pending != null ? transitTypeToString(pending.mType) : "unknown", transition);
         if (pending != null) {
             mPending.remove(pending);
+            pending.mFullscreenTaskMatched = false;
         }
         if (mTaskViewRepo.isEmpty()) {
             if (pending != null) {
                 Slog.e(TAG, "Pending taskview transition but no task-views");
+                rollbackPendingTransition(pending);
             }
             return false;
         }
         boolean stillNeedsMatchingLaunch = pending != null && pending.mLaunchCookie != null;
+        boolean adoptedTaskHandled = false;
         int changingDisplayId = -1;
         WindowContainerTransaction wct = null;
 
@@ -782,7 +1189,8 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
 
             switch (task.getMode()) {
                 case TRANSIT_TO_BACK:
-                    if (pending != null && pending.mType == TRANSIT_TO_BACK) {
+                    if (pending != null && pending.mType == TRANSIT_TO_BACK
+                            && !infoTv.isOneStepTaskView()) {
                         // TO_BACK is only used when setting the task view visibility immediately,
                         // so in that case we can also hide the surface immediately
                         startTransaction.hide(leash);
@@ -803,6 +1211,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                     break;
                 case TRANSIT_TO_FRONT:
                     if (wct == null) wct = new WindowContainerTransaction();
+                    final boolean adoptedToFront = isAdoptedTask(task, pending);
                     if (infoTv == null && pending != null && isTaskToTaskView(task, pending)) {
                         // The task is being moved into taskView, so it is still "new" from
                         // TaskView's perspective (e.g. task being moved into a bubble)
@@ -810,29 +1219,50 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                         isReadyForAnimation &= prepareOpenAnimation(pending.mTaskView,
                                 true /* isNewInTaskView */, startTransaction, finishTransaction,
                                 taskInfo, leash, wct);
+                        adoptedTaskHandled |= adoptedToFront;
                     } else {
                         isReadyForAnimation &= prepareOpenAnimation(infoTv,
-                                false /* isNewInTaskView */, startTransaction, finishTransaction,
+                                adoptedToFront /* isNewInTaskView */,
+                                startTransaction, finishTransaction,
                                 taskInfo, leash, wct);
+                        adoptedTaskHandled |= adoptedToFront;
                     }
                     break;
                 case TRANSIT_CHANGE:
-                    final Rect boundsOnScreen = infoTv.prepareOpen(task.getTaskInfo(), leash);
+                    final TaskViewTaskController changeTv = infoTv == null
+                            && isTaskToTaskView(task, pending) ? pending.mTaskView : infoTv;
+                    if (changeTv == null) break;
+                    if (isMovingTaskViewToFullscreen(taskInfo, changeTv, pending)) {
+                        // The transition finish transaction already reparents the task leash back
+                        // to its fullscreen hierarchy. Reparenting it to the TaskView here leaves
+                        // the fullscreen task under a surface that is about to be destroyed.
+                        updateVisibilityState(changeTv, false /* visible */);
+                        pending.mFullscreenTaskMatched = true;
+                        startTransaction.setCornerRadius(leash, 0f);
+                        finishTransaction.setCornerRadius(leash, 0f);
+                        break;
+                    }
+                    final boolean adopted = isAdoptedTask(task, pending);
+                    final Rect boundsOnScreen = changeTv.prepareOpen(task.getTaskInfo(), leash);
                     if (boundsOnScreen != null) {
                         if (wct == null) wct = new WindowContainerTransaction();
-                        updateBounds(infoTv, boundsOnScreen, startTransaction, finishTransaction,
+                        updateBounds(changeTv, boundsOnScreen, startTransaction, finishTransaction,
                                 taskInfo, leash, wct);
                         if (changingDisplayId == task.getEndDisplayId()) {
                             ProtoLog.d(WM_SHELL_BUBBLES, "Transitions.startAnimation(): "
-                                    + "display change, taskView=%d", infoTv.hashCode());
+                                    + "display change, taskView=%d", changeTv.hashCode());
                             // Remove the change from TransitionInfo to avoid the transition from
                             // being handled by another TaskViewTransitions instance.
                             info.getChanges().remove(task);
                         }
                     } else {
-                        startTransaction.reparent(leash, infoTv.getSurfaceControl());
-                        finishTransaction.reparent(leash, infoTv.getSurfaceControl())
+                        startTransaction.reparent(leash, changeTv.getSurfaceControl());
+                        finishTransaction.reparent(leash, changeTv.getSurfaceControl())
                                 .setPosition(leash, 0, 0);
+                    }
+                    if (adopted) {
+                        adoptedTaskHandled = true;
+                        changeTv.notifyAppeared(true /* newTask */);
                     }
                     break;
                 default:
@@ -862,7 +1292,18 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             }
         }
 
-        if (stillNeedsMatchingLaunch) {
+        if (pending != null && pending.mNotifyTaskRemovalAfterTransition
+                && !pending.mFullscreenTaskMatched) {
+            Slog.w(TAG, "Expected fullscreen OneStep task " + pending.mFullscreenTaskId
+                    + " in transition, rolling it back");
+            rollbackFullscreen(pending);
+            startNextTransition();
+            return false;
+        } else if (pending != null && pending.mAdoptedTaskId >= 0 && !adoptedTaskHandled) {
+            Slog.w(TAG, "Expected adopted task " + pending.mAdoptedTaskId
+                    + " in transition, rolling it back");
+            rollbackAdoption(pending);
+        } else if (stillNeedsMatchingLaunch) {
             Slog.w(TAG, "Expected a TaskView launch in this transition but didn't get one, "
                     + "cleaning up the task view");
             // Didn't find a task so the task must have never launched
@@ -872,8 +1313,19 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             return false;
         } else if (!isReadyForAnimation) {
             // Animation could not be fully prepared. The surface for one or more TaskViews was
-            // destroyed before the animation could start, let another handler animate.
-            Slog.w(TAG, "Animation not ready for all TaskViews, deferring to another handler.");
+            // destroyed after the WCT had started. Roll back the listener/windowing migration
+            // before another handler consumes the transition, otherwise the task escapes
+            // fullscreen while the TaskView repository still claims it is embedded.
+            Slog.w(TAG, "Animation not ready for all TaskViews; rolling back OneStep state.");
+            if (pending != null) {
+                if (pending.mAdoptedTaskId >= 0) {
+                    rollbackAdoption(pending);
+                } else if (pending.mLaunchCookie != null) {
+                    pending.mTaskView.setTaskNotFound();
+                    updateVisibilityState(pending.mTaskView, false /* visible */);
+                }
+            }
+            startNextTransition();
             return false;
         }
         if (changingDisplayId > -1) {
@@ -893,6 +1345,8 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         // No animation, just show it immediately.
         startTransaction.apply();
         finishCallback.onTransitionFinished(wct);
+        notifyTaskRemovalAfterTransition(pending);
+        finishSwap(pending);
         startNextTransition();
         return true;
     }
@@ -908,14 +1362,17 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                 pending != null ? transitTypeToString(pending.mType) : "unknown", transition);
         if (pending != null) {
             mPending.remove(pending);
+            pending.mFullscreenTaskMatched = false;
         }
         if (mTaskViewRepo.isEmpty()) {
             if (pending != null) {
                 Slog.e(TAG, "Pending taskview transition but no task-views");
+                rollbackPendingTransition(pending);
             }
             return false;
         }
         boolean stillNeedsMatchingLaunch = pending != null && pending.mLaunchCookie != null;
+        boolean adoptedTaskHandled = false;
         ArrayList<TransitionInfo.Change> taskViewChanges = null;
         int changingDisplayId = -1;
         int changesHandled = 0;
@@ -946,7 +1403,8 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                     continue;
                 }
                 if (isHide) {
-                    if (pending != null && pending.mType == TRANSIT_TO_BACK) {
+                    if (pending != null && pending.mType == TRANSIT_TO_BACK
+                            && !tv.isOneStepTaskView()) {
                         // TO_BACK is only used when setting the task view visibility immediately,
                         // so in that case we can also hide the surface immediately
                         startTransaction.hide(chg.getLeash());
@@ -958,6 +1416,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                 changesHandled++;
             } else if (TransitionUtil.isOpeningType(chg.getMode())) {
                 boolean isNewInTaskView = false;
+                final boolean adopted = isAdoptedTask(chg, pending);
                 TaskViewTaskController tv;
                 if (chg.getMode() == TRANSIT_OPEN) {
                     isNewInTaskView = true;
@@ -972,10 +1431,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                 } else {
                     tv = findTaskView(taskInfo);
                     if (tv == null && pending != null) {
-                        if (BubbleAnythingFlagHelper.enableCreateAnyBubble()
-                                && chg.getMode() == TRANSIT_TO_FRONT
-                                && pending.mTaskView.getPendingInfo() != null
-                                && pending.mTaskView.getPendingInfo().taskId == taskInfo.taskId) {
+                        if (isTaskToTaskView(chg, pending)) {
                             // In this case an existing task, not currently in TaskView, is
                             // brought to the front to be moved into TaskView. This is still
                             // "new" from TaskView's perspective. (e.g. task being moved into a
@@ -983,6 +1439,7 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                             isNewInTaskView = true;
                             stillNeedsMatchingLaunch = false;
                             tv = pending.mTaskView;
+                            adoptedTaskHandled |= adopted;
                         } else {
                             Slog.w(TAG, "Found a non-TaskView task in a TaskView Transition. "
                                     + "This shouldn't happen, so there may be a visual "
@@ -990,6 +1447,11 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                         }
                     }
                     if (tv == null) continue;
+                    if (adopted) {
+                        isNewInTaskView = true;
+                        stillNeedsMatchingLaunch = false;
+                        adoptedTaskHandled = true;
+                    }
                 }
                 if (wct == null) wct = new WindowContainerTransaction();
                 prepareOpenAnimation(tv, isNewInTaskView, startTransaction, finishTransaction,
@@ -997,12 +1459,22 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                 changesHandled++;
             } else if (chg.getMode() == TRANSIT_CHANGE) {
                 TaskViewTaskController tv = findTaskView(taskInfo);
+                final boolean adopted = isAdoptedTask(chg, pending);
+                if (tv == null && adopted) tv = pending.mTaskView;
                 if (tv == null) {
                     if (pending != null) {
                         Slog.w(TAG, "Found a non-TaskView task in a TaskView Transition. This "
                                 + "shouldn't happen, so there may be a visual artifact: "
                                 + taskInfo.taskId);
                     }
+                    continue;
+                }
+                if (isMovingTaskViewToFullscreen(taskInfo, tv, pending)) {
+                    updateVisibilityState(tv, false /* visible */);
+                    pending.mFullscreenTaskMatched = true;
+                    startTransaction.setCornerRadius(chg.getLeash(), 0f);
+                    finishTransaction.setCornerRadius(chg.getLeash(), 0f);
+                    changesHandled++;
                     continue;
                 }
                 if (taskViewChanges == null) {
@@ -1019,10 +1491,25 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
                     finishTransaction.reparent(chg.getLeash(), tv.getSurfaceControl())
                             .setPosition(chg.getLeash(), 0, 0);
                 }
+                if (adopted) {
+                    adoptedTaskHandled = true;
+                    tv.notifyAppeared(true /* newTask */);
+                }
                 changesHandled++;
             }
         }
-        if (stillNeedsMatchingLaunch) {
+        if (pending != null && pending.mNotifyTaskRemovalAfterTransition
+                && !pending.mFullscreenTaskMatched) {
+            Slog.w(TAG, "Expected fullscreen OneStep task " + pending.mFullscreenTaskId
+                    + " in legacy transition, rolling it back");
+            rollbackFullscreen(pending);
+            startNextTransition();
+            return false;
+        } else if (pending != null && pending.mAdoptedTaskId >= 0 && !adoptedTaskHandled) {
+            Slog.w(TAG, "Expected adopted task " + pending.mAdoptedTaskId
+                    + " in legacy transition, rolling it back");
+            rollbackAdoption(pending);
+        } else if (stillNeedsMatchingLaunch) {
             Slog.w(TAG, "Expected a TaskView launch in this transition but didn't get one, "
                     + "cleaning up the task view");
             // Didn't find a task so the task must have never launched
@@ -1053,6 +1540,8 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         // No animation, just show it immediately.
         startTransaction.apply();
         finishCallback.onTransitionFinished(wct);
+        notifyTaskRemovalAfterTransition(pending);
+        finishSwap(pending);
         startNextTransition();
         return true;
     }
@@ -1084,6 +1573,14 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         if (isSurfaceCreated) {
             updateBounds(taskView, boundsOnScreen, startTransaction, finishTransaction, taskInfo,
                     leash, wct);
+        } else if (taskView.isOneStepTaskView()) {
+            // Preserve the task and listener, but keep the activity hidden until the trusted
+            // sidebar SurfaceView is recreated. A visible orphan task can steal focus and system
+            // bar control even though its 2051 host window is gone.
+            wct.setHidden(taskInfo.token, true /* hidden */);
+            wct.setAlwaysOnTop(taskInfo.token, false);
+            wct.setFocusable(taskInfo.token, false);
+            updateVisibilityState(taskView, false /* visible */);
         } else {
             // The surface has already been destroyed before the task has appeared,
             // so go ahead and hide the task entirely
@@ -1093,6 +1590,10 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
         }
         if (newTask) {
             wct.setInterceptBackPressedOnTaskRoot(taskInfo.token, true /* intercept */);
+        }
+        if (taskView.isOneStepTaskView()) {
+            wct.setAlwaysOnTop(taskInfo.token, true);
+            wct.setFocusable(taskInfo.token, false);
         }
 
         if (taskInfo.taskDescription != null) {
@@ -1140,15 +1641,63 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             @NonNull SurfaceControl.Transaction startT, @NonNull SurfaceControl.Transaction finishT,
             @NonNull TaskViewTaskController taskView, int width, int height) {
         // Reparent the task under the task view surface and set the bounds on it.
-        startT.reparent(leash, taskView.getSurfaceControl())
-                .setPosition(leash, 0, 0)
-                .setWindowCrop(leash, width, height)
-                .show(leash);
+        applyTaskSurfacePresentation(startT, leash, taskView, width, height, true /* show */);
         // The finish transaction would reparent the task back to the window hierarchy parent, so
         // reparent it to the task view surface.
-        finishT.reparent(leash, taskView.getSurfaceControl())
-                .setPosition(leash, 0, 0)
-                .setWindowCrop(leash, width, height);
+        applyTaskSurfacePresentation(finishT, leash, taskView, width, height, false /* show */);
+    }
+
+    /**
+     * Maps fixed OneStep content into the TaskView's local Surface parent. Screen coordinates
+     * never enter this transaction; the trusted 2051 window and its View layout own placement.
+     */
+    private static void applyTaskSurfacePresentation(SurfaceControl.Transaction transaction,
+            SurfaceControl leash, TaskViewTaskController taskView, int fallbackWidth,
+            int fallbackHeight, boolean show) {
+        final Rect logicalBounds = taskView.getTaskBounds();
+        final int cropWidth = logicalBounds != null && !logicalBounds.isEmpty()
+                ? logicalBounds.width() : Math.max(1, fallbackWidth);
+        final int cropHeight = logicalBounds != null && !logicalBounds.isEmpty()
+                ? logicalBounds.height() : Math.max(1, fallbackHeight);
+        final float scale = taskView.getTaskSurfaceScale();
+        float dsdx = scale;
+        float dtdx = 0f;
+        float dtdy = 0f;
+        float dsdy = scale;
+        float x = 0f;
+        float y = 0f;
+        if (taskView.isOneStepTaskView()) {
+            switch (taskView.getOneStepContentRotation()) {
+                case Surface.ROTATION_90:
+                    dsdx = 0f;
+                    dtdx = -scale;
+                    dtdy = scale;
+                    dsdy = 0f;
+                    x = cropHeight * scale;
+                    break;
+                case Surface.ROTATION_180:
+                    dsdx = -scale;
+                    dsdy = -scale;
+                    x = cropWidth * scale;
+                    y = cropHeight * scale;
+                    break;
+                case Surface.ROTATION_270:
+                    dsdx = 0f;
+                    dtdx = scale;
+                    dtdy = -scale;
+                    dsdy = 0f;
+                    y = cropWidth * scale;
+                    break;
+                default:
+                    break;
+            }
+        }
+        transaction.reparent(leash, taskView.getSurfaceControl())
+                .setPosition(leash, x, y)
+                .setMatrix(leash, dsdx, dtdx, dtdy, dsdy)
+                .setWindowCrop(leash, cropWidth, cropHeight)
+                .setCornerRadius(leash, taskView.getTaskCornerRadius());
+        if (show) transaction.show(leash);
     }
 
     private void updateBounds(TaskViewTaskController taskView, Rect boundsOnScreen,
@@ -1158,16 +1707,19 @@ public class TaskViewTransitions implements Transitions.TransitionHandler, TaskV
             WindowContainerTransaction wct) {
         ProtoLog.d(WM_SHELL_BUBBLES_NOISY, "Transitions.updateBounds(): taskView=%d bounds=%s",
                 taskView.hashCode(), boundsOnScreen);
-        final SurfaceControl tvSurface = taskView.getSurfaceControl();
-        // Surface is ready, so just reparent the task to this surface control
-        startTransaction.reparent(leash, tvSurface)
-                .show(leash);
+        final int width = boundsOnScreen.width();
+        final int height = boundsOnScreen.height();
+        // Adoption starts from a fullscreen leash that already has screen-space position and crop.
+        // Reset both in the start transaction as well as the finish transaction, otherwise the
+        // first frame remains offset under the TaskView parent (and may stay there if another
+        // transition merges before the finish transaction is applied).
+        applyTaskSurfacePresentation(startTransaction, leash, taskView, width, height,
+                true /* show */);
         // Also reparent on finishTransaction since the finishTransaction will reparent back
         // to its "original" parent by default.
         if (finishTransaction != null) {
-            finishTransaction.reparent(leash, tvSurface)
-                    .setPosition(leash, 0, 0)
-                    .setWindowCrop(leash, boundsOnScreen.width(), boundsOnScreen.height());
+            applyTaskSurfacePresentation(finishTransaction, leash, taskView, width, height,
+                    false /* show */);
         }
         updateBoundsState(taskView, boundsOnScreen);
         updateVisibilityState(taskView, true /* visible */);

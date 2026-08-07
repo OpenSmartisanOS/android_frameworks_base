@@ -587,6 +587,29 @@ public class ShellTaskOrganizer extends TaskOrganizer {
     }
 
     /**
+     * Removes only the task-id association owned by {@code listener}. This is used when a
+     * TaskView atomically replaces one running task with another; removing every association for
+     * the listener would also detach the newly-adopted task.
+     */
+    public void removeListenerForTaskId(TaskListener listener, int taskId) {
+        synchronized (mLock) {
+            final TaskListener pending = mPendingTaskToListener.get(taskId);
+            if (pending == listener) {
+                mPendingTaskToListener.remove(taskId);
+            }
+            final TaskListener registered = mTaskListeners.get(taskId);
+            if (registered != listener) return;
+
+            final TaskAppearedInfo data = mTasks.get(taskId);
+            mTaskListeners.remove(taskId);
+            if (data != null) {
+                updateTaskListenerIfNeeded(data.getTaskInfo(), data.getLeash(), listener,
+                        getTaskListener(data.getTaskInfo()));
+            }
+        }
+    }
+
+    /**
      * Associated a listener to a pending launch cookie so we can route the task later once it
      * appears.  If both this and a pending task-id listener is set, then this will take priority.
      */
