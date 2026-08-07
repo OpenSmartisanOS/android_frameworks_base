@@ -49,6 +49,7 @@ import com.android.systemui.media.taptotransfer.MediaTttCommandLineHelper
 import com.android.systemui.media.taptotransfer.receiver.MediaTttChipControllerReceiver
 import com.android.systemui.media.taptotransfer.sender.MediaTttSenderCoordinator
 import com.android.systemui.mediaprojection.taskswitcher.MediaProjectionTaskSwitcherCoreStartable
+import com.android.systemui.onestep.OneStepTaskHost
 import com.android.systemui.shortcut.ShortcutKeyDispatcher
 import com.android.systemui.statusbar.ImmersiveModeConfirmation
 import com.android.systemui.statusbar.gesture.GesturePointerEventListener
@@ -75,6 +76,11 @@ import dagger.multibindings.IntoMap
 @Deprecated("Do not add things to this file.")
 @Module()
 abstract class SystemUICoreStartableModule {
+    @Binds
+    @IntoMap
+    @ClassKey(OneStepTaskHost::class)
+    abstract fun bindOneStepTaskHost(sysui: OneStepTaskHost): CoreStartable
+
     /** Inject into BiometricNotificationService */
     @Binds
     @IntoMap
