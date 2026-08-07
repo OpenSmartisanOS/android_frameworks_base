@@ -27,10 +27,15 @@ import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_MEDIA_OVE
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
 import static android.view.WindowManager.LayoutParams.TYPE_APPLICATION_SUB_PANEL;
+import static android.view.WindowManager.LayoutParams.TYPE_BACK_INDICATOR;
 import static android.view.WindowManager.LayoutParams.TYPE_BOOT_PROGRESS;
 import static android.view.WindowManager.LayoutParams.TYPE_DISPLAY_OVERLAY;
+import static android.view.WindowManager.LayoutParams.TYPE_DOCK_WINDOW;
 import static android.view.WindowManager.LayoutParams.TYPE_DOCK_DIVIDER;
 import static android.view.WindowManager.LayoutParams.TYPE_DRAG;
+import static android.view.WindowManager.LayoutParams.TYPE_DREAM_ACTIVITY;
+import static android.view.WindowManager.LayoutParams.TYPE_DREAM_OVERLAY;
+import static android.view.WindowManager.LayoutParams.TYPE_IDEA_PILLS;
 import static android.view.WindowManager.LayoutParams.TYPE_INPUT_CONSUMER;
 import static android.view.WindowManager.LayoutParams.TYPE_INPUT_METHOD;
 import static android.view.WindowManager.LayoutParams.TYPE_INPUT_METHOD_DIALOG;
@@ -40,13 +45,23 @@ import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_NAVIGATION_BAR_PANEL;
 import static android.view.WindowManager.LayoutParams.TYPE_NOTIFICATION_SHADE;
 import static android.view.WindowManager.LayoutParams.TYPE_PHONE;
+import static android.view.WindowManager.LayoutParams.TYPE_PC_REV_TOP_BAR_LKP;
+import static android.view.WindowManager.LayoutParams.TYPE_PC_SIDE_BAR_LKP;
 import static android.view.WindowManager.LayoutParams.TYPE_POINTER;
 import static android.view.WindowManager.LayoutParams.TYPE_PRESENTATION;
 import static android.view.WindowManager.LayoutParams.TYPE_PRIORITY_PHONE;
 import static android.view.WindowManager.LayoutParams.TYPE_PRIVATE_PRESENTATION;
 import static android.view.WindowManager.LayoutParams.TYPE_QS_DIALOG;
 import static android.view.WindowManager.LayoutParams.TYPE_SCREENSHOT;
+import static android.view.WindowManager.LayoutParams.TYPE_SCREENSHOT_EXT;
 import static android.view.WindowManager.LayoutParams.TYPE_SEARCH_BAR;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_DIALOG;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS;
+import static android.view.WindowManager.LayoutParams.TYPE_SIDEBAR_TOOLS_SIDE_AREA;
+import static android.view.WindowManager.LayoutParams.TYPE_SMARTISAN_APPLICATION_OVERLAY;
+import static android.view.WindowManager.LayoutParams.TYPE_SMARTISAN_CONTEXT_MENU;
+import static android.view.WindowManager.LayoutParams.TYPE_RECENT_PSP;
+import static android.view.WindowManager.LayoutParams.TYPE_ROUND_CORNER_OVERLAY;
 import static android.view.WindowManager.LayoutParams.TYPE_SECURE_SYSTEM_OVERLAY;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR;
 import static android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR_ADDITIONAL;
@@ -564,6 +579,7 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
                 // in a higher layer than TYPE_APPLICATION_OVERLAY.
                 return  canAddInternalSystemWindow ? 12 : 9;
             case TYPE_APPLICATION_OVERLAY:
+            case TYPE_SMARTISAN_APPLICATION_OVERLAY:
                 return  11;
             case TYPE_INPUT_METHOD:
                 // on-screen keyboards and other such input method user interfaces go here.
@@ -601,10 +617,12 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
                 // some panels (e.g. search) need to show on top of the navigation bar
                 return  25;
             case TYPE_SCREENSHOT:
+            case TYPE_SCREENSHOT_EXT:
                 // screenshot selection layer shouldn't go above system error, but it should cover
                 // navigation bars at the very least.
                 return  26;
             case TYPE_SYSTEM_ERROR:
+            case TYPE_SMARTISAN_CONTEXT_MENU:
                 // system-level error dialogs
                 return  canAddInternalSystemWindow ? 27 : 9;
             case TYPE_MAGNIFICATION_OVERLAY:
@@ -614,21 +632,37 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
                 // used to simulate secondary display devices
                 return  29;
             case TYPE_DRAG:
+            case TYPE_BACK_INDICATOR:
                 // the drag layer: input for drag-and-drop is associated with this window,
                 // which sits above all other focusable windows
                 return  30;
             case TYPE_ACCESSIBILITY_OVERLAY:
+            case TYPE_SIDEBAR_TOOLS_SIDE_AREA:
+            case TYPE_SIDEBAR_TOOLS:
+            case TYPE_PC_SIDE_BAR_LKP:
                 // overlay put by accessibility services to intercept user interaction
                 return  31;
             case TYPE_ACCESSIBILITY_MAGNIFICATION_OVERLAY:
+            case TYPE_SIDEBAR_DIALOG:
+            case TYPE_PC_REV_TOP_BAR_LKP:
+            case TYPE_IDEA_PILLS:
                 return 32;
             case TYPE_SECURE_SYSTEM_OVERLAY:
                 return  33;
             case TYPE_BOOT_PROGRESS:
                 return  34;
             case TYPE_POINTER:
+            case TYPE_ROUND_CORNER_OVERLAY:
                 // the (mouse) pointer layer
                 return  35;
+            case TYPE_DOCK_WINDOW:
+                return 12;
+            case TYPE_RECENT_PSP:
+                return 18;
+            case TYPE_DREAM_OVERLAY:
+                return 23;
+            case TYPE_DREAM_ACTIVITY:
+                return 3;
             default:
                 Slog.e("WindowManager", "Unknown window type: " + type);
                 return 3;
