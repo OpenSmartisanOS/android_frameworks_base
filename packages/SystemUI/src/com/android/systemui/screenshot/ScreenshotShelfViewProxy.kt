@@ -19,10 +19,14 @@ package com.android.systemui.screenshot
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.content.Context
+import android.content.ClipData
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Rect
 import android.graphics.Region
 import android.os.Looper
+import android.os.ServiceManager
+import android.net.Uri
 import android.view.Choreographer
 import android.view.InputEvent
 import android.view.KeyEvent
@@ -40,6 +44,7 @@ import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.animation.doOnEnd
 import androidx.core.animation.doOnStart
 import com.android.internal.logging.UiEventLogger
+import com.android.internal.sidebar.ISidebarService
 import com.android.systemui.Flags
 import com.android.systemui.Flags.screenshotAnnounceLiveRegion
 import com.android.systemui.log.DebugLogger.debugLog
@@ -112,6 +117,7 @@ constructor(
     private val animationController = ScreenshotAnimationController(view, viewModel)
     private var inputMonitor: InputMonitorCompat? = null
     private var inputEventReceiver: InputChannelCompat.InputEventReceiver? = null
+    private var savedScreenshotUri: Uri? = null
 
     init {
         shelfViewBinder.bind(
@@ -131,6 +137,26 @@ constructor(
             info.touchableRegion.set(getTouchRegion())
         }
         screenshotPreview = view.screenshotPreview
+        screenshotPreview.setOnLongClickListener { preview ->
+            val uri = savedScreenshotUri ?: return@setOnLongClickListener false
+            val mimeType = context.contentResolver.getType(uri) ?: "image/png"
+            val clip = ClipData.newUri(context.contentResolver, "screenshot", uri)
+            val share = Intent(Intent.ACTION_SEND)
+                .setType(mimeType)
+                .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            share.clipData = clip
+            share.putExtra(Intent.EXTRA_STREAM, uri)
+            val sidebar = ISidebarService.Stub.asInterface(ServiceManager.getService("sidebar"))
+            try {
+                sidebar?.showGlobalShare(share)
+            } catch (_: android.os.RemoteException) {}
+            preview.startDragAndDrop(
+                clip,
+                View.DragShadowBuilder(preview),
+                uri,
+                View.DRAG_FLAG_GLOBAL or View.DRAG_FLAG_GLOBAL_URI_READ,
+            )
+        }
         thumbnailObserver.setViews(
             view.blurredScreenshotPreview,
             view.requireViewById(R.id.screenshot_preview_border),
@@ -152,6 +178,11 @@ constructor(
         animationController.cancel()
         isPendingSharedTransition = false
         viewModel.reset()
+        savedScreenshotUri = null
+    }
+
+    fun setSavedScreenshotUri(uri: Uri?) {
+        savedScreenshotUri = uri
     }
 
     fun updateInsets(insets: WindowInsets) {

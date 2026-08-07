@@ -222,6 +222,7 @@ internal constructor(
         val requestId = actionsController.setCurrentScreenshot(screenshot)
         saveScreenshotInBackground(screenshot, requestId, finisher) { result ->
             if (result.uri != null) {
+                viewProxy.setSavedScreenshotUri(result.uri)
                 val savedScreenshot =
                     ScreenshotSavedResult(result.uri, screenshot.userHandle, result.timestamp)
                 actionsController.setCompletedScreenshot(requestId, savedScreenshot)
