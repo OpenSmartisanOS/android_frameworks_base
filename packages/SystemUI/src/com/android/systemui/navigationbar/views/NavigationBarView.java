@@ -120,6 +120,7 @@ public class NavigationBarView extends FrameLayout {
     private int mNavbarFlags;
     private int mNavBarMode;
     private boolean mImeDrawsImeNavBar;
+    private boolean mSosKeyguardHomeHandleHidden;
 
     private KeyButtonDrawable mBackIcon;
     private KeyButtonDrawable mHomeDefaultIcon;
@@ -633,8 +634,9 @@ public class NavigationBarView extends FrameLayout {
         boolean disableRecent = isRecentsButtonDisabled();
 
         // Disable the home handle if both hone and recents are disabled
-        boolean disableHomeHandle = disableRecent
-                && ((mDisabledFlags & View.STATUS_BAR_DISABLE_HOME) != 0);
+        boolean disableHomeHandle = isGesturalMode(mNavBarMode)
+                || mSosKeyguardHomeHandleHidden || (disableRecent
+                && ((mDisabledFlags & View.STATUS_BAR_DISABLE_HOME) != 0));
 
         boolean disableBack = !isBackDismissIme && (mEdgeBackGestureHandler.isHandlingGestures()
                 || ((mDisabledFlags & View.STATUS_BAR_DISABLE_BACK) != 0))
@@ -668,6 +670,15 @@ public class NavigationBarView extends FrameLayout {
         getRecentsButton().setVisibility(disableRecent  ? View.INVISIBLE : View.VISIBLE);
         getHomeHandle().setVisibility(disableHomeHandle ? View.INVISIBLE : View.VISIBLE);
         notifyActiveTouchRegions();
+    }
+
+    /** Hides only the gesture pill while preserving the navigation window and gesture insets. */
+    public void setSosKeyguardHomeHandleHidden(boolean hidden) {
+        if (mSosKeyguardHomeHandleHidden == hidden) {
+            return;
+        }
+        mSosKeyguardHomeHandleHidden = hidden;
+        updateNavButtonIcons();
     }
 
     /**
@@ -840,6 +851,9 @@ public class NavigationBarView extends FrameLayout {
         if (mRotationButtonController != null) {
             mRotationButtonController.onNavigationModeChanged(mNavBarMode);
         }
+        // Re-evaluate the home handle after the real navigation mode arrives.  The view is often
+        // inflated while mNavBarMode still contains its default value during cold boot.
+        updateNavButtonIcons();
         updateRotationButton();
     }
 

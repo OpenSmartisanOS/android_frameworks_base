@@ -37,6 +37,7 @@ import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_I
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_NAV_BAR_HIDDEN;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_OVERVIEW_DISABLED;
 import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SCREEN_PINNING;
+import static com.android.systemui.shared.system.QuickStepContract.SYSUI_STATE_SOS_KEYGUARD_HOME_HANDLE_HIDDEN;
 
 import android.app.StatusBarManager;
 import android.app.StatusBarManager.NavbarFlags;
@@ -135,6 +136,7 @@ public class TaskbarDelegate implements CommandQueue.Callbacks,
             };
     private int mDisabledFlags;
     private @WindowVisibleState int mTaskBarWindowState = WINDOW_STATE_SHOWING;
+    private boolean mSosKeyguardHomeHandleHidden;
 
     private @TransitionMode int mTransitionMode;
     private @Appearance int mAppearance;
@@ -365,6 +367,21 @@ public class TaskbarDelegate implements CommandQueue.Callbacks,
         return mInitialized;
     }
 
+    /**
+     * Gives the SOS keyguard visual and gesture ownership of the bottom edge. The navigation
+     * window stays alive for IME/accessibility bookkeeping, but QuickStep must not start a Home
+     * gesture while the original lockscreen is handling the same upward stream.
+     */
+    public void setSosKeyguardHomeHandleHidden(boolean hidden) {
+        if (mSosKeyguardHomeHandleHidden == hidden) {
+            return;
+        }
+        mSosKeyguardHomeHandleHidden = hidden;
+        if (mInitialized) {
+            updateSysuiFlags();
+        }
+    }
+
     private void parseCurrentSysuiState() {
         NavBarHelper.CurrentSysuiState state = mNavBarHelper.getCurrentSysuiState();
         if (state.mWindowStateDisplayId == mDefaultDisplayId) {
@@ -394,6 +411,8 @@ public class TaskbarDelegate implements CommandQueue.Callbacks,
                 .setFlag(SYSUI_STATE_NAV_BAR_HIDDEN, !isWindowVisible())
                 .setFlag(SYSUI_STATE_ALLOW_GESTURE_IGNORING_BAR_VISIBILITY,
                         allowSystemGestureIgnoringBarVisibility())
+                .setFlag(SYSUI_STATE_SOS_KEYGUARD_HOME_HANDLE_HIDDEN,
+                        QuickStepContract.isGesturalMode(mNavigationMode))
                 .commitUpdate(mDefaultDisplayId);
     }
 
@@ -718,6 +737,7 @@ public class TaskbarDelegate implements CommandQueue.Callbacks,
         pw.println("  mNavigationMode=" + mNavigationMode);
         pw.println("  mDisabledFlags=" + mDisabledFlags);
         pw.println("  mTaskBarWindowState=" + mTaskBarWindowState);
+        pw.println("  mSosKeyguardHomeHandleHidden=" + mSosKeyguardHomeHandleHidden);
         pw.println("  mBehavior=" + mBehavior);
         pw.println("  mTaskbarTransientShowing=" + mTaskbarTransientShowing);
         mEdgeBackGestureHandler.dump(pw);
