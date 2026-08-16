@@ -16,6 +16,7 @@
 
 package com.android.systemui.keyguard.domain.interactor
 
+import android.content.applicationContext
 import com.android.systemui.biometrics.domain.interactor.fingerprintPropertyInteractor
 import com.android.systemui.common.ui.domain.interactor.configurationInteractor
 import com.android.systemui.keyguard.data.repository.keyguardBlueprintRepository
@@ -30,6 +31,7 @@ val Kosmos.keyguardBlueprintInteractor by
             keyguardBlueprintRepository = keyguardBlueprintRepository,
             applicationScope = applicationCoroutineScope,
             shadeModeInteractor = shadeModeInteractor,
+            context = applicationContext,
             configurationInteractor = configurationInteractor,
             fingerprintPropertyInteractor = fingerprintPropertyInteractor,
             smartspaceSection = keyguardSmartspaceSection,

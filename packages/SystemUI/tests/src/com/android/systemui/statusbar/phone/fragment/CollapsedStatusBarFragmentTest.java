@@ -74,6 +74,7 @@ import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarCompone
 import com.android.systemui.statusbar.phone.ongoingcall.OngoingCallController;
 import com.android.systemui.statusbar.phone.ongoingcall.StatusBarChipsModernization;
 import com.android.systemui.statusbar.phone.ui.DarkIconManager;
+import com.android.systemui.statusbar.phone.ui.SosSystemIconsController;
 import com.android.systemui.statusbar.phone.ui.StatusBarIconController;
 import com.android.systemui.statusbar.pipeline.shared.ui.viewmodel.FakeHomeStatusBarViewBinder;
 import com.android.systemui.statusbar.pipeline.shared.ui.viewmodel.FakeHomeStatusBarViewModel;
@@ -1163,6 +1164,7 @@ public class CollapsedStatusBarFragmentTest extends SysuiBaseFragmentTest {
                 mAnimationScheduler,
                 mShadeExpansionStateManager,
                 mStatusBarIconController,
+                mock(SosSystemIconsController.class),
                 mIconManagerFactory,
                 homeStatusBarViewModelFactory,
                 mCollapsedStatusBarViewBinder,

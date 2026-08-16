@@ -86,6 +86,14 @@ public class LockSettingsServiceTests extends BaseLockSettingsServiceTests {
     }
 
     @Test
+    public void pinLengthMigration_requiresExactVerifiedProtector() {
+        assertTrue(LockSettingsService.isVerifiedProtectorCurrent(42L, 42L));
+        assertFalse(LockSettingsService.isVerifiedProtectorCurrent(42L, 43L));
+        assertFalse(LockSettingsService.isVerifiedProtectorCurrent(
+                SyntheticPasswordManager.NULL_PROTECTOR_ID, 42L));
+    }
+
+    @Test
     public void testSetPasswordPrimaryUser() throws RemoteException {
         setAndVerifyCredential(PRIMARY_USER_ID, newPassword("password"));
     }

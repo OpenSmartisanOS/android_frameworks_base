@@ -696,6 +696,36 @@ public class SyntheticPasswordTests extends BaseLockSettingsServiceTests {
     }
 
     @Test
+    public void testCreateProtectorStoresExactFourDigitPinLength() {
+        final int userId = 1;
+        final LockscreenCredential pin = LockscreenCredential.createPin("1234");
+        final MockSyntheticPasswordManager manager = new MockSyntheticPasswordManager(mContext,
+                mStorage, mGateKeeperService, mUserManager, mPasswordSlotManager);
+        final SyntheticPassword sp = manager.newSyntheticPassword(userId);
+
+        final long protectorId = manager.createLskfBasedProtector(mGateKeeperService, pin, sp,
+                userId);
+
+        // Four digits are below AOSP's auto-confirm minimum. R2 still needs the exact length
+        // because its original keyboard intentionally has no visible confirmation key.
+        assertEquals(pin.size(), manager.getPinLength(protectorId, userId));
+    }
+
+    @Test
+    public void testCreateProtectorDoesNotStorePasswordLengthAsPinLength() {
+        final int userId = 1;
+        final LockscreenCredential password = LockscreenCredential.createPassword("password");
+        final MockSyntheticPasswordManager manager = new MockSyntheticPasswordManager(mContext,
+                mStorage, mGateKeeperService, mUserManager, mPasswordSlotManager);
+        final SyntheticPassword sp = manager.newSyntheticPassword(userId);
+
+        final long protectorId = manager.createLskfBasedProtector(mGateKeeperService, password, sp,
+                userId);
+
+        assertEquals(PIN_LENGTH_UNAVAILABLE, manager.getPinLength(protectorId, userId));
+    }
+
+    @Test
     public void testDeserializePasswordData_forPinWithLengthAvailable() {
         byte[] serialized = new byte[] {
                 0, 0, 0, 3, /* CREDENTIAL_TYPE_PIN */

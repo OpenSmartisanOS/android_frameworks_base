@@ -114,6 +114,7 @@ val Kosmos.keyguardBlueprintRepository by
         spy(
             KeyguardBlueprintRepository(
                 blueprints = setOf(defaultKeyguardBlueprint, splitShadeBlueprint),
+                context = applicationContext,
                 handler = fakeExecutorHandler,
                 assert = mock(),
                 log = logcatLogBuffer("blueprints"),

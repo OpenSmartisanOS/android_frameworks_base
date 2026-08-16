@@ -16,6 +16,7 @@
 
 package com.android.systemui.keyguard.ui.viewmodel
 
+import android.content.applicationContext
 import com.android.systemui.keyguard.ui.keyguardTransitionAnimationFlow
 import com.android.systemui.keyguard.ui.transitions.blurConfig
 import com.android.systemui.kosmos.Kosmos
@@ -23,6 +24,7 @@ import com.android.systemui.kosmos.Kosmos.Fixture
 
 val Kosmos.primaryBouncerToLockscreenTransitionViewModel by Fixture {
     PrimaryBouncerToLockscreenTransitionViewModel(
+        context = applicationContext,
         animationFlow = keyguardTransitionAnimationFlow,
         blurConfig = blurConfig,
     )

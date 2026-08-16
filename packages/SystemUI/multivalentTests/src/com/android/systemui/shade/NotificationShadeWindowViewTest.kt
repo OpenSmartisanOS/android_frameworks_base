@@ -98,6 +98,7 @@ import org.mockito.Mockito.verify
 import org.mockito.MockitoAnnotations
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
+import com.android.systemui.plugins.FalsingManager
 
 @RunWith(AndroidJUnit4::class)
 @RunWithLooper(setAsMainLooper = true)
@@ -107,6 +108,7 @@ class NotificationShadeWindowViewTest : SysuiTestCase() {
     private val kosmos = testKosmos()
 
     @Mock private lateinit var choreographer: Choreographer
+    @Mock private lateinit var falsingManager: FalsingManager
     @Mock private lateinit var blurUtils: BlurUtils
     @Mock private lateinit var windowRootViewModelFactory: WindowRootViewModel.Factory
     @Mock private lateinit var dragDownHelper: DragDownHelper
@@ -201,6 +203,7 @@ class NotificationShadeWindowViewTest : SysuiTestCase() {
                 choreographer,
                 lockscreenShadeTransitionController,
                 falsingCollector,
+                falsingManager,
                 statusBarStateController,
                 dockManager,
                 notificationShadeDepthController,

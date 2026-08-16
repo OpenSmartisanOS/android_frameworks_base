@@ -89,6 +89,7 @@ import com.android.systemui.statusbar.phone.DozeServiceHost
 import com.android.systemui.statusbar.phone.PhoneStatusBarViewController
 import com.android.systemui.statusbar.phone.fragment.dagger.createFakeHomeStatusBarComponent
 import com.android.systemui.statusbar.window.StatusBarWindowStateController
+import com.android.systemui.plugins.FalsingManager
 import com.android.systemui.testKosmos
 import com.android.systemui.unfold.SysUIUnfoldComponent
 import com.android.systemui.unfold.UnfoldTransitionProgressProvider
@@ -135,6 +136,7 @@ class NotificationShadeWindowViewControllerTest(flags: FlagsParameterization) : 
     val kosmos = testKosmos().useUnconfinedTestDispatcher()
 
     @Mock private lateinit var view: NotificationShadeWindowView
+    @Mock private lateinit var falsingManager: FalsingManager
     @Mock private lateinit var sysuiStatusBarStateController: SysuiStatusBarStateController
     @Mock private lateinit var centralSurfaces: CentralSurfaces
     @Mock private lateinit var dozeServiceHost: DozeServiceHost
@@ -237,6 +239,7 @@ class NotificationShadeWindowViewControllerTest(flags: FlagsParameterization) : 
                 choreographer,
                 lockscreenShadeTransitionController,
                 falsingCollector,
+                falsingManager,
                 sysuiStatusBarStateController,
                 dockManager,
                 notificationShadeDepthController,
