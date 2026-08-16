@@ -242,6 +242,8 @@ class KeyguardController {
 
         state.mKeyguardShowing = keyguardShowing;
         state.mAodShowing = aodShowing;
+        mWindowManager.mKeyguardBackgroundController.onKeyguardShownChangedLocked(
+                displayId, keyguardShowing, aodShowing);
         state.writeEventLog("setKeyguardShown");
 
         if (keyguardChanged || (mWindowManager.mFlags.mAodTransition && aodChanged)) {
@@ -626,6 +628,7 @@ class KeyguardController {
     }
 
     void onDisplayRemoved(@NonNull DisplayContent dc) {
+        mWindowManager.mKeyguardBackgroundController.onDisplayRemovedLocked(dc.mDisplayId);
         final KeyguardDisplayState state = mDisplayStates.get(dc.mDisplayId);
         if (state != null) {
             state.onRemoved(dc);

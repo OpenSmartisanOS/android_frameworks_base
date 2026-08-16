@@ -809,6 +809,7 @@ public class WindowManagerService extends IWindowManager.Stub
 
     final TaskSnapshotController mTaskSnapshotController;
     final SnapshotController mSnapshotController;
+    final KeyguardBackgroundController mKeyguardBackgroundController;
 
     final BlurController mBlurController;
     final TaskFpsCallbackController mTaskFpsCallbackController;
@@ -1394,6 +1395,7 @@ public class WindowManagerService extends IWindowManager.Stub
         mWindowPlacerLocked = new WindowSurfacePlacer(this);
         mSnapshotController = new SnapshotController(this);
         mTaskSnapshotController = mSnapshotController.mTaskSnapshotController;
+        mKeyguardBackgroundController = new KeyguardBackgroundController(this);
 
         mWindowTracing = WindowTracing.createDefaultAndStartLooper(this,
                 Choreographer.getInstance());
@@ -3861,6 +3863,9 @@ public class WindowManagerService extends IWindowManager.Stub
 
     @Override
     public void screenTurningOff(int displayId, ScreenOffListener listener) {
+        synchronized (mGlobalLock) {
+            mKeyguardBackgroundController.onScreenTurningOffLocked(displayId);
+        }
         mTaskSnapshotController.screenTurningOff(displayId, listener);
     }
 
@@ -3878,6 +3883,7 @@ public class WindowManagerService extends IWindowManager.Stub
     @Override
     public void onUserSwitched() {
         synchronized (mGlobalLock) {
+            mKeyguardBackgroundController.onUserSwitchedLocked();
             // force a re-application of focused window sysui visibility on each display.
             mRoot.forAllDisplayPolicies(DisplayPolicy::resetSystemBarAttributes);
         }

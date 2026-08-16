@@ -174,6 +174,7 @@ class WindowSurfacePlacer {
             Trace.traceBegin(Trace.TRACE_TAG_WINDOW_MANAGER, "performSurfacePlacement");
             try {
                 mService.mRoot.performSurfacePlacement();
+                mService.mKeyguardBackgroundController.onSurfacePlacementLocked();
             } finally {
                 Trace.traceEnd(Trace.TRACE_TAG_WINDOW_MANAGER);
             }

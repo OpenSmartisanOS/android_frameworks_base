@@ -493,8 +493,11 @@ class TaskSnapshotController extends AbsAppSnapshotController<Task, TaskSnapshot
         }
         // Allow taking snapshot of home when turning screen off to reduce the delay of waking from
         // secure lock to home.
-        final boolean allowSnapshotHome = displayId == Display.DEFAULT_DISPLAY
-                && mService.mPolicy.isKeyguardSecure(mService.mCurrentUserId);
+        // The R2 keyguard reveals a stable, non-interactive keyguard_background while its curtain
+        // moves.  Keep Home in the in-memory sleeping snapshot set even when the current trust
+        // state does not require a credential; the normal secure/protected-window filters still
+        // decide whether a real snapshot is permitted.
+        final boolean allowSnapshotHome = displayId == Display.DEFAULT_DISPLAY;
         mTmpTasks.clear();
         displayContent.forAllLeafTasks(task -> {
             if (!allowSnapshotHome && task.isActivityTypeHome()) {
