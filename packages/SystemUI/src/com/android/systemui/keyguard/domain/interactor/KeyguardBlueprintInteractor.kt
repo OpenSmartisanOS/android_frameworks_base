@@ -17,6 +17,7 @@
 
 package com.android.systemui.keyguard.domain.interactor
 
+import android.content.Context
 import com.android.app.tracing.coroutines.launchTraced as launch
 import com.android.systemui.CoreStartable
 import com.android.systemui.biometrics.domain.interactor.FingerprintPropertyInteractor
@@ -26,6 +27,7 @@ import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.keyguard.data.repository.KeyguardBlueprintRepository
 import com.android.systemui.keyguard.shared.model.KeyguardBlueprint
 import com.android.systemui.keyguard.ui.view.layout.blueprints.DefaultKeyguardBlueprint
+import com.android.systemui.keyguard.ui.view.layout.blueprints.SosKeyguardBlueprint
 import com.android.systemui.keyguard.ui.view.layout.blueprints.SplitShadeKeyguardBlueprint
 import com.android.systemui.keyguard.ui.view.layout.blueprints.transitions.IntraBlueprintTransition.Config
 import com.android.systemui.keyguard.ui.view.layout.blueprints.transitions.IntraBlueprintTransition.Type
@@ -47,6 +49,7 @@ constructor(
     private val keyguardBlueprintRepository: KeyguardBlueprintRepository,
     @Application private val applicationScope: CoroutineScope,
     shadeModeInteractor: ShadeModeInteractor,
+    @ShadeDisplayAware private val context: Context,
     @ShadeDisplayAware private val configurationInteractor: ConfigurationInteractor,
     private val fingerprintPropertyInteractor: FingerprintPropertyInteractor,
     private val smartspaceSection: SmartspaceSection,
@@ -64,6 +67,7 @@ constructor(
     val blueprintId =
         shadeModeInteractor.shadeMode.map { shadeMode ->
             when {
+                SosKeyguardBlueprint.isEnabled(context) -> SosKeyguardBlueprint.ID
                 shadeMode is ShadeMode.Split && !SceneContainerFlag.isEnabled ->
                     SplitShadeKeyguardBlueprint.ID
                 else -> DefaultKeyguardBlueprint.DEFAULT

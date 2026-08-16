@@ -97,6 +97,7 @@ import com.android.internal.util.LatencyTracker;
 import com.android.keyguard.ActiveUnlockConfig;
 import com.android.keyguard.KeyguardUnfoldTransition;
 import com.android.keyguard.KeyguardUpdateMonitor;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.keyguard.dagger.KeyguardStatusBarViewComponent;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.Dumpable;
@@ -1400,11 +1401,38 @@ public final class NotificationPanelViewController implements
                 || mNotificationContainerParent == null) {
             return;
         }
+        // The legacy paged shade treats its selected QS page as fully expanded while the
+        // keyguard panel itself is laid out at full height. That makes ShadeInteractor hide the
+        // separate KeyguardRootView before the user has opened the shade. Keep the collapsed SOS
+        // keyguard on the notification page; an explicit two-finger QS gesture can still switch it.
+        final boolean sosKeyguardOwnsSurface = mBarState == KEYGUARD
+                && isSosDeltaKeyguardEnabled();
         setSosQuickSettingsPage(
-                !(mActiveNotificationsInteractor.getAreAnyNotificationsPresentValue()
-                        && mSosOneFingerExpansion),
+                !sosKeyguardOwnsSurface
+                        && !(mActiveNotificationsInteractor.getAreAnyNotificationsPresentValue()
+                                && mSosOneFingerExpansion),
                 animate);
         mSosAutoPageSelectedForCurrentExpansion = true;
+    }
+
+    private boolean isSosDeltaKeyguardEnabled() {
+        return SosKeyguardRuntime.isEnabled(mView.getContext());
+    }
+
+    private float getLegacyShadeExpansionForRepository() {
+        // Legacy keyguard keeps the panel at a non-zero layout height even when the lockscreen
+        // shade is closed. KeyguardInteractor interprets an intermediate legacy fraction as an
+        // in-progress swipe-up and fades KeyguardRootView almost completely. Publish the reset
+        // value while the SOS lockscreen is idle; keep the real fraction during user/animator
+        // movement so unlock gestures retain their normal transition semantics.
+        if (mBarState == KEYGUARD
+                && isSosDeltaKeyguardEnabled()
+                && mSosLockscreenShadeExpansion <= 0f
+                && !isTracking()
+                && mHeightAnimator == null) {
+            return 1f;
+        }
+        return mExpandedFraction;
     }
 
     private void onSosActiveNotificationsChanged(Boolean hasNotifications) {
@@ -1458,9 +1486,11 @@ public final class NotificationPanelViewController implements
         final float chromeMaxHeight =
                 panelHeight > 0 ? panelHeight : getMaxPanelTransitionDistance();
         if (mBarState == KEYGUARD) {
-            mQsController.setSosQuickSettingsPage(false);
+            final float lockscreenFraction = MathUtils.saturate(mSosLockscreenShadeExpansion);
             mNotificationContainerParent.setSosExpansion(
-                    0f, chromeMaxHeight, false /* shadeContentAllowed */);
+                    lockscreenFraction * chromeMaxHeight,
+                    chromeMaxHeight,
+                    lockscreenFraction > 0f && !mStatusBarStateController.isDozing());
             return;
         }
         final float sosExpandedFraction = mExpandedFraction;
@@ -1477,7 +1507,10 @@ public final class NotificationPanelViewController implements
                 && mNotificationContainerParent != null) {
             mSosPageSelectionExplicit = true;
             setSosQuickSettingsPage(true, true);
-            if (isFullyCollapsed()) {
+            if (isKeyguardShowing()) {
+                mLockscreenShadeTransitionController.goToLockedShade(
+                        /* expandedView= */ null, /* needsQSAnimation= */ true);
+            } else if (isFullyCollapsed()) {
                 expand(true /* animate */);
             }
             return;
@@ -1515,7 +1548,10 @@ public final class NotificationPanelViewController implements
                 && mNotificationContainerParent != null) {
             mSosPageSelectionExplicit = true;
             setSosQuickSettingsPage(false, true);
-            if (isFullyCollapsed()) {
+            if (isKeyguardShowing()) {
+                mLockscreenShadeTransitionController.goToLockedShade(
+                        /* expandedView= */ null, /* needsQSAnimation= */ true);
+            } else if (isFullyCollapsed()) {
                 expand(true /* animate */);
             }
             return;
@@ -3294,7 +3330,7 @@ public final class NotificationPanelViewController implements
             if (mExpandedFraction > 0f && mExpectingSynthesizedDown) {
                 mExpectingSynthesizedDown = false;
             }
-            mShadeRepository.setLegacyShadeExpansion(mExpandedFraction);
+            mShadeRepository.setLegacyShadeExpansion(getLegacyShadeExpansionForRepository());
             mQsController.setShadeExpansion(mExpandedHeight, mExpandedFraction);
             mExpansionDragDownAmountPx = h;
             if (!SceneContainerFlag.isEnabled()) {
@@ -3734,6 +3770,12 @@ public final class NotificationPanelViewController implements
             mBarState = statusBarState;
             mQsController.setBarState(statusBarState);
             updateSosChromeForExpansion();
+            if (keyguardShowing && isSosDeltaKeyguardEnabled()
+                    && mNotificationContainerParent != null) {
+                setSosQuickSettingsPage(false, false);
+                mShadeRepository.setLegacyShadeExpansion(
+                        getLegacyShadeExpansionForRepository());
+            }
 
             boolean fromShadeToKeyguard = statusBarState == KEYGUARD
                     && (oldState == SHADE || oldState == SHADE_LOCKED);

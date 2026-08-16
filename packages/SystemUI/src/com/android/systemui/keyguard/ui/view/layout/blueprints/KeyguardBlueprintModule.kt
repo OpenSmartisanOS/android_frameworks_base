@@ -42,6 +42,10 @@ abstract class KeyguardBlueprintModule {
     ): KeyguardBlueprint
 
     @Binds
+    @IntoSet
+    abstract fun bindSosBlueprint(sosKeyguardBlueprint: SosKeyguardBlueprint): KeyguardBlueprint
+
+    @Binds
     @IntoMap
     @ClassKey(KeyguardBlueprintInteractor::class)
     abstract fun bindsKeyguardBlueprintInteractor(

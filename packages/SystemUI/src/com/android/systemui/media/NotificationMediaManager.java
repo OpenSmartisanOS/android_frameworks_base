@@ -255,6 +255,36 @@ public class NotificationMediaManager implements Dumpable {
         return mMediaMetadata;
     }
 
+    /** Controls the primary local media session from alternate SystemUI surfaces. */
+    public void playPausePrimarySession() {
+        final MediaController controller = mMediaController;
+        if (controller == null) {
+            return;
+        }
+        final int state = getMediaControllerPlaybackState(controller);
+        if (isPlayingState(state)) {
+            controller.getTransportControls().pause();
+        } else {
+            controller.getTransportControls().play();
+        }
+    }
+
+    /** Skips the primary local media session to its previous queue item. */
+    public void skipPrimarySessionToPrevious() {
+        final MediaController controller = mMediaController;
+        if (controller != null) {
+            controller.getTransportControls().skipToPrevious();
+        }
+    }
+
+    /** Skips the primary local media session to its next queue item. */
+    public void skipPrimarySessionToNext() {
+        final MediaController controller = mMediaController;
+        if (controller != null) {
+            controller.getTransportControls().skipToNext();
+        }
+    }
+
     public Icon getMediaIcon() {
         if (mMediaNotificationKey == null) {
             return null;

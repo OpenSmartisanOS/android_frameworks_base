@@ -55,6 +55,8 @@ import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInterac
 import com.android.systemui.keyguard.shared.model.Edge;
 import com.android.systemui.keyguard.shared.model.TransitionState;
 import com.android.systemui.keyguard.shared.model.TransitionStep;
+import com.android.systemui.keyguard.ui.view.layout.sections.SosKeyguardUnlockGestureRouter;
+import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.qs.flags.QSComposeFragment;
 import com.android.systemui.res.R;
 import com.android.systemui.scene.shared.flag.SceneContainerFlag;
@@ -109,6 +111,7 @@ import javax.inject.Provider;
 public class NotificationShadeWindowViewController implements Dumpable {
     private static final String TAG = "NotifShadeWindowVC";
     private final FalsingCollector mFalsingCollector;
+    private final SosKeyguardUnlockGestureRouter mSosUnlockGestureRouter;
     private final SysuiStatusBarStateController mStatusBarStateController;
     private final NotificationShadeWindowView mView;
     private final NotificationShadeDepthController mDepthController;
@@ -197,6 +200,7 @@ public class NotificationShadeWindowViewController implements Dumpable {
             Choreographer choreographer,
             LockscreenShadeTransitionController transitionController,
             FalsingCollector falsingCollector,
+            FalsingManager falsingManager,
             SysuiStatusBarStateController statusBarStateController,
             DockManager dockManager,
             NotificationShadeDepthController depthController,
@@ -240,6 +244,7 @@ public class NotificationShadeWindowViewController implements Dumpable {
         mFalsingCollector = falsingCollector;
         mStatusBarStateController = statusBarStateController;
         mView = notificationShadeWindowView;
+        mSosUnlockGestureRouter = new SosKeyguardUnlockGestureRouter(mView, falsingManager);
         mDockManager = dockManager;
         mShadeViewController = shadeViewController;
         mPanelExpansionInteractor = panelExpansionInteractor;
@@ -608,6 +613,13 @@ public class NotificationShadeWindowViewController implements Dumpable {
                     }
                 }
 
+                // R2 owns an unlocking swipe before NotificationPanelViewController. DOWN is
+                // observation-only; this returns true only after a single-finger upward gesture
+                // is unambiguous, leaving TPage/camera horizontal swipes and QS drag-down intact.
+                if (mSosUnlockGestureRouter.shouldIntercept(ev)) {
+                    return true;
+                }
+
                 boolean bouncerShowing = mPrimaryBouncerInteractor.isBouncerShowing()
                             || mAlternateBouncerInteractor.isVisibleState();
                 if (mPanelExpansionInteractor.isFullyExpanded()
@@ -658,6 +670,9 @@ public class NotificationShadeWindowViewController implements Dumpable {
 
             @Override
             public boolean handleTouchEvent(MotionEvent ev) {
+                if (mSosUnlockGestureRouter.onTouchEvent(ev)) {
+                    return true;
+                }
                 boolean handled = false;
                 if (mStatusBarStateController.isDozing()) {
                     handled = !mDozeServiceHost.isPulsing();

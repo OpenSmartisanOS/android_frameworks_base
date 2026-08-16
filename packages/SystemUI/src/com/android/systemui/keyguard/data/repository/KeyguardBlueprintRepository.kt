@@ -17,6 +17,7 @@
 
 package com.android.systemui.keyguard.data.repository
 
+import android.content.Context
 import android.os.Handler
 import androidx.annotation.VisibleForTesting
 import com.android.systemui.dagger.SysUISingleton
@@ -24,11 +25,13 @@ import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.keyguard.shared.model.KeyguardBlueprint
 import com.android.systemui.keyguard.ui.view.layout.blueprints.DefaultKeyguardBlueprint.Companion.DEFAULT
 import com.android.systemui.keyguard.ui.view.layout.blueprints.KeyguardBlueprintModule
+import com.android.systemui.keyguard.ui.view.layout.blueprints.SosKeyguardBlueprint
 import com.android.systemui.keyguard.ui.view.layout.blueprints.transitions.IntraBlueprintTransition.Config
 import com.android.systemui.log.LogBuffer
 import com.android.systemui.log.core.Logger
 import com.android.systemui.log.dagger.KeyguardBlueprintLog
 import com.android.systemui.util.ThreadAssert
+import com.android.systemui.shade.ShadeDisplayAware
 import java.io.PrintWriter
 import java.util.TreeMap
 import javax.inject.Inject
@@ -51,6 +54,7 @@ class KeyguardBlueprintRepository
 @Inject
 constructor(
     blueprints: Set<@JvmSuppressWildcards KeyguardBlueprint>,
+    @ShadeDisplayAware context: Context,
     @Main val handler: Handler,
     val assert: ThreadAssert,
     @KeyguardBlueprintLog log: LogBuffer,
@@ -61,7 +65,15 @@ constructor(
     // blueprints in the adb tool.
     private val blueprintIdMap: TreeMap<String, KeyguardBlueprint> =
         TreeMap<String, KeyguardBlueprint>().apply { putAll(blueprints.associateBy { it.id }) }
-    val blueprint: MutableStateFlow<KeyguardBlueprint> = MutableStateFlow(blueprintIdMap[DEFAULT]!!)
+    private val initialBlueprintId =
+        if (SosKeyguardBlueprint.isEnabled(context) &&
+            blueprintIdMap.containsKey(SosKeyguardBlueprint.ID)) {
+            SosKeyguardBlueprint.ID
+        } else {
+            DEFAULT
+        }
+    val blueprint: MutableStateFlow<KeyguardBlueprint> =
+        MutableStateFlow(checkNotNull(blueprintIdMap[initialBlueprintId]))
     val refreshTransition = MutableSharedFlow<Config>(extraBufferCapacity = 1)
     @VisibleForTesting var targetTransitionConfig: Config? = null
 

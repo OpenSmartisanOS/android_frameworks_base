@@ -145,6 +145,19 @@ constructor(
             str2 = "$newConfig"
         }
 
+        // The first keyguard frame must already contain the selected blueprint.  Posting an Init
+        // transition leaves the empty/default root visible for one or more frames during SystemUI
+        // startup, which exposes the old top-left clock before the R2 host is inserted.  Init has
+        // no animated properties by definition, so applying it synchronously is both equivalent
+        // and removes the startup race.
+        if (newConfig.type == Type.Init) {
+            if (newConfig.terminatePrevious) {
+                TransitionManager.endTransitions(constraintLayout)
+            }
+            apply()
+            return
+        }
+
         // beginDelayedTransition makes a copy, so we temporarially add the uncopied transition to
         // the running set until the copy is started by the handler.
         updateTransitions(TransitionData(newConfig)) { add(transition) }

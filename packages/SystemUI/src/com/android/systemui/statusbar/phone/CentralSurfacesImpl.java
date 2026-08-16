@@ -139,6 +139,7 @@ import com.android.systemui.fragments.FragmentService;
 import com.android.systemui.keyguard.KeyguardUnlockAnimationController;
 import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.keyguard.ScreenLifecycle;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.keyguard.WakefulnessLifecycle;
 import com.android.systemui.media.NotificationMediaManager;
 import com.android.systemui.navigationbar.NavigationBarController;
@@ -2469,6 +2470,16 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             return;
         }
 
+        if (SosKeyguardRuntime.isEnabled(mContext)) {
+            // Delta draws AOD and wake transitions inside its own host. Android's power-button
+            // radial reveal exposes the top status bar and bottom clock at different times, which
+            // looks like either component was lost. Keep this non-security scrim fully revealed;
+            // credential/scrim security layers remain independently owned by Keyguard.
+            mLightRevealScrim.setRevealEffect(LiftReveal.INSTANCE);
+            mLightRevealScrim.setRevealAmount(1f);
+            return;
+        }
+
         if (ambientAod()) {
             return;
         }
@@ -3142,7 +3153,9 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
 
                 @Override
                 public void onDozeAmountChanged(float linear, float eased) {
-                    if (!ambientAod()
+                    if (SosKeyguardRuntime.isEnabled(mContext)) {
+                        mLightRevealScrim.setRevealAmount(1f);
+                    } else if (!ambientAod()
                             && !(mLightRevealScrim.getRevealEffect() instanceof CircleReveal)) {
                         // If wakeAndUnlocking, this is handled in AuthRippleInteractor
                         if (!mBiometricUnlockController.isWakeAndUnlock()) {

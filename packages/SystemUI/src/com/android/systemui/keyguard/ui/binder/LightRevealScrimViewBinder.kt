@@ -21,6 +21,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.app.animation.Interpolators.ALPHA_IN
 import com.android.app.tracing.coroutines.launchTraced as launch
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.ui.viewmodel.LightRevealScrimViewModel
 import com.android.systemui.lifecycle.repeatWhenAttached
 import com.android.systemui.shared.Flags.ambientAod
@@ -34,6 +35,15 @@ object LightRevealScrimViewBinder {
         viewModel: LightRevealScrimViewModel,
         wallpaperViewModel: WallpaperViewModel,
     ) {
+        if (SosKeyguardRuntime.isEnabled(revealScrim.context)) {
+            // The R2 host owns both its AOD fade and wake presentation. Keeping Android's
+            // independent radial/lift reveal active masks the top status bar and bottom clock at
+            // different times. This scrim is visual only; bouncer and secure-content scrims are
+            // separate and remain untouched.
+            revealScrim.revealAmount = 1f
+            revealScrim.alpha = 1f
+            return
+        }
         revealScrim.repeatWhenAttached {
             repeatOnLifecycle(Lifecycle.State.CREATED) {
                 if (ambientAod()) {
