@@ -17,6 +17,7 @@
 package com.android.systemui.statusbar.pipeline.shared.ui.viewmodel
 
 import android.annotation.ColorInt
+import android.content.Context
 import android.graphics.Rect
 import android.graphics.RectF
 import android.view.Display
@@ -31,6 +32,7 @@ import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent.DisplayId
 import com.android.systemui.keyguard.domain.interactor.KeyguardInteractor
 import com.android.systemui.keyguard.domain.interactor.KeyguardOcclusionInteractor
 import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInteractor
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.shared.model.Edge
 import com.android.systemui.keyguard.shared.model.KeyguardState
 import com.android.systemui.keyguard.shared.model.KeyguardState.DREAMING
@@ -248,6 +250,7 @@ interface HomeStatusBarViewModel : Activatable {
 class HomeStatusBarViewModelImpl
 @AssistedInject
 constructor(
+    @DisplayAware context: Context,
     @DisplayId thisDisplayId: Int,
     override val batteryNextToPercentViewModel: BatteryNextToPercentViewModel.Factory,
     override val unifiedBatteryViewModel: BatteryViewModel.BasedOnUserSetting.Factory,
@@ -278,6 +281,14 @@ constructor(
     shadeDisplaysInteractor: Provider<ShadeDisplaysInteractor>,
     private val uiEventLogger: StatusBarChipsUiEventLogger,
 ) : HomeStatusBarViewModel, ExclusiveActivatable() {
+
+    /**
+     * The R2 lockscreen intentionally reuses this exact home status bar.  Keeping the decision in
+     * this view model avoids the old race where CollapsedStatusBarFragment made the children
+     * visible and HomeStatusBarViewBinder immediately hid them again because Keyguard was visible.
+     */
+    private val isSosKeyguardEnabled =
+        thisDisplayId == Display.DEFAULT_DISPLAY && SosKeyguardRuntime.isEnabled(context)
 
     private val hydrator = Hydrator(traceName = "HomeStatusBarViewModel.hydrator")
 
@@ -387,7 +398,9 @@ constructor(
                 if (isOccluded) {
                     true
                 } else if (isShadeWindowOnThisDisplay) {
-                    currentScene == Scenes.Gone && !isShadeVisibleOnAnyDisplay
+                    (currentScene == Scenes.Gone ||
+                        (isSosKeyguardEnabled && currentScene == Scenes.Lockscreen)) &&
+                        !isShadeVisibleOnAnyDisplay
                 } else {
                     // When the shade is visible on another display,
                     // allow the home status bar on the current display.
@@ -448,6 +461,16 @@ constructor(
             )
         }
 
+    /**
+     * The R2 host and the status-bar window publish their real presentation lifetime here.  Do
+     * not derive this from currentKeyguardState: cold boot, canceled transitions and AOD exit can
+     * all leave that state one step behind the already-visible lockscreen window.
+     */
+    private val isSosLockscreen: Flow<Boolean> =
+        SosKeyguardRuntime.awakeLockscreenPresented
+            .map { isSosKeyguardEnabled && it }
+            .distinctUntilChanged()
+
     override val useDesktopStatusBar: Boolean by
         hydrator.hydratedStateOf(
             traceName = "useDesktopStatusBar",
@@ -477,7 +500,9 @@ constructor(
         combine(currentKeyguardState, isShadeVisibleOnThisDisplay) {
                 currentKeyguardState,
                 isShadeVisibleOnThisDisplay ->
-                (currentKeyguardState == GONE || currentKeyguardState == OCCLUDED) &&
+                (currentKeyguardState == GONE ||
+                    currentKeyguardState == OCCLUDED ||
+                    (isSosKeyguardEnabled && currentKeyguardState == LOCKSCREEN)) &&
                     !isShadeVisibleOnThisDisplay
             }
             .distinctUntilChanged()
@@ -490,10 +515,18 @@ constructor(
 
     // "Compat" to cover both legacy and Scene container case in one flow.
     private val isHomeStatusBarAllowedCompat =
-        if (SceneContainerFlag.isEnabled) {
-            isHomeStatusBarAllowedByScene
-        } else {
-            isHomeScreenStatusBarAllowedLegacy
+        combine(
+            if (SceneContainerFlag.isEnabled) {
+                isHomeStatusBarAllowedByScene
+            } else {
+                isHomeScreenStatusBarAllowedLegacy
+            },
+            isSosLockscreen,
+        ) { allowedByAndroid, sosLockscreen ->
+            // R2 deliberately reuses the normal PhoneStatusBarView on lockscreen.  Android's
+            // scene/legacy policy normally reserves that row for KeyguardStatusBarView, which the
+            // SOS blueprint does not create.
+            allowedByAndroid || sosLockscreen
         }
 
     override val isHomeStatusBarAllowed =
@@ -538,7 +571,11 @@ constructor(
                         !isGoneToDream &&
                         // In legacy code, check if keyguard is visible to cover canceled
                         // transitions. In Flexi, the scene state is enough to cover this case.
-                        if (!SceneContainerFlag.isEnabled) !isKeyguardVisible else true)
+                        if (!SceneContainerFlag.isEnabled) {
+                            !isKeyguardVisible || isSosKeyguardEnabled
+                        } else {
+                            true
+                        })
             }
             .distinctUntilChanged()
             .logDiffsForTable(
@@ -662,11 +699,12 @@ constructor(
         combine(
                 shouldHomeStatusBarBeVisible,
                 homeStatusBarInteractor.visibilityViaDisableFlags,
-            ) { shouldStatusBarBeVisible, visibilityViaDisableFlags
+                isSosLockscreen,
+            ) { shouldStatusBarBeVisible, visibilityViaDisableFlags, isSosLockscreen
                 ->
                 val showClock =
                     shouldStatusBarBeVisible &&
-                        visibilityViaDisableFlags.isClockAllowed
+                        (isSosLockscreen || visibilityViaDisableFlags.isClockAllowed)
                 // Always use View.GONE here, so that we do not get stray spaces
                 VisibilityModel(showClock.toVisibleOrGone(), visibilityViaDisableFlags.animate)
             }
@@ -683,13 +721,16 @@ constructor(
                 shouldHomeStatusBarBeVisible,
                 isAnyChipVisible,
                 homeStatusBarInteractor.visibilityViaDisableFlags,
-            ) { shouldStatusBarBeVisible, anyChipVisible, visibilityViaDisableFlags ->
+                isSosLockscreen,
+            ) { shouldStatusBarBeVisible, anyChipVisible, visibilityViaDisableFlags,
+                isSosLockscreen ->
                 val showNotificationIconContainer =
                     if (anyChipVisible) {
                         false
                     } else {
                         shouldStatusBarBeVisible &&
-                            visibilityViaDisableFlags.areNotificationIconsAllowed
+                            (isSosLockscreen ||
+                                visibilityViaDisableFlags.areNotificationIconsAllowed)
                     }
                 VisibilityModel(
                     showNotificationIconContainer.toVisibleOrGone(),
@@ -705,11 +746,14 @@ constructor(
             .flowOn(bgDispatcher)
 
     private val isSystemInfoVisible =
-        combine(shouldHomeStatusBarBeVisible, homeStatusBarInteractor.visibilityViaDisableFlags) {
-            shouldStatusBarBeVisible,
-            visibilityViaDisableFlags ->
+        combine(
+            shouldHomeStatusBarBeVisible,
+            homeStatusBarInteractor.visibilityViaDisableFlags,
+            isSosLockscreen,
+        ) { shouldStatusBarBeVisible, visibilityViaDisableFlags, isSosLockscreen ->
             val showSystemInfo =
-                shouldStatusBarBeVisible && visibilityViaDisableFlags.isSystemInfoAllowed
+                shouldStatusBarBeVisible &&
+                    (isSosLockscreen || visibilityViaDisableFlags.isSystemInfoAllowed)
             VisibilityModel(showSystemInfo.toVisibleOrGone(), visibilityViaDisableFlags.animate)
         }
 

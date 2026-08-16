@@ -17,6 +17,7 @@
 package com.android.systemui.statusbar.policy;
 
 import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.app.StatusBarManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -392,7 +393,15 @@ public class Clock extends TextView implements
     @Override
     public void onDarkChanged(ArrayList<Rect> areas, float darkIntensity, int tint) {
         mNonAdaptedColor = DarkIconDispatcher.getTint(areas, this, tint);
-        setTextColor(mNonAdaptedColor);
+        setTextColor(mSosKeyguardColorOverride != null
+                ? mSosKeyguardColorOverride : mNonAdaptedColor);
+    }
+
+    @Nullable private Integer mSosKeyguardColorOverride;
+
+    public void setSosKeyguardColorOverride(@Nullable Integer color) {
+        mSosKeyguardColorOverride = color;
+        setTextColor(color != null ? color : mNonAdaptedColor);
     }
 
     // Update text color based when shade scrim changes color.

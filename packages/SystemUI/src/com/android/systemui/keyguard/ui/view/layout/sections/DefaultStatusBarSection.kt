@@ -27,6 +27,7 @@ import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.START
 import androidx.constraintlayout.widget.ConstraintSet.TOP
 import com.android.keyguard.dagger.KeyguardStatusBarViewComponent
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.shared.model.KeyguardSection
 import com.android.systemui.res.R
 import com.android.systemui.scene.shared.flag.SceneContainerFlag
@@ -47,8 +48,16 @@ constructor(
 ) : KeyguardSection() {
 
     private val statusBarViewId = R.id.keyguard_header
+    private fun isSosStatusBar(): Boolean = SosKeyguardRuntime.isEnabled(context)
 
     override fun addViews(constraintLayout: ConstraintLayout) {
+        if (isSosStatusBar()) {
+            // SOS always reuses the normal PhoneStatusBarView window. The keyguard header is a
+            // second status bar implementation, even under SceneContainer, and must not be placed
+            // over the imported lockscreen.
+            notificationPanelView.findViewById<View?>(statusBarViewId)?.visibility = View.GONE
+            return
+        }
         if (!SceneContainerFlag.isEnabled) {
             return
         }
@@ -66,7 +75,9 @@ constructor(
     }
 
     override fun bindData(constraintLayout: ConstraintLayout) {
+        if (isSosStatusBar()) return
         if (!SceneContainerFlag.isEnabled) {
+            // The reused legacy view is already bound by NotificationPanelViewController.
             return
         }
 
@@ -88,6 +99,7 @@ constructor(
     }
 
     override fun applyConstraints(constraintSet: ConstraintSet) {
+        if (isSosStatusBar()) return
         constraintSet.apply {
             constrainHeight(statusBarViewId, Utils.getStatusBarHeaderHeightKeyguard(context))
             connect(statusBarViewId, TOP, PARENT_ID, TOP)

@@ -73,6 +73,9 @@ interface StatusBarWindowController {
      */
     fun setForceStatusBarVisible(forceStatusBarVisible: Boolean, source: String)
 
+    /** Keeps the normal status bar window visible for the transparent R2 keyguard. */
+    fun setSosKeyguardForceStatusBarVisible(visible: Boolean) {}
+
     /**
      * Sets whether an ongoing process requires the status bar to be forced visible.
      *

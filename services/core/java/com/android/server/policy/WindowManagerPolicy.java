@@ -588,7 +588,12 @@ public interface WindowManagerPolicy extends WindowManagerPolicyConstants {
                 // on-screen keyboards and other such input method user interfaces go here.
                 return  14;
             case TYPE_STATUS_BAR:
-                return  15;
+                // R2 reuses the one normal PhoneStatusBarView on HOME, KEYGUARD and PANEL. AOSP
+                // puts NotificationShade above this window because it draws a second
+                // KeyguardStatusBarView inside the shade. R2 deliberately has no such duplicate,
+                // so place the real status bar above the shade while keeping it below keyguard
+                // dialogs and the remaining security overlays.
+                return  18;
             case TYPE_STATUS_BAR_ADDITIONAL:
                 return  16;
             case TYPE_NOTIFICATION_SHADE:

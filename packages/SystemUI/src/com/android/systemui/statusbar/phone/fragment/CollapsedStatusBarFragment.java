@@ -47,6 +47,7 @@ import com.android.systemui.demomode.DemoMode;
 import com.android.systemui.demomode.DemoModeController;
 import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent.DisplayAware;
 import com.android.systemui.dump.DumpManager;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.res.R;
 import com.android.systemui.scene.shared.flag.SceneContainerFlag;
@@ -76,11 +77,13 @@ import com.android.systemui.statusbar.phone.ongoingcall.OngoingCallController;
 import com.android.systemui.statusbar.phone.ongoingcall.OngoingCallListener;
 import com.android.systemui.statusbar.phone.ongoingcall.StatusBarChipsModernization;
 import com.android.systemui.statusbar.phone.ui.DarkIconManager;
+import com.android.systemui.statusbar.phone.ui.SosSystemIconsController;
 import com.android.systemui.statusbar.phone.ui.StatusBarIconController;
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.HomeStatusBarViewBinder;
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.StatusBarVisibilityChangeListener;
 import com.android.systemui.statusbar.pipeline.shared.ui.viewmodel.HomeStatusBarViewModel;
 import com.android.systemui.statusbar.pipeline.shared.ui.viewmodel.HomeStatusBarViewModel.HomeStatusBarViewModelFactory;
+import com.android.systemui.statusbar.policy.Clock;
 import com.android.systemui.statusbar.policy.KeyguardStateController;
 import com.android.systemui.statusbar.window.StatusBarWindowController;
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore;
@@ -152,6 +155,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private final SystemStatusAnimationScheduler mAnimationScheduler;
     private final ShadeExpansionStateManager mShadeExpansionStateManager;
     private final StatusBarIconController mStatusBarIconController;
+    private final SosSystemIconsController mSosSystemIconsController;
     private final CarrierConfigTracker mCarrierConfigTracker;
     private final HomeStatusBarViewBinder mHomeStatusBarViewBinder;
     private final HomeStatusBarViewModelFactory mHomeStatusBarViewModelFactory;
@@ -178,6 +182,19 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     };
     private OperatorNameViewController mOperatorNameViewController;
     private StatusBarSystemEventDefaultAnimator mSystemEventAnimator;
+    private final SosSystemIconsController.HomeKeyguardThemeListener mSosHomeThemeListener =
+            (active, supportsDarkText) -> {
+                if (mDarkIconManager == null) return;
+                final Integer iconTint = active
+                        ? SosSystemIconsController.iconTintForWallpaper(supportsDarkText) : null;
+                final Integer foregroundTint = active
+                        ? SosSystemIconsController.foregroundTintForWallpaper(supportsDarkText)
+                        : null;
+                mDarkIconManager.setSosKeyguardTintOverride(iconTint, foregroundTint);
+                if (mClockView instanceof Clock clock) {
+                    clock.setSosKeyguardColorOverride(iconTint);
+                }
+            };
 
     private final CarrierConfigChangedListener mCarrierConfigCallback =
             new CarrierConfigChangedListener() {
@@ -256,6 +273,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
             SystemStatusAnimationScheduler animationScheduler,
             ShadeExpansionStateManager shadeExpansionStateManager,
             StatusBarIconController statusBarIconController,
+            SosSystemIconsController sosSystemIconsController,
             DarkIconManager.Factory darkIconManagerFactory,
             @DisplayAware HomeStatusBarViewModelFactory homeStatusBarViewModelFactory,
             @DisplayAware HomeStatusBarViewBinder homeStatusBarViewBinder,
@@ -281,6 +299,7 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         mAnimationScheduler = animationScheduler;
         mShadeExpansionStateManager = shadeExpansionStateManager;
         mStatusBarIconController = statusBarIconController;
+        mSosSystemIconsController = sosSystemIconsController;
         mHomeStatusBarViewModelFactory = homeStatusBarViewModelFactory;
         mHomeStatusBarViewBinder = homeStatusBarViewBinder;
         mStatusBarHideIconsForBouncerManager = statusBarHideIconsForBouncerManager;
@@ -387,10 +406,12 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
                         mHomeStatusBarComponent.getDarkIconDispatcher());
         mDarkIconManager.setShouldLog(true);
         updateBlockedIcons();
-        mStatusBarIconController.addIconGroup(mDarkIconManager);
+        mSosSystemIconsController.registerHost(
+                mDarkIconManager, SosSystemIconsController.HostAppearance.HOME);
         mEndSideContent = mStatusBar.findViewById(R.id.status_bar_end_side_content);
         mEndSideAlphaController = new MultiSourceMinAlphaController(mEndSideContent);
         mClockView = mStatusBar.findViewById(R.id.clock);
+        mSosSystemIconsController.addHomeKeyguardThemeListener(mSosHomeThemeListener);
         mPrimaryOngoingActivityChip = mStatusBar.findViewById(R.id.ongoing_activity_chip_primary);
         mSecondaryOngoingActivityChip =
                 mStatusBar.findViewById(R.id.ongoing_activity_chip_secondary);
@@ -518,7 +539,11 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
         if (mHomeStatusBarComponent == null) {
             return;
         }
-        mStatusBarIconController.removeIconGroup(mDarkIconManager);
+        mSosSystemIconsController.removeHomeKeyguardThemeListener(mSosHomeThemeListener);
+        if (mClockView instanceof Clock clock) {
+            clock.setSosKeyguardColorOverride(null);
+        }
+        mSosSystemIconsController.unregisterHost(mDarkIconManager);
         mCarrierConfigTracker.removeCallback(mCarrierConfigCallback);
         mCarrierConfigTracker.removeDataSubscriptionChangedListener(mDefaultDataListener);
 
@@ -663,6 +688,24 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     private StatusBarVisibilityModel calculateInternalModel(
             StatusBarVisibilityModel externalModel) {
         StatusBarRootModernization.assertInLegacyMode();
+
+        if (SosKeyguardRuntime.isEnabled(getContext())
+                && mKeyguardStateController.isShowing()
+                && !mKeyguardStateController.isOccluded()
+                && mStatusBar != null
+                && mStatusBar.getDisplay().getDisplayId() == Display.DEFAULT_DISPLAY
+                && !mStatusBarStateController.isDozing()) {
+            // R2 reuses the normal status bar window on keyguard. Keep its clock and system-info
+            // pipelines visible even though Android's keyguard disable flags normally hand those
+            // jobs to KeyguardStatusBarView (which R2 deliberately does not inflate). Notification
+            // icons and ongoing chips still obey their Android policy/controller state.
+            return new StatusBarVisibilityModel(
+                    true,
+                    externalModel.getShowNotificationIcons(),
+                    mHasPrimaryOngoingActivity,
+                    PromotedNotificationUi.isEnabled() && mHasSecondaryOngoingActivity,
+                    true);
+        }
 
         // TODO(b/328393714) use HeadsUpNotificationInteractor.showHeadsUpStatusBar instead.
         boolean headsUpVisible = mHomeStatusBarComponent
@@ -997,7 +1040,15 @@ public class CollapsedStatusBarFragment extends Fragment implements CommandQueue
     }
 
     @Override
-    public void onStateChanged(int newState) { }
+    public void onStateChanged(int newState) {
+        if (!StatusBarRootModernization.isEnabled()
+                && SosKeyguardRuntime.isEnabled(getContext())) {
+            // The Keyguard disable flags may arrive before or after the state callback. Recompute
+            // from the final state so cold boot and cancel-to-lockscreen cannot retain a hidden
+            // home-status-bar model.
+            updateStatusBarVisibilities(/* animate= */ false);
+        }
+    }
 
     @Override
     public void onDozingChanged(boolean isDozing) {

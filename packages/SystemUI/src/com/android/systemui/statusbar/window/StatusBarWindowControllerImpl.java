@@ -352,6 +352,15 @@ public class StatusBarWindowControllerImpl implements StatusBarWindowController 
     }
 
     @Override
+    public void setSosKeyguardForceStatusBarVisible(boolean visible) {
+        if (mCurrentState.mSosKeyguardForceStatusBarVisible == visible) {
+            return;
+        }
+        mCurrentState.mSosKeyguardForceStatusBarVisible = visible;
+        apply(mCurrentState);
+    }
+
+    @Override
     public void setOngoingProcessRequiresStatusBarVisible(boolean visible, String source) {
         mLogBuffer.log(
                 /* tag= */ source,
@@ -437,6 +446,7 @@ public class StatusBarWindowControllerImpl implements StatusBarWindowController 
 
     private static class State {
         boolean mForceStatusBarVisible;
+        boolean mSosKeyguardForceStatusBarVisible;
         boolean mIsLaunchAnimationRunning;
         boolean mOngoingProcessRequiresStatusBarVisible;
     }
@@ -459,6 +469,7 @@ public class StatusBarWindowControllerImpl implements StatusBarWindowController 
                                 + " OngoingProcessRequiresVisible=" + msg.getBool3()
         );
         if (state.mForceStatusBarVisible
+                || state.mSosKeyguardForceStatusBarVisible
                 || state.mIsLaunchAnimationRunning
                 || state.mOngoingProcessRequiresStatusBarVisible) {
             mLpChanged.forciblyShownTypes |= WindowInsets.Type.statusBars();
