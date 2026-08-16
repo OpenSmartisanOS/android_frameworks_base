@@ -8,4 +8,7 @@
     <string name="onestep_close">退出一步</string>
     <string name="onestep_settings">一步设置</string>
     <string name="onestep_previous_task">上一个任务</string>
+    <string name="onestep_pin_current_task">固定当前任务到锁屏</string>
+    <string name="onestep_pin_added">已固定到锁屏</string>
+    <string name="onestep_pin_removed_or_failed">已取消固定或当前任务无法固定</string>
 </resources>

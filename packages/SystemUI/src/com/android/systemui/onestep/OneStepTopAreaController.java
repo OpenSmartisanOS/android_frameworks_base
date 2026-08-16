@@ -27,6 +27,7 @@ import android.graphics.PixelFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
 import android.os.ServiceManager;
@@ -53,6 +54,7 @@ import android.widget.Toast;
 import com.android.internal.sidebar.ISidebarService;
 import com.android.internal.sidebar.OneStepPanelSpec;
 import com.android.systemui.res.R;
+import com.android.systemui.keyguard.pin.SosKeyguardPinProvider;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -413,6 +415,9 @@ final class OneStepTopAreaController {
         final ImageButton settings = createImageButton(R.drawable.onestep_sidebar_setting_gear,
                 R.string.onestep_settings);
         settings.setOnClickListener(view -> openSettings(settings));
+        final ImageButton pin = createImageButton(R.drawable.sos_onestep_pin,
+                R.string.onestep_pin_current_task);
+        pin.setOnClickListener(view -> pinCurrentTask());
         final ImageButton close = createImageButton(mMode == OneStepPanelSpec.MODE_LEFT
                         ? R.drawable.onestep_sidebar_exit_left
                         : R.drawable.onestep_sidebar_exit_right,
@@ -421,6 +426,7 @@ final class OneStepTopAreaController {
         if (mMode == OneStepPanelSpec.MODE_LEFT) {
             addButton(header, close, 6, 0);
             addButton(header, settings, 12, 0);
+            addButton(header, pin, 12, 0);
             addTitle(header);
             addButton(header, previous, 12, 0);
             addButton(header, next, 12, 6);
@@ -428,6 +434,7 @@ final class OneStepTopAreaController {
             addButton(header, previous, 6, 0);
             addButton(header, next, 12, 0);
             addTitle(header);
+            addButton(header, pin, 12, 0);
             addButton(header, settings, 12, 0);
             addButton(header, close, 12, 6);
         }
@@ -441,6 +448,33 @@ final class OneStepTopAreaController {
     private void updateStatus() {
         if (mStatus == null) return;
         mStatus.setText(R.string.onestep_factory_title);
+    }
+
+    private void pinCurrentTask() {
+        Bundle result;
+        if (mContext.getPackageManager().resolveContentProvider(
+                SosKeyguardPinProvider.AUTHORITY, 0) == null) {
+            Log.i(TAG, "Pin provider unavailable; using in-process R2 store");
+            result = SosKeyguardPinProvider.toggleCurrentTaskForSystemUi(
+                    mContext, ActivityManager.getCurrentUser());
+        } else {
+            try {
+                result = mContext.getContentResolver().call(
+                        Uri.parse("content://com.smartisanos.keyguard.pin.provider"),
+                        "pin_current_task", null, null);
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Registered pin provider rejected toggle; using R2 store", e);
+                result = SosKeyguardPinProvider.toggleCurrentTaskForSystemUi(
+                        mContext, ActivityManager.getCurrentUser());
+            }
+        }
+        final String packageName = result != null
+                ? result.getString("pinned_package") : null;
+        Toast.makeText(mContext,
+                TextUtils.isEmpty(packageName)
+                        ? R.string.onestep_pin_removed_or_failed
+                        : R.string.onestep_pin_added,
+                Toast.LENGTH_SHORT).show();
     }
 
     private void refreshTargets() {

@@ -210,6 +210,11 @@
     <permission android:name="com.android.systemui.permission.FLAGS"
                 android:protectionLevel="signature" />
 
+    <!-- Compatibility contract used by the original Smartisan sidebar to pin the foreground
+         task into the Delta lockscreen task stack. -->
+    <permission android:name="com.smartisanos.keyguard.ACCESS_CALL"
+                android:protectionLevel="signature|privileged" />
+
     <permission android:name="android.permission.CUSTOMIZE_SYSTEM_UI"
         android:protectionLevel="signature|privileged" />
 
@@ -1093,6 +1098,14 @@
                   android:grantUriPermissions="true"
                   android:exported="true">
         </provider>
+
+        <provider
+            android:name=".keyguard.pin.SosKeyguardPinProvider"
+            android:authorities="com.smartisanos.keyguard.pin.provider"
+            android:directBootAware="true"
+            android:exported="true"
+            android:readPermission="com.smartisanos.keyguard.ACCESS_CALL"
+            android:writePermission="com.smartisanos.keyguard.ACCESS_CALL" />
 
         <receiver android:name=".media.dialog.MediaOutputDialogReceiver"
                   android:exported="true">
