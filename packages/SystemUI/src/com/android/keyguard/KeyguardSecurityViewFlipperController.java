@@ -21,6 +21,7 @@ import static android.content.res.Configuration.ORIENTATION_LANDSCAPE;
 import static com.android.systemui.flags.Flags.LOCKSCREEN_ENABLE_LANDSCAPE;
 
 import android.util.Log;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 
 import androidx.asynclayoutinflater.view.AsyncLayoutInflater;
@@ -130,13 +131,20 @@ public class KeyguardSecurityViewFlipperController
      */
     private void asynchronouslyInflateView(SecurityMode securityMode,
             KeyguardSecurityCallback keyguardSecurityCallback) {
-        int layoutId = mFeatureFlags.isEnabled(LOCKSCREEN_ENABLE_LANDSCAPE)
-                ? getLayoutIdFor(securityMode) : getLegacyLayoutIdFor(securityMode);
+        final boolean useSosBouncer = shouldUseSosLayout(securityMode);
+        int layoutId = useSosBouncer
+                ? getSosLayoutIdFor(securityMode)
+                : (mFeatureFlags.isEnabled(LOCKSCREEN_ENABLE_LANDSCAPE)
+                        ? getLayoutIdFor(securityMode) : getLegacyLayoutIdFor(securityMode));
         if (layoutId != 0) {
             if (DEBUG) {
                 Log.v(TAG, "inflating on bg thread id = " + layoutId + " .");
             }
-            mAsyncLayoutInflater.inflate(layoutId, mView,
+            AsyncLayoutInflater asyncLayoutInflater = useSosBouncer
+                    ? new AsyncLayoutInflater(new ContextThemeWrapper(
+                            mView.getContext(), R.style.SosKeyguardBouncerTheme))
+                    : mAsyncLayoutInflater;
+            asyncLayoutInflater.inflate(layoutId, mView,
                     (view, resId, parent) -> {
                         mView.addView(view);
                         mSecurityModeInProgress.remove(securityMode);
@@ -157,7 +165,8 @@ public class KeyguardSecurityViewFlipperController
                         }
 
                         // Single bouncer constrains are default
-                        if (mFeatureFlags.isEnabled(LOCKSCREEN_ENABLE_LANDSCAPE)) {
+                        if (!useSosBouncer
+                                && mFeatureFlags.isEnabled(LOCKSCREEN_ENABLE_LANDSCAPE)) {
                             boolean useSplitBouncer =
                                     getResources().getBoolean(R.bool.update_bouncer_constraints)
                                         && getResources().getConfiguration().orientation
@@ -166,6 +175,12 @@ public class KeyguardSecurityViewFlipperController
                         }
                     });
         }
+    }
+
+    private boolean shouldUseSosLayout(SecurityMode securityMode) {
+        // R2 is the only phone keyguard presentation. Missing legacy PIN-length metadata is
+        // handled inside the R2 PIN view and must never switch the whole surface back to AOSP.
+        return getSosLayoutIdFor(securityMode) != 0;
     }
 
     private int getLayoutIdFor(SecurityMode securityMode) {
@@ -178,6 +193,23 @@ public class KeyguardSecurityViewFlipperController
             case Password -> R.layout.keyguard_password_motion_layout;
             case SimPin -> R.layout.keyguard_sim_pin_view;
             case SimPuk -> R.layout.keyguard_sim_puk_view;
+            default -> 0;
+        };
+    }
+
+    /**
+     * R2-derived layouts are responsive portrait layouts and must not enter AOSP MotionLayout,
+     * irrespective of the landscape feature flag. Authentication controllers remain unchanged.
+     */
+    private int getSosLayoutIdFor(SecurityMode securityMode) {
+        return switch (securityMode) {
+            case PIN -> R.layout.sos_keyguard_pin_view;
+            case Pattern -> R.layout.sos_keyguard_pattern_view;
+            case Password -> R.layout.sos_keyguard_password_view;
+            case SimPin -> R.layout.sos_keyguard_sim_pin_view;
+            case SimPuk -> R.layout.sos_keyguard_sim_puk_view;
+            case SecureLockDeviceBiometricAuth ->
+                    R.layout.keyguard_secure_lock_device_biometric_auth_view;
             default -> 0;
         };
     }

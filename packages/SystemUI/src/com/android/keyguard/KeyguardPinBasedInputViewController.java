@@ -215,7 +215,10 @@ public abstract class KeyguardPinBasedInputViewController<T extends KeyguardPinB
                 }
             });
         }
-        if (pinInputFieldStyledFocusState()) {
+        if (pinInputFieldStyledFocusState()
+                && !(mView instanceof SosKeyguardPINView)
+                && !(mView instanceof SosKeyguardSimPinView)
+                && !(mView instanceof SosKeyguardSimPukView)) {
             collectFlow(mPasswordEntry, mKeyguardKeyboardInteractor.isAnyKeyboardConnected(),
                     this::setKeyboardBasedFocusOutline);
 

@@ -42,13 +42,18 @@ public class KeyguardPinViewController
     private final KeyguardUpdateMonitor mKeyguardUpdateMonitor;
     private final DevicePostureController mPostureController;
     private final DevicePostureController.Callback mPostureCallback = posture ->
-            mView.onDevicePostureChanged(posture);
+            {
+                if (!(mView instanceof SosKeyguardPINView)) {
+                    mView.onDevicePostureChanged(posture);
+                }
+            };
     private LockPatternUtils mLockPatternUtils;
     private final FeatureFlags mFeatureFlags;
     private static final int DEFAULT_PIN_LENGTH = 6;
     private static final int MIN_FAILED_PIN_ATTEMPTS = 5;
     private NumPadButton mBackspaceKey;
     private View mOkButton = mView.findViewById(R.id.key_enter);
+    private SosCredentialVisualAdapter mSosVisualAdapter;
 
     private long mPinLength;
     private final UiEventLogger mUiEventLogger;
@@ -83,7 +88,15 @@ public class KeyguardPinViewController
         mFeatureFlags = featureFlags;
         view.setIsLockScreenLandscapeEnabled(mFeatureFlags.isEnabled(LOCKSCREEN_ENABLE_LANDSCAPE));
         mBackspaceKey = view.findViewById(R.id.delete_button);
-        mPinLength = mLockPatternUtils.getPinLength(selectedUserInteractor.getSelectedUserId());
+        mPinLength = view instanceof SosKeyguardPINView
+                ? SosPinLengthRepository.resolve(
+                        view.getContext(), mLockPatternUtils,
+                        selectedUserInteractor.getSelectedUserId())
+                : mLockPatternUtils.getPinLength(selectedUserInteractor.getSelectedUserId());
+        if (view instanceof SosKeyguardPINView) {
+            mSosVisualAdapter = SosCredentialVisualAdapter.attach(view);
+            mSosVisualAdapter.setExpectedPinLength(mPinLength);
+        }
         mUiEventLogger = uiEventLogger;
     }
 
@@ -99,18 +112,47 @@ public class KeyguardPinViewController
             });
         }
         mPasswordEntry.setUserActivityListener(this::onUserInput);
-        mView.onDevicePostureChanged(mPostureController.getDevicePosture());
+        if (mView instanceof SosKeyguardPINView && mBackspaceKey instanceof SosNumPadButton) {
+            mBackspaceKey.setOnClickListener(view -> {
+                if (mPasswordEntry.getText().isEmpty()) {
+                    // R2 keeps the empty-input cancel action available during credential lockout.
+                    // Only deletion is gated by the disabled password buffer; returning to the
+                    // lockscreen must not clear LockPatternUtils' authoritative deadline.
+                    getKeyguardSecurityCallback().reset();
+                    getKeyguardSecurityCallback().onCancelClicked();
+                } else if (mPasswordEntry.isEnabled()) {
+                    mPasswordEntry.deleteLastChar();
+                }
+            });
+            updateSosDeleteState();
+        }
+        if (!(mView instanceof SosKeyguardPINView)) {
+            mView.onDevicePostureChanged(mPostureController.getDevicePosture());
+        }
         mPostureController.addCallback(mPostureCallback);
-        mPasswordEntry.setUsePinShapes(true);
+        mPasswordEntry.setUsePinShapes(!(mView instanceof SosKeyguardPINView));
         updateAutoConfirmationState();
-        mView.updatePinScrambling(
-                LineageSettings.System.getIntForUser(getContext().getContentResolver(),
-                        LineageSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, 0,
-                        mSelectedUserInteractor.getSelectedUserId()) == 1);
+        if (!(mView instanceof SosKeyguardPINView)) {
+            mView.updatePinScrambling(
+                    LineageSettings.System.getIntForUser(getContext().getContentResolver(),
+                            LineageSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, 0,
+                            mSelectedUserInteractor.getSelectedUserId()) == 1);
+        }
     }
 
     protected void onUserInput() {
         super.onUserInput();
+        updateSosDeleteState();
+        if (mView instanceof SosKeyguardPINView) {
+            if (hasResolvedSosPinLength()) {
+                if (mPasswordEntry.getText().length() == mPinLength) {
+                    verifyPasswordAndUnlock();
+                }
+            } else {
+                updateSosExceptionalConfirmState();
+            }
+            return;
+        }
         if (isAutoPinConfirmEnabledInSettings()) {
             updateAutoConfirmationState();
             if (mPasswordEntry.getText().length() == mPinLength
@@ -130,10 +172,12 @@ public class KeyguardPinViewController
     @Override
     public void startAppearAnimation() {
         super.startAppearAnimation();
-        mView.updatePinScrambling(
-                LineageSettings.System.getIntForUser(getContext().getContentResolver(),
-                        LineageSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, 0,
-                        mSelectedUserInteractor.getSelectedUserId()) == 1);
+        if (!(mView instanceof SosKeyguardPINView)) {
+            mView.updatePinScrambling(
+                    LineageSettings.System.getIntForUser(getContext().getContentResolver(),
+                            LineageSettings.System.LOCKSCREEN_PIN_SCRAMBLE_LAYOUT, 0,
+                            mSelectedUserInteractor.getSelectedUserId()) == 1);
+        }
     }
 
     @Override
@@ -160,6 +204,14 @@ public class KeyguardPinViewController
      * Updates the visibility of the OK button for auto confirm feature
      */
     private void updateOKButtonVisibility() {
+        if (mView instanceof SosKeyguardPINView) {
+            updateSosExceptionalConfirmState();
+            View emergency = mView.findViewById(R.id.emergency_call_button);
+            if (emergency != null) {
+                emergency.setVisibility(View.VISIBLE);
+            }
+            return;
+        }
         if (isAutoPinConfirmEnabledInSettings() && !mDisabledAutoConfirmation) {
             mOkButton.setVisibility(View.INVISIBLE);
         } else {
@@ -172,6 +224,10 @@ public class KeyguardPinViewController
      * Visibility changes are only for auto confirmation configuration.
      */
     private void updateBackSpaceVisibility() {
+        if (mView instanceof SosKeyguardPINView) {
+            mBackspaceKey.setVisibility(View.VISIBLE);
+            return;
+        }
         boolean isAutoConfirmation = isAutoPinConfirmEnabledInSettings();
         mBackspaceKey.setTransparentMode(/* isTransparentMode= */
                 isAutoConfirmation && !mDisabledAutoConfirmation);
@@ -186,6 +242,10 @@ public class KeyguardPinViewController
     }
     /** Updates whether to use pin hinting or not. */
     void updatePinHinting() {
+        if (mView instanceof SosKeyguardPINView) {
+            mPasswordEntry.setIsPinHinting(false);
+            return;
+        }
         mPasswordEntry.setIsPinHinting(isAutoPinConfirmEnabledInSettings() && isPinHinting()
                 && !mDisabledAutoConfirmation);
     }
@@ -208,6 +268,49 @@ public class KeyguardPinViewController
         return mLockPatternUtils.isAutoPinConfirmEnabled(
                 mSelectedUserInteractor.getSelectedUserId())
                 && mPinLength != LockPatternUtils.PIN_LENGTH_UNAVAILABLE;
+    }
+
+    private boolean hasResolvedSosPinLength() {
+        return mPinLength <= Integer.MAX_VALUE
+                && SosPinLengthRepository.isUsable((int) mPinLength);
+    }
+
+    private void updateSosExceptionalConfirmState() {
+        if (!(mView instanceof SosKeyguardPINView) || mOkButton == null) return;
+        final boolean missingMetadata = !hasResolvedSosPinLength();
+        mOkButton.setVisibility(missingMetadata ? View.VISIBLE : View.GONE);
+        mOkButton.setEnabled(missingMetadata
+                && mPasswordEntry.getText().length() >= LockPatternUtils.MIN_LOCK_PASSWORD_SIZE
+                && mPasswordEntry.isEnabled());
+        mOkButton.setAlpha(mOkButton.isEnabled() ? 1f : 0.4f);
+    }
+
+    @Override
+    void onPasswordChecked(int userId, boolean matched, int timeoutMs, boolean isValidPassword) {
+        if (matched && mView instanceof SosKeyguardPINView && !hasResolvedSosPinLength()) {
+            final int verifiedLength = mPasswordEntry.getText().length();
+            if (SosPinLengthRepository.isUsable(verifiedLength)) {
+                // LockSettings migrates against the exact protector that was verified before the
+                // successful response returns. Re-read that versioned value instead of binding
+                // cached metrics to whichever protector happens to be current in a later call.
+                final int storedLength = mLockPatternUtils.getPinLength(userId);
+                if (storedLength == verifiedLength) {
+                    mPinLength = storedLength;
+                    if (mSosVisualAdapter != null) {
+                        mSosVisualAdapter.setExpectedPinLength(storedLength);
+                    }
+                    updateSosExceptionalConfirmState();
+                }
+            }
+        }
+        super.onPasswordChecked(userId, matched, timeoutMs, isValidPassword);
+    }
+
+    private void updateSosDeleteState() {
+        if (mView instanceof SosKeyguardPINView && mBackspaceKey instanceof SosNumPadButton) {
+            ((SosNumPadButton) mBackspaceKey).setCancelMode(
+                    mPasswordEntry.getText().isEmpty());
+        }
     }
 
     /** UI Events for the auto confirmation feature in*/

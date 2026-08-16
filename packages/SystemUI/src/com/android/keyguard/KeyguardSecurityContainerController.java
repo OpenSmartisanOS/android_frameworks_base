@@ -91,6 +91,8 @@ import com.android.systemui.log.SessionTracker;
 import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.res.R;
+import com.android.systemui.keyguard.ui.view.layout.sections.SosKeyguardHostView;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.securelockdevice.domain.interactor.SecureLockDeviceInteractor;
 import com.android.systemui.shared.system.SysUiStatsLog;
@@ -551,6 +553,12 @@ public class KeyguardSecurityContainerController extends ViewController<Keyguard
 
         showPrimarySecurityScreen(false);
 
+        // R2 composites its own cropped wallpaper, progressive StackBlur and dark layer. Keep the
+        // credential container transparent regardless of the device/window blur capability.
+        if (SosKeyguardRuntime.isEnabled(mView.getContext())) {
+            mView.enableTransparentMode();
+        }
+
         if (SceneContainerFlag.isEnabled()) {
             // When the scene framework says that the lockscreen has been dismissed, dismiss the
             // keyguard here, revealing the underlying app or launcher:
@@ -577,6 +585,10 @@ public class KeyguardSecurityContainerController extends ViewController<Keyguard
     }
 
     private void handleBlurSupportedChanged(boolean isWindowBlurSupported) {
+        if (SosKeyguardRuntime.isEnabled(mView.getContext())) {
+            mView.enableTransparentMode();
+            return;
+        }
         if (isWindowBlurSupported) {
             mView.enableTransparentMode();
         } else {
@@ -848,7 +860,14 @@ public class KeyguardSecurityContainerController extends ViewController<Keyguard
 
     public boolean startDisappearAnimation(Runnable onFinishRunnable) {
         if (mCurrentSecurityMode != SecurityMode.None) {
-            mView.startDisappearAnimation(mCurrentSecurityMode);
+            // All three R2 primary credentials finish through the same host-level curtain. Do not
+            // add KeyguardSecurityContainer's AOSP translation on top of it.
+            if (!(SosKeyguardRuntime.isEnabled(mView.getContext())
+                    && (mCurrentSecurityMode == SecurityMode.PIN
+                    || mCurrentSecurityMode == SecurityMode.Pattern
+                    || mCurrentSecurityMode == SecurityMode.Password))) {
+                mView.startDisappearAnimation(mCurrentSecurityMode);
+            }
             getCurrentSecurityController(
                     controller -> {
                         boolean didRunAnimation = controller.startDisappearAnimation(
@@ -1377,6 +1396,19 @@ public class KeyguardSecurityContainerController extends ViewController<Keyguard
      * @param fraction amount of the screen that should show.
      */
     public void setExpansion(float fraction) {
+        final boolean useSosBouncer = SosKeyguardRuntime.isEnabled(mView.getContext());
+        if (useSosBouncer && mView.getHeight() > 0) {
+            float visibleProgress = MathUtils.constrain(1f - fraction, 0f, 1f);
+            SosBouncerVisualCoordinator.State state = SosBouncerVisualCoordinator.calculate(
+                    visibleProgress * mView.getHeight() / 3f, mView.getHeight());
+            setAlpha(state.getSecurityAlpha());
+            mView.setTranslationY(state.getSecurityTranslationY());
+            View host = mView.getRootView().findViewById(R.id.sos_keyguard_host_view);
+            if (host instanceof SosKeyguardHostView) {
+                ((SosKeyguardHostView) host).setBouncerVisualProgress(visibleProgress);
+            }
+            return;
+        }
         float scaledFraction = BouncerPanelExpansionCalculator.showBouncerProgress(fraction);
         setAlpha(MathUtils.constrain(1 - scaledFraction, 0f, 1f));
         mView.setTranslationY(scaledFraction * mTranslationY);

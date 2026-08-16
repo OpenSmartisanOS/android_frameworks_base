@@ -68,6 +68,7 @@ public class KeyguardSimPinViewController
     private int mSubId = INVALID_SUBSCRIPTION_ID;
     private AlertDialog mRemainingAttemptsDialog;
     private ImageView mSimImageView;
+    private SosSimStatusView mSosSimStatusView;
 
     protected boolean mIsInTestMode = false;
 
@@ -114,6 +115,7 @@ public class KeyguardSimPinViewController
         mKeyguardUpdateMonitor = keyguardUpdateMonitor;
         mTelephonyManager = telephonyManager;
         mSimImageView = mView.findViewById(R.id.keyguard_sim);
+        mSosSimStatusView = mView.findViewById(R.id.sos_sim_status);
     }
 
     @Override
@@ -139,6 +141,7 @@ public class KeyguardSimPinViewController
         super.resetState();
         Log.v(TAG, "Resetting state");
         handleSubInfoChangeIfNeeded();
+        updateSosSimStatus();
         mMessageAreaController.setMessage("");
         if (mShowDefaultMessage) {
             showDefaultMessage();
@@ -149,6 +152,9 @@ public class KeyguardSimPinViewController
 
     @Override
     public boolean startDisappearAnimation(Runnable finishRunnable) {
+        if (mView instanceof SosKeyguardSimPinView) {
+            return mView.startDisappearAnimation(finishRunnable);
+        }
         return false;
     }
 
@@ -181,6 +187,7 @@ public class KeyguardSimPinViewController
             getKeyguardSecurityCallback().userActivity();
             mMessageAreaController.setMessage(
                     com.android.systemui.res.R.string.kg_invalid_sim_pin_hint);
+            showSosPinError();
             return;
         }
 
@@ -200,6 +207,7 @@ public class KeyguardSimPinViewController
                                 result.getResult() != PinResult.PIN_RESULT_TYPE_SUCCESS);
                         if (result.getResult() == PinResult.PIN_RESULT_TYPE_SUCCESS) {
                             mKeyguardUpdateMonitor.reportSimUnlocked(mSubId);
+                            updateSosSimStatus();
                             mRemainingAttempts = -1;
                             mShowDefaultMessage = true;
                             getKeyguardSecurityCallback().dismiss(
@@ -208,6 +216,7 @@ public class KeyguardSimPinViewController
                         } else {
                             mShowDefaultMessage = false;
                             if (result.getResult() == PinResult.PIN_RESULT_TYPE_INCORRECT) {
+                                showSosPinError();
                                 if (result.getAttemptsRemaining() <= 2) {
                                     // this is getting critical - show dialog
                                     getSimRemainingAttemptsDialog(
@@ -248,6 +257,21 @@ public class KeyguardSimPinViewController
                     WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
         }
         return mSimUnlockProgressDialog;
+    }
+
+    private void updateSosSimStatus() {
+        if (mSosSimStatusView != null) {
+            mSosSimStatusView.update(mKeyguardUpdateMonitor, mSubId);
+            mSimImageView.setVisibility(
+                    mSosSimStatusView.getVisibility() == View.VISIBLE
+                            ? View.INVISIBLE : View.VISIBLE);
+        }
+    }
+
+    private void showSosPinError() {
+        if (mView instanceof SosKeyguardSimPinView) {
+            SosCredentialVisualAdapter.attach(mView).showCredentialError();
+        }
     }
 
 

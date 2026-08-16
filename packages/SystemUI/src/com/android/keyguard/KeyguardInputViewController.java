@@ -126,11 +126,24 @@ public abstract class KeyguardInputViewController<T extends KeyguardInputView>
      */
     public void updateMessageAreaVisibility() {
         if (mMessageAreaController == null) return;
-        if (Flags.revampedBouncerMessages()) {
+        // The R2 credential layouts deliberately use the legacy message-area contract as their
+        // one and only visible prompt. Android's revamped bouncer normally disables that view
+        // permanently and renders messages in BouncerMessageView instead. The latter is a hidden
+        // compatibility node in the pixel-identical R2 layouts, so disabling this view makes
+        // wrong-credential and lockout countdown messages disappear completely.
+        if (usesSosOriginalMessageArea()) {
+            mMessageAreaController.setIsVisible(true);
+        } else if (Flags.revampedBouncerMessages()) {
             mMessageAreaController.disable();
         } else {
             mMessageAreaController.setIsVisible(true);
         }
+    }
+
+    private boolean usesSosOriginalMessageArea() {
+        android.view.View messageArea = mView.findViewById(R.id.bouncer_message_area);
+        return messageArea instanceof SosPatternMessageArea
+                || messageArea instanceof SosPasswordMessageArea;
     }
 
 

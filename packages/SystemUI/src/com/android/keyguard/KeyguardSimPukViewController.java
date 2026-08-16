@@ -32,6 +32,7 @@ import android.telephony.SubscriptionManager;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
@@ -85,6 +86,7 @@ public class KeyguardSimPukViewController
     };
     private ImageView mSimImageView;
     private AlertDialog mRemainingAttemptsDialog;
+    private SosSimStatusView mSosSimStatusView;
 
     protected KeyguardSimPukViewController(KeyguardSimPukView view,
             KeyguardUpdateMonitor keyguardUpdateMonitor,
@@ -110,6 +112,7 @@ public class KeyguardSimPukViewController
         mKeyguardUpdateMonitor = keyguardUpdateMonitor;
         mTelephonyManager = telephonyManager;
         mSimImageView = mView.findViewById(R.id.keyguard_sim);
+        mSosSimStatusView = mView.findViewById(R.id.sos_sim_status);
     }
 
     @Override
@@ -162,15 +165,19 @@ public class KeyguardSimPukViewController
             if (mState == ENTER_PUK) {
                 if (checkPuk()) {
                     mState = ENTER_PIN;
+                    setSosExpectedLength(4);
                     msg = com.android.systemui.res.R.string.kg_puk_enter_pin_hint;
                 } else {
+                    showSosStageError();
                     msg = com.android.systemui.res.R.string.kg_invalid_sim_puk_hint;
                 }
             } else if (mState == ENTER_PIN) {
                 if (checkPin()) {
                     mState = CONFIRM_PIN;
+                    setSosExpectedLength(mPinText.length());
                     msg = com.android.systemui.res.R.string.kg_enter_confirm_pin_hint;
                 } else {
+                    showSosStageError();
                     msg = com.android.systemui.res.R.string.kg_invalid_sim_pin_hint;
                 }
             } else if (mState == CONFIRM_PIN) {
@@ -180,6 +187,8 @@ public class KeyguardSimPukViewController
                     updateSim();
                 } else {
                     mState = ENTER_PIN; // try again?
+                    setSosExpectedLength(4);
+                    showSosStageError();
                     msg = com.android.systemui.res.R.string.kg_invalid_confirm_pin_hint;
                 }
             }
@@ -194,7 +203,9 @@ public class KeyguardSimPukViewController
             mPinText = "";
             mPukText = "";
             mState = ENTER_PUK;
+            setSosExpectedLength(8);
             handleSubInfoChangeIfNeeded();
+            updateSosSimStatus();
             if (mShowDefaultMessage) {
                 showDefaultMessage();
             }
@@ -302,6 +313,7 @@ public class KeyguardSimPukViewController
                                 result.getResult() != PinResult.PIN_RESULT_TYPE_SUCCESS);
                         if (result.getResult() == PinResult.PIN_RESULT_TYPE_SUCCESS) {
                             mKeyguardUpdateMonitor.reportSimUnlocked(mSubId);
+                            updateSosSimStatus();
                             mRemainingAttempts = -1;
                             mShowDefaultMessage = true;
 
@@ -311,6 +323,7 @@ public class KeyguardSimPukViewController
                         } else {
                             mShowDefaultMessage = false;
                             if (result.getResult() == PinResult.PIN_RESULT_TYPE_INCORRECT) {
+                                showSosStageError();
                                 // show message
                                 mMessageAreaController.setMessage(mView.getPukPasswordErrorMessage(
                                         result.getAttemptsRemaining(), false,
@@ -374,6 +387,27 @@ public class KeyguardSimPukViewController
             mSubId = subId;
             mShowDefaultMessage = true;
             mRemainingAttempts = -1;
+        }
+    }
+
+    private void updateSosSimStatus() {
+        if (mSosSimStatusView != null) {
+            mSosSimStatusView.update(mKeyguardUpdateMonitor, mSubId);
+            mSimImageView.setVisibility(
+                    mSosSimStatusView.getVisibility() == View.VISIBLE
+                            ? View.INVISIBLE : View.VISIBLE);
+        }
+    }
+
+    private void setSosExpectedLength(int length) {
+        if (mPasswordEntry instanceof SosPasswordTextView) {
+            ((SosPasswordTextView) mPasswordEntry).setExpectedLength(length);
+        }
+    }
+
+    private void showSosStageError() {
+        if (mView instanceof SosKeyguardSimPukView) {
+            SosCredentialVisualAdapter.attach(mView).showCredentialError();
         }
     }
 

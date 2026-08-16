@@ -27,6 +27,7 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.PluralsMessageFormatter;
 import android.view.KeyEvent;
+import android.view.View;
 
 import com.android.internal.util.LatencyTracker;
 import com.android.internal.widget.LockPatternChecker;
@@ -157,6 +158,10 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
 
     // Prevent user from using the PIN/Password entry until scheduled deadline.
     protected void handleAttemptLockout(long elapsedRealtimeDeadline) {
+        if (mCountdownTimer != null) {
+            mCountdownTimer.cancel();
+            mCountdownTimer = null;
+        }
         mView.setPasswordEntryEnabled(false);
         mView.setPasswordEntryInputEnabled(false);
         mLockedOut = true;
@@ -164,28 +169,75 @@ public abstract class KeyguardAbsKeyInputViewController<T extends KeyguardAbsKey
         long secondsInFuture = (long) Math.ceil(
                 (elapsedRealtimeDeadline - elapsedRealtime) / 1000.0);
         getKeyguardSecurityCallback().onAttemptLockoutStart(secondsInFuture);
+        // CountDownTimer waits one full interval before its first callback. Render the
+        // authoritative deadline immediately so the original prompt never becomes an empty slot
+        // between GateKeeper returning a timeout and the first one-second tick.
+        updateLockoutMessage((int) Math.max(1, secondsInFuture));
+        View originalTip = mView.findViewById(R.id.easy_password_tip);
+        Log.i(TAG, "R2 lockout started: seconds=" + secondsInFuture
+                + " originalTip=" + (originalTip != null ? originalTip.getClass() : "none"));
         mCountdownTimer = new CountDownTimer(secondsInFuture * 1000, 1000) {
 
             @Override
             public void onTick(long millisUntilFinished) {
-                int secondsRemaining = (int) Math.round(millisUntilFinished / 1000.0);
-                Map<String, Object> arguments = new HashMap<>();
-                arguments.put("count", secondsRemaining);
-                mMessageAreaController.setMessage(
-                        PluralsMessageFormatter.format(
-                            mView.getResources(),
-                            arguments,
-                            R.string.kg_too_many_failed_attempts_countdown),
-                        /* animate= */ false);
+                int secondsRemaining = (int) ((999 + millisUntilFinished) / 1000);
+                updateLockoutMessage(secondsRemaining);
             }
 
             @Override
             public void onFinish() {
-                mMessageAreaController.setMessage("");
+                mCountdownTimer = null;
                 mLockedOut = false;
+                if (!showSosLockoutFinishedPrompt()) {
+                    mMessageAreaController.setMessage("");
+                }
                 resetState();
             }
         }.start();
+    }
+
+    private void updateLockoutMessage(int secondsRemaining) {
+        if (showSosLockoutMessage(secondsRemaining)) {
+            return;
+        }
+        Map<String, Object> arguments = new HashMap<>();
+        arguments.put("count", secondsRemaining);
+        mMessageAreaController.setMessage(
+                PluralsMessageFormatter.format(
+                    mView.getResources(),
+                    arguments,
+                    R.string.kg_too_many_failed_attempts_countdown),
+                /* animate= */ false);
+    }
+
+    private boolean showSosLockoutMessage(int secondsRemaining) {
+        View originalPinTip = mView.findViewById(R.id.easy_password_tip);
+        CharSequence originalMessage = SosLockoutMessageFormatter.format(
+                mView.getResources(), secondsRemaining);
+        if (originalPinTip instanceof SosPinMessageArea) {
+            ((SosPinMessageArea) originalPinTip).showLockoutMessage(originalMessage);
+            return true;
+        }
+        View message = mView.findViewById(R.id.bouncer_message_area);
+        if (message instanceof SosPasswordMessageArea) {
+            ((SosPasswordMessageArea) message).showLockoutMessage(originalMessage);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean showSosLockoutFinishedPrompt() {
+        View originalPinTip = mView.findViewById(R.id.easy_password_tip);
+        if (originalPinTip instanceof SosPinMessageArea) {
+            ((SosPinMessageArea) originalPinTip).showPrompt();
+            return true;
+        }
+        View message = mView.findViewById(R.id.bouncer_message_area);
+        if (message instanceof SosPasswordMessageArea) {
+            ((SosPasswordMessageArea) message).showPrompt();
+            return true;
+        }
+        return false;
     }
 
     void onPasswordChecked(int userId, boolean matched, int timeoutMs, boolean isValidPassword) {

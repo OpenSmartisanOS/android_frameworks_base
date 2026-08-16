@@ -25,7 +25,6 @@ import android.os.AsyncTask;
 import android.os.CountDownTimer;
 import android.os.SystemClock;
 import android.util.Log;
-import android.util.PluralsMessageFormatter;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -46,9 +45,7 @@ import com.android.systemui.res.R;
 import com.android.systemui.statusbar.policy.DevicePostureController;
 import com.android.systemui.user.domain.interactor.SelectedUserInteractor;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class KeyguardPatternViewController
         extends KeyguardInputViewController<KeyguardPatternView> {
@@ -66,7 +63,11 @@ public class KeyguardPatternViewController
     private final EmergencyButtonController mEmergencyButtonController;
     private final DevicePostureController mPostureController;
     private final DevicePostureController.Callback mPostureCallback =
-            posture -> mView.onDevicePostureChanged(posture);
+            posture -> {
+                if (!(mView instanceof SosKeyguardPatternView)) {
+                    mView.onDevicePostureChanged(posture);
+                }
+            };
     private LockPatternView mLockPatternView;
     private CountDownTimer mCountdownTimer;
     private AsyncTask<?, ?, ?> mPendingLockCheck;
@@ -90,6 +91,10 @@ public class KeyguardPatternViewController
         @Override
         public void run() {
             mLockPatternView.clearPattern();
+            if (mLockPatternView instanceof SosLockPatternView) {
+                mLockPatternView.enableInput();
+                mLockPatternView.setEnabled(true);
+            }
         }
     };
 
@@ -98,7 +103,12 @@ public class KeyguardPatternViewController
         @Override
         public void onPatternStart() {
             mLockPatternView.removeCallbacks(mCancelPatternRunnable);
-            mMessageAreaController.setMessage("");
+            SosPatternMessageArea message = getSosPatternMessageArea();
+            if (message != null) {
+                message.showPrompt();
+            } else {
+                mMessageAreaController.setMessage("");
+            }
         }
 
         @Override
@@ -126,7 +136,9 @@ public class KeyguardPatternViewController
                     mFalsingCollector.updateFalseConfidence(FalsingClassifier.Result.falsed(
                             0.7, getClass().getSimpleName(), "empty pattern input"));
                 }
-                mLockPatternView.enableInput();
+                if (!(mLockPatternView instanceof SosLockPatternView)) {
+                    mLockPatternView.enableInput();
+                }
                 onPatternChecked(userId, false, 0, false /* not valid - too short */);
                 return;
             }
@@ -149,7 +161,9 @@ public class KeyguardPatternViewController
                         @Override
                         public void onChecked(boolean matched, int timeoutMs) {
                             mLatencyTracker.onActionEnd(ACTION_CHECK_CREDENTIAL_UNLOCKED);
-                            mLockPatternView.enableInput();
+                            if (!(mLockPatternView instanceof SosLockPatternView)) {
+                                mLockPatternView.enableInput();
+                            }
                             mPendingLockCheck = null;
                             if (!matched) {
                                 onPatternChecked(userId, false /* matched */, timeoutMs,
@@ -193,6 +207,13 @@ public class KeyguardPatternViewController
                         /* authenticationSucceeded= */false
                 );
                 mLockPatternView.setDisplayMode(LockPatternView.DisplayMode.Wrong);
+                SosPatternMessageArea sosMessage = getSosPatternMessageArea();
+                if (sosMessage != null) {
+                    // R2 blocks another pattern until the 400 ms error response has completed.
+                    mLockPatternView.disableInput();
+                    sosMessage.showPatternError(timeoutMs == 0);
+                    SosCredentialVisualAdapter.shake(sosMessage);
+                }
                 if (isValidPattern) {
                     getKeyguardSecurityCallback().reportUnlockAttempt(userId, false, timeoutMs);
                     if (timeoutMs > 0) {
@@ -202,8 +223,13 @@ public class KeyguardPatternViewController
                     }
                 }
                 if (timeoutMs == 0) {
-                    mMessageAreaController.setMessage(R.string.kg_wrong_pattern);
-                    mLockPatternView.postDelayed(mCancelPatternRunnable, PATTERN_CLEAR_TIMEOUT_MS);
+                    if (sosMessage == null) {
+                        mMessageAreaController.setMessage(R.string.kg_wrong_pattern);
+                    }
+                    mLockPatternView.postDelayed(mCancelPatternRunnable,
+                            mLockPatternView instanceof SosLockPatternView
+                                    ? (int) SosCredentialVisualAdapter.ERROR_DURATION_MS
+                                    : PATTERN_CLEAR_TIMEOUT_MS);
                 }
             }
         }
@@ -271,7 +297,9 @@ public class KeyguardPatternViewController
                 getKeyguardSecurityCallback().onCancelClicked();
             });
         }
-        mView.onDevicePostureChanged(mPostureController.getDevicePosture());
+        if (!(mView instanceof SosKeyguardPatternView)) {
+            mView.onDevicePostureChanged(mPostureController.getDevicePosture());
+        }
         mPostureController.addCallback(mPostureCallback);
         // if the user is currently locked out, enforce it.
         long deadline = mLockPatternUtils.getLockoutAttemptDeadline(
@@ -403,7 +431,19 @@ public class KeyguardPatternViewController
         mMessageAreaController.setMessage(getInitialMessageResId());
     }
 
+    private SosPatternMessageArea getSosPatternMessageArea() {
+        if (!(mView instanceof SosKeyguardPatternView)) {
+            return null;
+        }
+        View message = mView.findViewById(R.id.bouncer_message_area);
+        return message instanceof SosPatternMessageArea ? (SosPatternMessageArea) message : null;
+    }
+
     private void handleAttemptLockout(long elapsedRealtimeDeadline) {
+        if (mCountdownTimer != null) {
+            mCountdownTimer.cancel();
+            mCountdownTimer = null;
+        }
         mLockPatternView.clearPattern();
         mLockPatternView.setEnabled(false);
         final long elapsedRealtime = SystemClock.elapsedRealtime();
@@ -414,23 +454,29 @@ public class KeyguardPatternViewController
 
             @Override
             public void onTick(long millisUntilFinished) {
-                final int secondsRemaining = (int) Math.round(millisUntilFinished / 1000.0);
-                Map<String, Object> arguments = new HashMap<>();
-                arguments.put("count", secondsRemaining);
-
-                mMessageAreaController.setMessage(
-                        PluralsMessageFormatter.format(
-                            mView.getResources(),
-                            arguments,
-                            R.string.kg_too_many_failed_attempts_countdown),
-                        /* animate= */ false
-                );
+                final int secondsRemaining = (int) ((999 + millisUntilFinished) / 1000);
+                CharSequence message = SosLockoutMessageFormatter.format(
+                        mView.getResources(), secondsRemaining);
+                SosPatternMessageArea sosMessage = getSosPatternMessageArea();
+                if (sosMessage != null) {
+                    sosMessage.showLockoutMessage(message);
+                } else {
+                    mMessageAreaController.setMessage(message, /* animate= */ false);
+                }
             }
 
             @Override
             public void onFinish() {
+                mCountdownTimer = null;
+                mLockPatternView.enableInput();
                 mLockPatternView.setEnabled(true);
-                displayDefaultSecurityMessage();
+                mLockPatternView.clearPattern();
+                SosPatternMessageArea sosMessage = getSosPatternMessageArea();
+                if (sosMessage != null) {
+                    sosMessage.showPrompt();
+                } else {
+                    displayDefaultSecurityMessage();
+                }
             }
 
         }.start();
@@ -438,6 +484,8 @@ public class KeyguardPatternViewController
 
     @Override
     protected int getInitialMessageResId() {
-        return R.string.keyguard_enter_your_pattern;
+        return mView instanceof SosKeyguardPatternView
+                ? R.string.please_enter_pattern
+                : R.string.keyguard_enter_your_pattern;
     }
 }

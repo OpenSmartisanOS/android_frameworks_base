@@ -76,6 +76,7 @@ public class KeyguardPasswordViewController
     private EditText mPasswordEntry;
     private ImageView mSwitchImeButton;
     private boolean mPaused;
+    private Runnable mCancelSosErrorReset;
 
     private final OnEditorActionListener mOnEditorActionListener = (v, actionId, event) -> {
         // Check if this was the result of hitting the IME done action
@@ -163,6 +164,33 @@ public class KeyguardPasswordViewController
     }
 
     @Override
+    protected void startErrorAnimation() {
+        super.startErrorAnimation();
+        if (mView instanceof SosKeyguardPasswordView) {
+            View message = mView.findViewById(R.id.bouncer_message_area);
+            if (message instanceof SosPasswordMessageArea) {
+                boolean resetAfterError = mPasswordEntry.isEnabled();
+                mView.setPasswordEntryInputEnabled(false);
+                ((SosPasswordMessageArea) message).showCredentialError(resetAfterError);
+                SosCredentialVisualAdapter.shake(message);
+                if (mCancelSosErrorReset != null) {
+                    mCancelSosErrorReset.run();
+                    mCancelSosErrorReset = null;
+                }
+                if (resetAfterError) {
+                    mCancelSosErrorReset = mMainExecutor.executeDelayed(() -> {
+                        mCancelSosErrorReset = null;
+                        if (!mPaused && mView.isAttachedToWindow()) {
+                            mView.setPasswordEntryInputEnabled(true);
+                            ((SosPasswordMessageArea) message).showPrompt();
+                        }
+                    }, SosPasswordMessageArea.ERROR_RESET_DELAY_MS);
+                }
+            }
+        }
+    }
+
+    @Override
     protected void onViewAttached() {
         super.onViewAttached();
         mPasswordEntry.setTextOperationUser(
@@ -225,7 +253,8 @@ public class KeyguardPasswordViewController
         // If there's more than one IME, enable the IME switcher button
         updateSwitchImeButton();
 
-        if (Flags.pinInputFieldStyledFocusState()) {
+        if (Flags.pinInputFieldStyledFocusState()
+                && !(mView instanceof SosKeyguardPasswordView)) {
             collectFlow(mPasswordEntry,
                     mKeyguardKeyboardInteractor.isAnyKeyboardConnected(),
                     this::setPasswordFieldFocusBackground);
@@ -250,6 +279,7 @@ public class KeyguardPasswordViewController
     @Override
     protected void onViewDetached() {
         super.onViewDetached();
+        cancelSosErrorReset();
         mPasswordEntry.setOnEditorActionListener(null);
         mPostureController.removeCallback(mPostureCallback);
     }
@@ -261,6 +291,7 @@ public class KeyguardPasswordViewController
 
     @Override
     void resetState() {
+        cancelSosErrorReset();
         mPasswordEntry.setTextOperationUser(
                 UserHandle.of(mSelectedUserInteractor.getSelectedUserId()));
         mMessageAreaController.setMessage(getInitialMessageResId());
@@ -301,6 +332,7 @@ public class KeyguardPasswordViewController
             return;
         }
         mPaused = true;
+        cancelSosErrorReset();
 
         if (!mPasswordEntry.isVisibleToUser()) {
             // Reset all states directly and then hide IME when the screen turned off.
@@ -396,6 +428,15 @@ public class KeyguardPasswordViewController
 
     @Override
     protected int getInitialMessageResId() {
-        return R.string.keyguard_enter_your_password;
+        return mView instanceof SosKeyguardPasswordView
+                ? R.string.please_enter_easy_password
+                : R.string.keyguard_enter_your_password;
+    }
+
+    private void cancelSosErrorReset() {
+        if (mCancelSosErrorReset != null) {
+            mCancelSosErrorReset.run();
+            mCancelSosErrorReset = null;
+        }
     }
 }
