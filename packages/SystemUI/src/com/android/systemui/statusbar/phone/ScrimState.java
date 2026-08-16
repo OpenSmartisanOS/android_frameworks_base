@@ -72,6 +72,17 @@ public enum ScrimState {
         @Override
         public void prepare(ScrimState previousState) {
             mBlankScreen = false;
+            if (mSosKeyguardEnabled) {
+                // R2 supplies its own fixed alpha_layer. Any AOSP keyguard scrim here would fill
+                // the area uncovered by the moving curtain and hide Framework's background task.
+                mBehindAlpha = 0f;
+                mNotifAlpha = 0f;
+                mFrontAlpha = 0f;
+                mBehindTint = Color.TRANSPARENT;
+                mNotifTint = Color.TRANSPARENT;
+                mFrontTint = Color.TRANSPARENT;
+                return;
+            }
             if (previousState == ScrimState.AOD) {
                 mAnimationDuration = StackStateAnimator.ANIMATION_DURATION_WAKEUP_SCRIM;
                 if (mDisplayRequiresBlanking) {
@@ -121,6 +132,15 @@ public enum ScrimState {
     BOUNCER {
         @Override
         public void prepare(ScrimState previousState) {
+            if (mSosKeyguardEnabled) {
+                mBehindAlpha = 0f;
+                mNotifAlpha = 0f;
+                mFrontAlpha = 0f;
+                mBehindTint = Color.TRANSPARENT;
+                mNotifTint = Color.TRANSPARENT;
+                mFrontTint = Color.TRANSPARENT;
+                return;
+            }
             if (Flags.bouncerUiRevamp()) {
                 mBehindAlpha = ScrimState.getColorAlpha(mBouncerSurfaceColor);
                 mNotifAlpha = 0f;
@@ -138,6 +158,10 @@ public enum ScrimState {
         @Override
         public void setBouncerSurfaceColor(int surfaceColor) {
             super.setBouncerSurfaceColor(surfaceColor);
+            if (mSosKeyguardEnabled) {
+                mBehindTint = mNotifTint = Color.TRANSPARENT;
+                return;
+            }
             if (Flags.bouncerUiRevamp()) {
                 mBehindTint = mNotifTint = mBouncerSurfaceColor;
                 return;
@@ -533,6 +557,7 @@ public enum ScrimState {
     boolean mKeyguardFadingAway;
     long mKeyguardFadingAwayDuration;
     boolean mClipQsScrim;
+    boolean mSosKeyguardEnabled;
     int mBackgroundColor;
 
     // This is needed to blur the scrim behind the scrimmed bouncer to avoid showing
@@ -628,6 +653,10 @@ public enum ScrimState {
 
     public void setBouncerSurfaceColor(int surfaceColor) {
         mBouncerSurfaceColor = surfaceColor;
+    }
+
+    public void setSosKeyguardEnabled(boolean enabled) {
+        mSosKeyguardEnabled = enabled;
     }
 
     public void setShadePanelColor(int shadePanelColor) {

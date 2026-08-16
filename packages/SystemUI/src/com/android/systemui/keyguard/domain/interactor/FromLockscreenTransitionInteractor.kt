@@ -28,6 +28,8 @@ import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.keyguard.KeyguardWmStateRefactor
+import com.android.systemui.keyguard.SosKeyguardRuntime
+import com.android.systemui.keyguard.SosKeyguardRuntime.OriginalInteractiveTransitionPhase
 import com.android.systemui.keyguard.data.repository.KeyguardTransitionRepository
 import com.android.systemui.keyguard.shared.model.Edge
 import com.android.systemui.keyguard.shared.model.KeyguardState
@@ -48,6 +50,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
@@ -283,13 +286,38 @@ constructor(
         if (SceneContainerFlag.isEnabled) return
         if (KeyguardWmStateRefactor.isEnabled) return
         scope.launch("$TAG#listenForLockscreenToGone") {
-            keyguardInteractor.isKeyguardGoingAway
-                .filterRelevantKeyguardStateAnd { isKeyguardGoingAway -> isKeyguardGoingAway }
-                .collect {
+            combine(
+                    keyguardInteractor.isKeyguardGoingAway,
+                    SosKeyguardRuntime.originalInteractiveTransitionPhase,
+                ) { isKeyguardGoingAway, originalPhase ->
+                    isKeyguardGoingAway to originalPhase
+                }
+                .filterRelevantKeyguardStateAnd { (isKeyguardGoingAway, originalPhase) ->
+                    isKeyguardGoingAway &&
+                        originalPhase != OriginalInteractiveTransitionPhase.PREVIEW &&
+                        originalPhase != OriginalInteractiveTransitionPhase.CREDENTIAL_CURTAIN &&
+                        originalPhase !=
+                            OriginalInteractiveTransitionPhase.AUTHENTICATED_PREPARING &&
+                        originalPhase != OriginalInteractiveTransitionPhase.CANCELLING
+                }
+                .collect { (_, originalPhase) ->
+                    val originalCommit =
+                        originalPhase == OriginalInteractiveTransitionPhase.COMMITTING
                     startTransitionTo(
                         KeyguardState.GONE,
+                        animator =
+                            if (originalCommit) {
+                                ValueAnimator.ofFloat(0f, 1f).apply { duration = 0L }
+                            } else {
+                                getDefaultAnimatorForTransitionsToState(KeyguardState.GONE)
+                            },
                         modeOnCanceled = TransitionModeOnCanceled.RESET,
-                        ownerReason = "keyguard interactor says keyguard is going away",
+                        ownerReason =
+                            if (originalCommit) {
+                                "R2 original curtain completed"
+                            } else {
+                                "keyguard interactor says keyguard is going away"
+                            },
                     )
                 }
         }

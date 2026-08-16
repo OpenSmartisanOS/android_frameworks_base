@@ -61,6 +61,7 @@ import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dump.DumpManager;
 import com.android.systemui.dump.DumpsysTableLogger;
 import com.android.systemui.keyguard.KeyguardViewMediator;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
 import com.android.systemui.plugins.statusbar.StatusBarStateController.StateListener;
 import com.android.systemui.res.R;
@@ -421,7 +422,12 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
     private void applyKeyguardFlags(NotificationShadeWindowState state) {
         final boolean keyguardOrAod = state.keyguardShowing
                 || (state.dozing && mDozeParameters.getAlwaysOn());
-        if ((keyguardOrAod && !state.mediaBackdropShowing && !state.lightRevealScrimOpaque)
+        if (SosKeyguardRuntime.isEnabled(mContext) && state.keyguardShowing) {
+            // The imported R2 host draws the lock wallpaper itself. FLAG_SHOW_WALLPAPER would put
+            // WallpaperService between the transparent curtain and keyguard_background, causing
+            // a partial swipe to reveal a second copy of the lock wallpaper instead of the task.
+            mLpChanged.flags &= ~LayoutParams.FLAG_SHOW_WALLPAPER;
+        } else if ((keyguardOrAod && !state.mediaBackdropShowing && !state.lightRevealScrimOpaque)
                 || mKeyguardViewMediator.isAnimatingBetweenKeyguardAndSurfaceBehind()
                 || (EnsureWallpaperDrawnOnDisplaySwitch.isEnabled() && state.pendingDisplayChange)
         ) {

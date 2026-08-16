@@ -70,6 +70,7 @@ import com.android.systemui.dock.DockManager;
 import com.android.systemui.dreams.DreamOverlayStateController;
 import com.android.systemui.keyguard.DismissCallbackRegistry;
 import com.android.systemui.keyguard.KeyguardWmStateRefactor;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.keyguard.domain.interactor.KeyguardDismissActionInteractor;
 import com.android.systemui.keyguard.domain.interactor.KeyguardDismissTransitionInteractor;
 import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInteractor;
@@ -81,6 +82,7 @@ import com.android.systemui.navigationbar.TaskbarDelegate;
 import com.android.systemui.navigationbar.views.NavigationBarView;
 import com.android.systemui.plugins.ActivityStarter;
 import com.android.systemui.plugins.statusbar.StatusBarStateController;
+import com.android.systemui.res.R;
 import com.android.systemui.scene.domain.interactor.SceneInteractor;
 import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.scene.shared.model.Overlays;
@@ -1223,7 +1225,12 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
 
     @Override
     public void startPreHideAnimation(Runnable finishRunnable) {
-        if (primaryBouncerIsShowing()) {
+        if (isSosOriginalCredentialMode()) {
+            // Authentication may clear the repository's showing bit before this callback reaches
+            // us.  The original credential View is still bound and must remain the sole 300 ms
+            // visual clock, so always dispatch its disappear request for this path.
+            mPrimaryBouncerInteractor.startOriginalCredentialDisappearAnimation(finishRunnable);
+        } else if (primaryBouncerIsShowing()) {
             mPrimaryBouncerInteractor.startDisappearAnimation(finishRunnable);
 
             // We update the state (which will show the keyguard) only if an animation will run on
@@ -1242,6 +1249,17 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         mShadeLockscreenInteractor.blockExpansionForCurrentTouch();
     }
 
+    private boolean isSosOriginalCredentialMode() {
+        if (!SosKeyguardRuntime.isEnabled(mContext)) {
+            return false;
+        }
+        final KeyguardSecurityModel.SecurityMode mode = mKeyguardSecurityModel.getSecurityMode(
+                mSelectedUserInteractor.getSelectedUserId());
+        return mode == KeyguardSecurityModel.SecurityMode.PIN
+                || mode == KeyguardSecurityModel.SecurityMode.Pattern
+                || mode == KeyguardSecurityModel.SecurityMode.Password;
+    }
+
     @Override
     public void blockPanelExpansionFromCurrentTouch() {
         mShadeLockscreenInteractor.blockExpansionForCurrentTouch();
@@ -1257,11 +1275,21 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
                 mKeyguardStateController.isOccluded());
         launchPendingWakeupAction();
 
-        if (mKeyguardUpdateManager.needsSlowUnlockTransition()) {
+        final boolean originalCredentialCommit =
+                SosKeyguardRuntime.isOriginalCommitInProgress();
+        if (mKeyguardUpdateManager.needsSlowUnlockTransition() && !originalCredentialCommit) {
             fadeoutDuration = KEYGUARD_DISMISS_DURATION_LOCKED;
         }
         long uptimeMillis = SystemClock.uptimeMillis();
-        long delay = Math.max(0, startTime + HIDE_TIMING_CORRECTION_MS - uptimeMillis);
+        long delay = originalCredentialCommit
+                ? 0
+                : Math.max(0, startTime + HIDE_TIMING_CORRECTION_MS - uptimeMillis);
+        if (originalCredentialCommit) {
+            // The complete R2 credential page, wallpaper and curtain have already moved above the
+            // display. This method must only release Android's state; an additional fade briefly
+            // redraws the native bouncer/scrim after the original 300 ms animation.
+            fadeoutDuration = 0;
+        }
 
         if (mKeyguardStateController.isFlingingToDismissKeyguard()) {
             final boolean wasFlingingToDismissKeyguard =
@@ -1517,6 +1545,13 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
             }
         }
 
+        boolean hideSosKeyguardHomeHandle = shouldHideSosKeyguardHomeHandle(
+                showing, occluded, primaryBouncerIsOrWillBeShowing, remoteInputActive);
+        updateSosKeyguardHomeHandleVisibility(hideSosKeyguardHomeHandle);
+
+        // The Smartisan base bar replaces the visual home affordance, but not the navigation
+        // window itself.  Keeping the window visible preserves Android's gesture insets and
+        // restores the standard pill naturally as soon as keyguard stops showing.
         boolean navBarVisible = isNavBarVisible();
         boolean lastNavBarVisible = getLastNavBarVisible();
         if (navBarVisible != lastNavBarVisible || mFirstUpdate) {
@@ -1554,6 +1589,31 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
         mLastGesturalNav = mGesturalNav;
         mLastIsDocked = mIsDocked;
         mCentralSurfaces.onKeyguardViewManagerStatesUpdated();
+    }
+
+    private boolean shouldHideSosKeyguardHomeHandle(
+            boolean showing,
+            boolean occluded,
+            boolean bouncerShowing,
+            boolean remoteInputActive) {
+        return SosKeyguardRuntime.isEnabled(mContext)
+                && mGesturalNav
+                && showing
+                && !occluded
+                && !bouncerShowing
+                && !remoteInputActive
+                && !mGlobalActionsVisible
+                && mStatusBarStateController.getState() == StatusBarState.KEYGUARD;
+    }
+
+    private void updateSosKeyguardHomeHandleVisibility(boolean hideHomeHandle) {
+        NavigationBarView navBarView = mCentralSurfaces.getNavigationBarView();
+        if (navBarView != null) {
+            navBarView.setSosKeyguardHomeHandleHidden(hideHomeHandle);
+        }
+        if (mTaskbarDelegate != null) {
+            mTaskbarDelegate.setSosKeyguardHomeHandleHidden(hideHomeHandle);
+        }
     }
 
     /**
@@ -1636,6 +1696,21 @@ public class StatusBarKeyguardViewManager implements RemoteInputController.Callb
     @Override
     public void readyForKeyguardDone() {
         mViewMediatorCallback.readyForKeyguardDone();
+    }
+
+    /** Called by the R2 host at the original 150 ms launcher coordination point. */
+    public void prepareOriginalCredentialUnlockSurface(long generation, int userId) {
+        mViewMediatorCallback.prepareOriginalCredentialUnlockSurface(generation, userId);
+    }
+
+    /** Called by the R2 host only after its 300 ms curtain reaches the final position. */
+    public void commitOriginalCredentialUnlockSurface(long generation, int userId) {
+        mViewMediatorCallback.commitOriginalCredentialUnlockSurface(generation, userId);
+    }
+
+    /** Cancels an interrupted credential curtain without releasing Keyguard. */
+    public void cancelOriginalCredentialUnlockSurface(long generation, int userId) {
+        mViewMediatorCallback.cancelOriginalCredentialUnlockSurface(generation, userId);
     }
 
     @Override

@@ -16,10 +16,13 @@
 
 package com.android.systemui.keyguard.ui.viewmodel
 
+import android.content.Context
 import android.util.MathUtils
 import com.android.app.animation.Interpolators.EMPHASIZED_ACCELERATE
 import com.android.systemui.Flags
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.dagger.qualifiers.Application
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.domain.interactor.FromPrimaryBouncerTransitionInteractor
 import com.android.systemui.keyguard.shared.model.Edge
 import com.android.systemui.keyguard.shared.model.KeyguardState.LOCKSCREEN
@@ -42,8 +45,13 @@ import kotlinx.coroutines.flow.emptyFlow
 @SysUISingleton
 class PrimaryBouncerToLockscreenTransitionViewModel
 @Inject
-constructor(private val blurConfig: BlurConfig, animationFlow: KeyguardTransitionAnimationFlow) :
+constructor(
+    @Application context: Context,
+    private val blurConfig: BlurConfig,
+    animationFlow: KeyguardTransitionAnimationFlow,
+) :
     DeviceEntryIconTransition, PrimaryBouncerTransition {
+    private val useOriginalKeyguardComposition = SosKeyguardRuntime.isEnabled(context)
     private val transitionAnimation =
         animationFlow
             .setup(
@@ -65,6 +73,11 @@ constructor(private val blurConfig: BlurConfig, animationFlow: KeyguardTransitio
             // SharedNotificationContainerViewModel#alphaForShadeAndQsExpansion might be relevant
             // instead.
             return emptyFlow()
+        } else if (useOriginalKeyguardComposition) {
+            // LOCKSCREEN -> PRIMARY_BOUNCER keeps the R2 host opaque, so the reverse transition
+            // must also start and finish at one. This prevents a one-frame desktop flash when an
+            // authentication attempt is cancelled and the transparent bouncer is hidden.
+            return transitionAnimation.immediatelyTransitionTo(1f)
         } else {
             var currentAlpha = 0f
             return transitionAnimation.sharedFlow(

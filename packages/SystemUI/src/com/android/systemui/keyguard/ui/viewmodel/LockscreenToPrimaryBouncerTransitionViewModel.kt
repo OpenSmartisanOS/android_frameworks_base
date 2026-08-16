@@ -16,8 +16,11 @@
 
 package com.android.systemui.keyguard.ui.viewmodel
 
+import android.content.Context
 import com.android.systemui.Flags
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.dagger.qualifiers.Application
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.domain.interactor.FromLockscreenTransitionInteractor
 import com.android.systemui.keyguard.shared.model.Edge
 import com.android.systemui.keyguard.shared.model.KeyguardState.LOCKSCREEN
@@ -41,8 +44,13 @@ import kotlinx.coroutines.flow.emptyFlow
 @SysUISingleton
 class LockscreenToPrimaryBouncerTransitionViewModel
 @Inject
-constructor(private val blurConfig: BlurConfig, animationFlow: KeyguardTransitionAnimationFlow) :
+constructor(
+    @Application context: Context,
+    private val blurConfig: BlurConfig,
+    animationFlow: KeyguardTransitionAnimationFlow,
+) :
     DeviceEntryIconTransition, PrimaryBouncerTransition {
+    private val useOriginalKeyguardComposition = SosKeyguardRuntime.isEnabled(context)
     private val transitionAnimation =
         animationFlow
             .setup(
@@ -74,6 +82,12 @@ constructor(private val blurConfig: BlurConfig, animationFlow: KeyguardTransitio
             // SharedNotificationContainerViewModel#alphaForShadeAndQsExpansion might be relevant
             // instead.
             emptyFlow()
+        } else if (useOriginalKeyguardComposition) {
+            // R2 keeps desk_kg and blur_background in the same KeyguardHostView as kg_unlock_lay.
+            // The security view is transparent and moves above those two layers; the host itself
+            // never fades. Android's generic transition used to fade the whole KeyguardRootView,
+            // which removed the only lock wallpaper and exposed Framework's desktop background.
+            transitionAnimation.immediatelyTransitionTo(1f)
         } else {
             shortcutsAlpha
         }

@@ -28,6 +28,8 @@ import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.keyguard.KeyguardWmStateRefactor
+import com.android.systemui.keyguard.SosKeyguardRuntime
+import com.android.systemui.keyguard.SosKeyguardRuntime.OriginalInteractiveTransitionPhase
 import com.android.systemui.keyguard.data.repository.KeyguardTransitionRepository
 import com.android.systemui.keyguard.shared.model.Edge
 import com.android.systemui.keyguard.shared.model.KeyguardState
@@ -42,6 +44,7 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -84,16 +87,35 @@ constructor(
     }
 
     val surfaceBehindVisibility: Flow<Boolean?> =
-        transitionInteractor
-            .transition(
-                edge = Edge.INVALID,
-                edgeWithoutSceneContainer =
-                    Edge.create(from = KeyguardState.PRIMARY_BOUNCER, to = KeyguardState.GONE),
-            )
-            .map<TransitionStep, Boolean?> { it.value > TO_GONE_SURFACE_BEHIND_VISIBLE_THRESHOLD }
-            .onStart {
-                // Default to null ("don't care, use a reasonable default").
-                emit(null)
+        combine(
+                transitionInteractor
+                    .transition(
+                        edge = Edge.INVALID,
+                        edgeWithoutSceneContainer =
+                            Edge.create(
+                                from = KeyguardState.PRIMARY_BOUNCER,
+                                to = KeyguardState.GONE,
+                            ),
+                    )
+                    .map<TransitionStep, Boolean?> {
+                        it.value > TO_GONE_SURFACE_BEHIND_VISIBLE_THRESHOLD
+                    }
+                    .onStart {
+                        // Default to null ("don't care, use a reasonable default").
+                        emit(null)
+                    },
+                SosKeyguardRuntime.originalInteractiveTransitionPhase,
+            ) { transitionVisible, originalPhase ->
+                // The R2 curtain has already exposed the real task. Never hide it again for the
+                // first 10% of Android's bouncer transition or a single native flash is visible.
+                if (originalPhase ==
+                        OriginalInteractiveTransitionPhase.AUTHENTICATED_PREPARING ||
+                    originalPhase == OriginalInteractiveTransitionPhase.COMMITTING
+                ) {
+                    true
+                } else {
+                    transitionVisible
+                }
             }
             .distinctUntilChanged()
 
@@ -258,9 +280,21 @@ constructor(
         }
 
         scope.launch {
-            keyguardInteractor.isKeyguardGoingAway
-                .filterRelevantKeyguardStateAnd { isKeyguardGoingAway -> isKeyguardGoingAway }
-                .collect {
+            combine(
+                    keyguardInteractor.isKeyguardGoingAway,
+                    SosKeyguardRuntime.originalInteractiveTransitionPhase,
+                ) { isKeyguardGoingAway, originalPhase ->
+                    isKeyguardGoingAway to originalPhase
+                }
+                .filterRelevantKeyguardStateAnd { (isKeyguardGoingAway, originalPhase) ->
+                    isKeyguardGoingAway &&
+                        originalPhase != OriginalInteractiveTransitionPhase.PREVIEW &&
+                        originalPhase != OriginalInteractiveTransitionPhase.CREDENTIAL_CURTAIN &&
+                        originalPhase !=
+                            OriginalInteractiveTransitionPhase.AUTHENTICATED_PREPARING &&
+                        originalPhase != OriginalInteractiveTransitionPhase.CANCELLING
+                }
+                .collect { (_, originalPhase) ->
                     val editModeState = communalSceneInteractor.editModeState.value
                     if (Flags.hubEditModeTransition() && editModeState != null) {
                         Log.i(
@@ -273,25 +307,41 @@ constructor(
                         return@collect
                     }
 
-                    val securityMode =
-                        keyguardSecurityModel.getSecurityMode(
-                            selectedUserInteractor.getSelectedUserId()
-                        )
-                    // IME for password requires a slightly faster animation
+                    val originalCommit =
+                        originalPhase == OriginalInteractiveTransitionPhase.COMMITTING
                     val duration =
-                        if (securityMode == KeyguardSecurityModel.SecurityMode.Password) {
-                            TO_GONE_SHORT_DURATION
+                        if (originalCommit) {
+                            0.milliseconds
                         } else {
-                            TO_GONE_DURATION
+                            val securityMode =
+                                keyguardSecurityModel.getSecurityMode(
+                                    selectedUserInteractor.getSelectedUserId()
+                                )
+                            // IME for password requires a slightly faster AOSP animation.
+                            if (securityMode == KeyguardSecurityModel.SecurityMode.Password) {
+                                TO_GONE_SHORT_DURATION
+                            } else {
+                                TO_GONE_DURATION
+                            }
                         }
 
                     startTransitionTo(
                         toState = KeyguardState.GONE,
                         animator =
-                            getDefaultAnimatorForTransitionsToState(KeyguardState.GONE).apply {
-                                this.duration = duration.inWholeMilliseconds
+                            if (originalCommit) {
+                                ValueAnimator.ofFloat(0f, 1f).apply { this.duration = 0L }
+                            } else {
+                                getDefaultAnimatorForTransitionsToState(KeyguardState.GONE).apply {
+                                    this.duration = duration.inWholeMilliseconds
+                                }
                             },
                         modeOnCanceled = TransitionModeOnCanceled.RESET,
+                        ownerReason =
+                            if (originalCommit) {
+                                "R2 credential curtain completed"
+                            } else {
+                                "primary bouncer keyguard going away"
+                            },
                     )
                     closeHubImmediatelyIfNeeded()
                 }

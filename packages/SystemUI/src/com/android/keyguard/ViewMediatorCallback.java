@@ -62,6 +62,19 @@ public interface ViewMediatorCallback {
     void readyForKeyguardDone();
 
     /**
+     * Starts restoring the authenticated task behind the R2 credential curtain.  This prepares
+     * remote targets only; Keyguard remains visible until
+     * {@link #commitOriginalCredentialUnlockSurface(long, int)}.
+     */
+    void prepareOriginalCredentialUnlockSurface(long generation, int userId);
+
+    /** Opens the final R2 credential hand-off after its 300 ms curtain has completed. */
+    void commitOriginalCredentialUnlockSurface(long generation, int userId);
+
+    /** Cancels a not-yet-committed R2 credential surface preparation session. */
+    void cancelOriginalCredentialUnlockSurface(long generation, int userId);
+
+    /**
      * Reset the keyguard and bouncer.
      */
     void resetKeyguard();

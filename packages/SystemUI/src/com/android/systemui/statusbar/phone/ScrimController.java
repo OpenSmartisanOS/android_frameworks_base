@@ -64,6 +64,7 @@ import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.qualifiers.Main;
 import com.android.systemui.dock.DockManager;
 import com.android.systemui.keyguard.KeyguardUnlockAnimationController;
+import com.android.systemui.keyguard.SosKeyguardRuntime;
 import com.android.systemui.keyguard.domain.interactor.KeyguardInteractor;
 import com.android.systemui.keyguard.domain.interactor.KeyguardTransitionInteractor;
 import com.android.systemui.keyguard.shared.model.Edge;
@@ -145,6 +146,8 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
      */
     public static final int OPAQUE = 2;
     private boolean mClipsQsScrim;
+    /** R2 owns ordinary keyguard darkening with keyguard_host_view_delta's alpha_layer. */
+    private boolean mSosKeyguardEnabled;
 
     /**
      * Whether an activity is launching over the lockscreen. During the launch animation, we want to
@@ -467,8 +470,10 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
         mNotificationsScrim.enableRoundedCorners(true);
 
         final ScrimState[] states = ScrimState.values();
+        mSosKeyguardEnabled = SosKeyguardRuntime.isEnabled(notificationsScrim.getContext());
         for (ScrimState scrimState : states) {
             scrimState.init(mScrimInFront, mScrimBehind, mDozeParameters, mDockManager);
+            scrimState.setSosKeyguardEnabled(mSosKeyguardEnabled);
             scrimState.setScrimBehindAlphaKeyguard(mScrimBehindAlphaKeyguard);
             scrimState.setDefaultScrimAlpha(getDefaultScrimAlpha());
         }
@@ -1164,6 +1169,23 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
             if (mKeyguardOccluded || hideNotificationScrim) {
                 mNotificationsAlpha = 0;
             }
+        }
+
+        if (mSosKeyguardEnabled
+                && mState == ScrimState.KEYGUARD
+                && mTransitionToFullShadeProgress == 0f
+                && mQsExpansion == 0f) {
+            // Full-width phone layouts normally enable mClipsQsScrim. The generic branch above
+            // then overwrites R2's transparent KEYGUARD state with an opaque black scrim_behind.
+            // That black surface is what the moving wallpaper curtain currently reveals. Keep
+            // idle/interactive R2 keyguard transparent; real shade/QS expansion leaves this
+            // condition and continues through Android's normal scrim policy.
+            mInFrontAlpha = 0f;
+            mBehindAlpha = 0f;
+            mNotificationsAlpha = 0f;
+            mInFrontTint = Color.TRANSPARENT;
+            mBehindTint = Color.TRANSPARENT;
+            mNotificationsTint = Color.TRANSPARENT;
         }
         if (mState != ScrimState.UNLOCKED) {
             mAnimatingPanelExpansionOnUnlock = false;

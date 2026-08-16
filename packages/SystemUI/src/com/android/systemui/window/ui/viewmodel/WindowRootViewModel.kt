@@ -16,13 +16,16 @@
 
 package com.android.systemui.window.ui.viewmodel
 
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.android.systemui.Flags
 import com.android.systemui.communal.domain.interactor.CommunalSceneInteractor
 import com.android.systemui.keyguard.domain.interactor.KeyguardInteractor
+import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.ui.transitions.GlanceableHubTransition
 import com.android.systemui.keyguard.ui.transitions.PrimaryBouncerTransition
+import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.shade.domain.interactor.ShadeInteractor
 import com.android.systemui.window.domain.interactor.WindowRootViewBlurInteractor
 import dagger.assisted.AssistedFactory
@@ -49,10 +52,11 @@ constructor(
     private val blurInteractor: WindowRootViewBlurInteractor,
     private val keyguardInteractor: KeyguardInteractor,
     private val shadeInteractor: ShadeInteractor,
+    @ShadeDisplayAware context: Context,
 ) {
 
     private val bouncerBlurRadiusFlows =
-        if (Flags.bouncerUiRevamp())
+        if (Flags.bouncerUiRevamp() && !SosKeyguardRuntime.isEnabled(context))
             primaryBouncerTransitions.map { it.windowBlurRadius.logIfPossible(it.javaClass.name) }
         else emptyList()
 

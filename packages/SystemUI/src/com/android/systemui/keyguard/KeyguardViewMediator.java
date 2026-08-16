@@ -375,6 +375,48 @@ public class KeyguardViewMediator implements CoreStartable,
      * exit animation.
      */
     private int mGoingAwayRequestedForUserId = -1;
+    /** Invalidates queued keyguardGoingAway IPCs when an R2 session is cancelled or superseded. */
+    private volatile long mSurfaceBehindRequestSequence;
+    /** Serializes the point where a request becomes visible to WM with local cancellation. */
+    private final Object mSurfaceBehindRequestLock = new Object();
+    /** Sequence currently owned by the requested/running surface-behind session. */
+    private long mActiveSurfaceBehindRequestSequence;
+    /** Sequence sent to WM which has not produced START/CANCEL yet. */
+    private long mDispatchedSurfaceBehindRequestSequence;
+    /** Credential generation associated with the currently requested/running remote surface. */
+    private long mSurfaceBehindCredentialGeneration;
+    /** User frozen with {@link #mSurfaceBehindCredentialGeneration}. */
+    private int mSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+    /**
+     * A cancelled credential request whose WM start/cancel callback may still be queued. The active
+     * remote fields are cleared immediately so the old request cannot own a later session; this
+     * tombstone makes the one late callback fail closed instead of entering Android's generic
+     * "no pending lock means unlocked" branch.
+     */
+    private long mCanceledSurfaceBehindCredentialGeneration;
+    private int mCanceledSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+    private long mCanceledSurfaceBehindRequestSequence;
+    /** Latest request held until the cancelled WM request has produced its terminal callback. */
+    private boolean mDeferredSurfaceBehindRequest;
+    private long mDeferredSurfaceBehindCredentialGeneration;
+    private int mDeferredSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+    private int mDeferredSurfaceBehindRequestUserId = UserHandle.USER_NULL;
+
+    private static final class CanceledSurfaceBehindRequest {
+        final long sequence;
+        final long credentialGeneration;
+        final int credentialUserId;
+
+        CanceledSurfaceBehindRequest(long sequence, long credentialGeneration,
+                int credentialUserId) {
+            this.sequence = sequence;
+            this.credentialGeneration = credentialGeneration;
+            this.credentialUserId = credentialUserId;
+        }
+    }
+
+    /** R2 credential generation whose Android completion semantics have run exactly once. */
+    private long mOriginalCredentialSemanticsGeneration;
 
     private boolean mSystemReady;
     private boolean mBootCompleted;
@@ -988,12 +1030,101 @@ public class KeyguardViewMediator implements CoreStartable,
         @Override
         public void readyForKeyguardDone() {
             Trace.beginSection("KeyguardViewMediator.mViewMediatorCallback#readyForKeyguardDone");
+            if (SosKeyguardRuntime.deferReadyForKeyguardDone()) {
+                Log.d(TAG, "Deferring readyForKeyguardDone until R2 credential curtain commits");
+                Trace.endSection();
+                return;
+            }
             if (mKeyguardDonePendingForUser != NO_KEYGUARD_DONE_PENDING) {
                 int user = mKeyguardDonePendingForUser;
                 mKeyguardDonePendingForUser = NO_KEYGUARD_DONE_PENDING;
                 tryKeyguardDone(user);
             }
             Trace.endSection();
+        }
+
+        @Override
+        public void prepareOriginalCredentialUnlockSurface(long generation, int userId) {
+            if (generation == 0
+                    || userId == UserHandle.USER_NULL
+                    || mSelectedUserInteractor.getSelectedUserId() != userId
+                    || !SosKeyguardRuntime.isOriginalCredentialSession(generation, userId)
+                    || !SosKeyguardRuntime.isOriginalCredentialTransitionActive()) {
+                return;
+            }
+            Log.d(TAG, "Preparing R2 credential surface generation=" + generation
+                    + " user=" + userId);
+            mKeyguardUnlockAnimationControllerLazy.get()
+                    .prepareOriginalCredentialSurfaceHandoff(generation, userId);
+            if (!mSurfaceBehindRemoteAnimationRequested
+                    && !mSurfaceBehindRemoteAnimationRunning) {
+                showSurfaceBehindKeyguard();
+            }
+        }
+
+        @Override
+        public void commitOriginalCredentialUnlockSurface(long generation, int userId) {
+            if (generation == 0
+                    || userId == UserHandle.USER_NULL
+                    || mSelectedUserInteractor.getSelectedUserId() != userId
+                    || !SosKeyguardRuntime.isOriginalCredentialSession(generation, userId)
+                    || !SosKeyguardRuntime.isOriginalCommitInProgress()) {
+                return;
+            }
+            Log.d(TAG, "Committing R2 credential surface generation=" + generation
+                    + " user=" + userId);
+            if (!completeOriginalCredentialUnlockSemantics(generation, userId)) {
+                Log.w(TAG, "Rejecting invalid R2 credential commit generation=" + generation
+                        + " user=" + userId);
+                cancelOriginalCredentialUnlockSurface(generation, userId);
+                return;
+            }
+            SosKeyguardRuntime.consumeDeferredReadyForKeyguardDone(generation);
+            if (!mSurfaceBehindRemoteAnimationRequested
+                    && !mSurfaceBehindRemoteAnimationRunning) {
+                // The 150 ms request failed or was lost. Keep the same state machine and let its
+                // post-curtain timeout provide the bounded compatibility fallback.
+                showSurfaceBehindKeyguard();
+            }
+            mKeyguardUnlockAnimationControllerLazy.get()
+                    .commitOriginalCredentialSurfaceHandoff(generation, userId);
+        }
+
+        @Override
+        public void cancelOriginalCredentialUnlockSurface(long generation, int userId) {
+            final boolean ownsRuntime =
+                    SosKeyguardRuntime.getOriginalCredentialGeneration() == generation
+                            && SosKeyguardRuntime.getOriginalCredentialUserId() == userId;
+            final boolean ownsRemote = mSurfaceBehindCredentialGeneration == generation
+                    && mSurfaceBehindCredentialUserId == userId;
+            if (generation == 0 || userId == UserHandle.USER_NULL
+                    || (!ownsRuntime && !ownsRemote)) {
+                Log.w(TAG, "Ignoring stale R2 credential cancel generation=" + generation
+                        + " user=" + userId + " activeGeneration="
+                        + SosKeyguardRuntime.getOriginalCredentialGeneration()
+                        + " remoteGeneration=" + mSurfaceBehindCredentialGeneration);
+                return;
+            }
+            mKeyguardUnlockAnimationControllerLazy.get()
+                    .cancelOriginalCredentialSurfaceHandoff(generation, userId);
+            if (ownsRemote) {
+                final boolean remoteWasRunning = mSurfaceBehindRemoteAnimationRunning;
+                final boolean awaitingWmCallback = invalidateOriginalCredentialSurfaceRequest(
+                        generation, userId, remoteWasRunning);
+                if (remoteWasRunning) {
+                    finishSurfaceBehindRemoteAnimation(true /* showKeyguard */);
+                } else if (!awaitingWmCallback) {
+                    dispatchDeferredSurfaceBehindRequest();
+                }
+            }
+            if (ownsRuntime) {
+                synchronized (KeyguardViewMediator.this) {
+                    resetKeyguardDonePendingLocked();
+                    mHideAnimationRun = false;
+                    mHideAnimationRunning = false;
+                    mHiding = false;
+                }
+            }
         }
 
         @Override
@@ -1868,6 +1999,7 @@ public class KeyguardViewMediator implements CoreStartable,
      */
     public void onStartedGoingToSleep(@WindowManagerPolicyConstants.OffReason int offReason) {
         if (DEBUG) Log.d(TAG, "onStartedGoingToSleep(" + offReason + ")");
+        final int currentUser = mSelectedUserInteractor.getSelectedUserId();
         synchronized (this) {
             mDeviceInteractive = false;
             mPowerGestureIntercepted = false;
@@ -1876,7 +2008,6 @@ public class KeyguardViewMediator implements CoreStartable,
             // Lock immediately based on setting if secure (user has a pin/pattern/password).
             // This also "locks" the device when not secure to provide easy access to the
             // camera while preventing unwanted input.
-            int currentUser = mSelectedUserInteractor.getSelectedUserId();
             final boolean lockImmediately =
                     mLockPatternUtils.getPowerButtonInstantlyLocks(currentUser)
                             || !mLockPatternUtils.isSecure(currentUser);
@@ -2881,10 +3012,15 @@ public class KeyguardViewMediator implements CoreStartable,
                     message = "START_KEYGUARD_EXIT_ANIM";
                     Trace.beginSection(
                             "KeyguardViewMediator#handleMessage START_KEYGUARD_EXIT_ANIM");
+                    StartKeyguardExitAnimParams params = (StartKeyguardExitAnimParams) msg.obj;
+                    if (consumeCanceledOriginalCredentialStart(params.mFinishedCallback)) {
+                        Trace.endSection();
+                        break;
+                    }
+                    markSurfaceBehindRequestCallbackReceived();
                     synchronized (KeyguardViewMediator.this) {
                         mHiding = true;
                     }
-                    StartKeyguardExitAnimParams params = (StartKeyguardExitAnimParams) msg.obj;
                     mNotificationShadeWindowControllerLazy.get().batchApplyWindowLayoutParams(
                             () -> {
                                 handleStartKeyguardExitAnimation(params.startTime,
@@ -2947,6 +3083,26 @@ public class KeyguardViewMediator implements CoreStartable,
         }
         Log.d(TAG, "tryKeyguardDone: pendingForUser - " + logUserId
                 + ", animRan - " + mHideAnimationRun + " animRunning - " + mHideAnimationRunning);
+        if (SosKeyguardRuntime.isOriginalCredentialBeforeCommit()) {
+            SosKeyguardRuntime.deferReadyForKeyguardDone();
+            Log.d(TAG, "Holding tryKeyguardDone for R2 credential curtain");
+            return;
+        }
+        if (SosKeyguardRuntime.isOriginalCommitInProgress()
+                && SosKeyguardRuntime.getOriginalCredentialGeneration() != 0) {
+            final long generation = SosKeyguardRuntime.getOriginalCredentialGeneration();
+            final int credentialUserId = SosKeyguardRuntime.getOriginalCredentialUserId();
+            if (!SosKeyguardRuntime.isOriginalCredentialSession(generation, credentialUserId)
+                    || credentialUserId != userId
+                    || credentialUserId != mSelectedUserInteractor.getSelectedUserId()) {
+                Log.w(TAG, "Rejecting cross-user R2 ready callback generation=" + generation
+                        + " credentialUser=" + credentialUserId + " readyUser=" + userId);
+                return;
+            }
+            mKeyguardUnlockAnimationControllerLazy.get()
+                    .commitOriginalCredentialSurfaceHandoff(generation, credentialUserId);
+            return;
+        }
         if (mKeyguardDonePendingForUser == NO_KEYGUARD_DONE_PENDING && mHideAnimationRun
                 && !mHideAnimationRunning) {
             handleKeyguardDone();
@@ -2991,6 +3147,180 @@ public class KeyguardViewMediator implements CoreStartable,
             mUpdateMonitor.clearFingerprintRecognizedWhenKeyguardDone(currentUser);
         }
         Trace.endSection();
+    }
+
+    /**
+     * Completes Android's authenticated-user bookkeeping without starting its visual hide path.
+     * The R2 Host is the only owner of the 300 ms curtain; WMS release happens separately after
+     * its final frame and the real task surface are ready.
+     */
+    private boolean completeOriginalCredentialUnlockSemantics(long generation, int userId) {
+        if (!isOriginalCredentialCompletionValid(generation, userId, false /* canceled */)) {
+            return false;
+        }
+        if (mOriginalCredentialSemanticsGeneration == generation) return true;
+
+        mOriginalCredentialSemanticsGeneration = generation;
+        if (mLockPatternUtils.isSecure(userId)) {
+            mUiBgExecutor.execute(() ->
+                    mLockPatternUtils.getDevicePolicyManager().reportKeyguardDismissed(userId));
+        }
+        synchronized (this) {
+            resetKeyguardDonePendingLocked();
+            mHideAnimationRun = false;
+            mHideAnimationRunning = false;
+        }
+        setPendingLock(false);
+        mKeyguardInteractor.keyguardDoneAnimationsFinished();
+        mUpdateMonitor.clearFingerprintRecognizedWhenKeyguardDone(userId);
+        return true;
+    }
+
+    /** Final R2 hand-off used by both the prepared-target path and its bounded timeout fallback. */
+    public void finishOriginalCredentialUnlock(
+            long generation, int userId, boolean surfacePrepared) {
+        if (!completeOriginalCredentialUnlockSemantics(generation, userId)) {
+            final boolean ownsRuntime =
+                    SosKeyguardRuntime.getOriginalCredentialGeneration() == generation
+                            && SosKeyguardRuntime.getOriginalCredentialUserId() == userId;
+            final boolean ownsRemote = mSurfaceBehindCredentialGeneration == generation
+                    && mSurfaceBehindCredentialUserId == userId;
+            Log.w(TAG, "R2 credential hand-off became invalid generation=" + generation
+                    + " user=" + userId + " ownsRuntime=" + ownsRuntime
+                    + " ownsRemote=" + ownsRemote);
+            if (!ownsRuntime && !ownsRemote) {
+                // An old timeout/transaction callback must not cancel a newer authenticated
+                // curtain or the newer surface-behind request.
+                return;
+            }
+            if (ownsRemote) {
+                final boolean remoteWasRunning = mSurfaceBehindRemoteAnimationRunning;
+                final boolean awaitingWmCallback = invalidateOriginalCredentialSurfaceRequest(
+                        generation, userId, remoteWasRunning);
+                if (remoteWasRunning) {
+                    finishSurfaceBehindRemoteAnimation(true /* showKeyguard */);
+                } else if (!awaitingWmCallback) {
+                    dispatchDeferredSurfaceBehindRequest();
+                }
+            }
+            if (ownsRuntime) {
+                SosKeyguardRuntime.cancelOriginalCredentialTransition(generation);
+                synchronized (this) {
+                    mHiding = false;
+                    resetStateLocked();
+                    setShowingLocked(true, true, "invalid R2 credential hand-off");
+                }
+                SosKeyguardRuntime.finishOriginalCredentialTransition(generation);
+            }
+            return;
+        }
+
+        if (mSurfaceBehindRemoteAnimationRunning || mSurfaceBehindRemoteAnimationRequested) {
+            exitOriginalCredentialAndFinishSurfaceBehindRemoteAnimation(generation, userId);
+            return;
+        }
+
+        // WM did not provide a remote session. The authenticated curtain is already above the
+        // display, so hide the Keyguard view and state atomically without invoking AOSP animation.
+        Log.w(TAG, "Finishing R2 credential unlock without remote target; prepared="
+                + surfacePrepared);
+        postAfterTraversal(() -> {
+            if (!isOriginalCredentialCompletionValid(generation, userId, false /* canceled */)) {
+                resetStateLocked();
+                setShowingLocked(true, true, "R2 credential fallback relocked");
+                SosKeyguardRuntime.finishOriginalCredentialTransition(generation);
+                return;
+            }
+            mKeyguardViewControllerLazy.get().hide(0 /* startTime */, 0 /* fadeoutDuration */);
+            onKeyguardExitFinished("R2 credential fallback without remote target");
+            mUpdateMonitor.dispatchKeyguardDismissAnimationFinished();
+            SosKeyguardRuntime.finishOriginalCredentialTransition(generation);
+        });
+    }
+
+    /** Completes only the remote session associated with one authenticated R2 generation. */
+    private void exitOriginalCredentialAndFinishSurfaceBehindRemoteAnimation(
+            long generation, int userId) {
+        if (!mSurfaceBehindRemoteAnimationRunning && !mSurfaceBehindRemoteAnimationRequested) {
+            return;
+        }
+        mKeyguardViewControllerLazy.get().blockPanelExpansionFromCurrentTouch();
+        final boolean wasShowing = ENABLE_NEW_KEYGUARD_SHELL_TRANSITIONS
+                ? mKeyguardStateController.isShowing() : mShowing;
+        InteractionJankMonitor.getInstance().end(CUJ_LOCKSCREEN_UNLOCK_ANIMATION);
+        postAfterTraversal(() -> {
+            // A later request may already own these fields. A stale traversal must never finish or
+            // clean up the newer remote session.
+            if (mSurfaceBehindCredentialGeneration != generation
+                    || mSurfaceBehindCredentialUserId != userId) {
+                Log.w(TAG, "Ignoring stale R2 remote completion generation=" + generation
+                        + " user=" + userId + " active="
+                        + mSurfaceBehindCredentialGeneration + "/"
+                        + mSurfaceBehindCredentialUserId);
+                return;
+            }
+            if (!isOriginalCredentialCompletionValid(
+                    generation, userId, mIsKeyguardExitAnimationCanceled)) {
+                Log.w(TAG, "Relocking stale/invalid R2 remote completion generation="
+                        + generation + " user=" + userId);
+                finishSurfaceBehindRemoteAnimation(true /* showKeyguard */);
+                synchronized (this) {
+                    mHiding = false;
+                    resetStateLocked();
+                    setShowingLocked(true, true, "invalid R2 remote completion");
+                }
+                return;
+            }
+
+            onKeyguardExitFinished("R2 credential remote completion");
+            if (mKeyguardStateController.isDismissingFromSwipe() || wasShowing) {
+                mKeyguardUnlockAnimationControllerLazy.get()
+                        .hideKeyguardViewAfterRemoteAnimation();
+            }
+            finishSurfaceBehindRemoteAnimation(false /* showKeyguard */);
+            mUpdateMonitor.dispatchKeyguardDismissAnimationFinished();
+        });
+    }
+
+    private boolean isOriginalCredentialCompletionValid(
+            long generation, int userId, boolean canceled) {
+        return isOriginalCredentialCompletionValid(
+                generation,
+                userId,
+                SosKeyguardRuntime.getOriginalCredentialGeneration(),
+                SosKeyguardRuntime.getOriginalCredentialUserId(),
+                mSelectedUserInteractor.getSelectedUserId(),
+                SosKeyguardRuntime.isOriginalCommitInProgress(),
+                mPM.isInteractive(),
+                mGoingToSleep,
+                mPendingLock,
+                mShowing,
+                canceled);
+    }
+
+    @VisibleForTesting
+    static boolean isOriginalCredentialCompletionValid(
+            long expectedGeneration,
+            int expectedUserId,
+            long activeGeneration,
+            int activeUserId,
+            int selectedUserId,
+            boolean commitInProgress,
+            boolean interactive,
+            boolean goingToSleep,
+            boolean pendingLock,
+            boolean showing,
+            boolean canceled) {
+        return expectedGeneration != 0
+                && expectedGeneration == activeGeneration
+                && expectedUserId == activeUserId
+                && expectedUserId == selectedUserId
+                && commitInProgress
+                && interactive
+                && !goingToSleep
+                && !pendingLock
+                && showing
+                && !canceled;
     }
 
     private void sendUserPresentBroadcast() {
@@ -3491,7 +3821,8 @@ public class KeyguardViewMediator implements CoreStartable,
             // When remaining on the shade, there's no need to do a fancy remote animation,
             // it will dismiss the panel in that case.
             } else if (!mStatusBarStateController.leaveOpenOnKeyguardHide()
-                    && apps != null && apps.length > 0) {
+                    && ((apps != null && apps.length > 0)
+                    || SosKeyguardRuntime.isOriginalCredentialTransitionActive())) {
                 if (!KeyguardWmStateRefactor.isEnabled()) {
                     // Handled in WmLockscreenVisibilityManager. Other logic in this class will
                     // short circuit when this is null.
@@ -3504,19 +3835,22 @@ public class KeyguardViewMediator implements CoreStartable,
                                 CUJ_LOCKSCREEN_UNLOCK_ANIMATION, "DismissPanel"));
 
                 // Filter out any closing apps, such as the dream.
-                RemoteAnimationTarget[] openingApps = apps;
+                RemoteAnimationTarget[] openingApps = apps != null
+                        ? apps : new RemoteAnimationTarget[0];
                 if (dismissDreamOnKeyguardDismiss()) {
-                    openingApps = Arrays.stream(apps)
+                    openingApps = Arrays.stream(openingApps)
                             .filter(a -> a.mode == RemoteAnimationTarget.MODE_OPENING)
                             .toArray(RemoteAnimationTarget[]::new);
                 }
 
                 // Pass the surface and metadata to the unlock animation controller.
-                RemoteAnimationTarget[] openingWallpapers = Arrays.stream(wallpapers).filter(
+                RemoteAnimationTarget[] safeWallpapers = wallpapers != null
+                        ? wallpapers : new RemoteAnimationTarget[0];
+                RemoteAnimationTarget[] openingWallpapers = Arrays.stream(safeWallpapers).filter(
                         w -> w.mode == RemoteAnimationTarget.MODE_OPENING).toArray(
                         RemoteAnimationTarget[]::new);
 
-                RemoteAnimationTarget[] closingWallpapers = Arrays.stream(wallpapers).filter(
+                RemoteAnimationTarget[] closingWallpapers = Arrays.stream(safeWallpapers).filter(
                         w -> w.mode == RemoteAnimationTarget.MODE_CLOSING).toArray(
                         RemoteAnimationTarget[]::new);
 
@@ -3666,12 +4000,74 @@ public class KeyguardViewMediator implements CoreStartable,
      * app transition before finishing the current RemoteAnimation, or the keyguard being re-shown).
      */
     private void handleCancelKeyguardExitAnimation() {
+        final CanceledSurfaceBehindRequest canceledRequest =
+                consumeCanceledOriginalCredentialRequest();
+        if (canceledRequest != null) {
+            final long canceledGeneration = canceledRequest.credentialGeneration;
+            final int canceledUserId = canceledRequest.credentialUserId;
+            final long runtimeGeneration =
+                    SosKeyguardRuntime.getOriginalCredentialGeneration();
+            final int runtimeUserId = SosKeyguardRuntime.getOriginalCredentialUserId();
+            final int selectedUserId = mSelectedUserInteractor.getSelectedUserId();
+            final boolean newerCredentialSession = isDifferentOriginalCredentialSession(
+                    canceledGeneration, canceledUserId, runtimeGeneration, runtimeUserId,
+                    selectedUserId);
+            Log.w(TAG, "Consumed late WMS cancel for abandoned R2 credential sequence="
+                    + canceledRequest.sequence + " generation=" + canceledGeneration
+                    + " user=" + canceledUserId);
+            mKeyguardStateController.notifyKeyguardGoingAway(false);
+            if (newerCredentialSession) {
+                // No newer keyguardGoingAway request can have reached WM while the tombstone was
+                // active. Preserve the authenticated curtain and release its deferred request now
+                // that the old callback has been consumed.
+                Log.w(TAG, "Preserving newer R2 credential generation=" + runtimeGeneration
+                        + " after draining generation=" + canceledGeneration);
+            } else if (mShowing) {
+                mIsKeyguardExitAnimationCanceled = true;
+                synchronized (this) {
+                    mHiding = false;
+                    resetStateLocked();
+                    setShowingLocked(true, true,
+                            "late canceled R2 credential remote session");
+                }
+            }
+            dispatchDeferredSurfaceBehindRequest();
+            return;
+        }
+        markSurfaceBehindRequestCallbackReceived();
         if (!KeyguardWmStateRefactor.isEnabled()
                 && mGoingAwayRequestedForUserId != mSelectedUserInteractor.getSelectedUserId()) {
             Log.e(TAG, "Setting pendingLock = true due to userId mismatch. Requested: "
                     + mGoingAwayRequestedForUserId + ", current: "
                     + mSelectedUserInteractor.getSelectedUserId());
             setPendingLock(true);
+        }
+        final long credentialGeneration = mSurfaceBehindCredentialGeneration != 0
+                ? mSurfaceBehindCredentialGeneration
+                : SosKeyguardRuntime.getOriginalCredentialGeneration();
+        final boolean preserveOriginalCredential = credentialGeneration != 0
+                && (SosKeyguardRuntime.isOriginalCredentialBeforeCommit()
+                        || SosKeyguardRuntime.isOriginalCommitInProgress());
+        if (!mPendingLock && preserveOriginalCredential) {
+            // WMS may cancel the surface request because of a concurrent transition. Authentication
+            // is already valid, but the original 300 ms curtain remains the sole visual clock. End
+            // only this remote attempt and let the Host commit boundary re-request it.
+            Log.w(TAG, "R2 credential remote animation cancelled; preserving generation="
+                    + credentialGeneration + " phase="
+                    + SosKeyguardRuntime.getOriginalInteractiveTransitionPhaseValue());
+            finishSurfaceBehindRemoteAnimation(true /* showKeyguard */,
+                    true /* preserveOriginalCredential */);
+            setShowingLocked(true, true, "R2 credential remote attempt cancelled");
+            if (SosKeyguardRuntime.isOriginalCommitInProgress()
+                    && SosKeyguardRuntime.isOriginalCredentialSession(credentialGeneration,
+                            mSelectedUserInteractor.getSelectedUserId())
+                    && mPM.isInteractive()) {
+                showSurfaceBehindKeyguard();
+                mKeyguardUnlockAnimationControllerLazy.get()
+                        .commitOriginalCredentialSurfaceHandoff(credentialGeneration,
+                                mSelectedUserInteractor.getSelectedUserId());
+            }
+            return;
         }
         if (mPendingLock) {
             Log.d(TAG, "#handleCancelKeyguardExitAnimation: keyguard exit animation cancelled. "
@@ -3777,10 +4173,26 @@ public class KeyguardViewMediator implements CoreStartable,
      * the parameters needed to animate the surface.
      */
     public void showSurfaceBehindKeyguard() {
+        final int requestUserId = mSelectedUserInteractor.getSelectedUserId();
+        final long credentialGeneration = SosKeyguardRuntime.getOriginalCredentialGeneration();
+        final int credentialUserId = credentialGeneration != 0
+                ? SosKeyguardRuntime.getOriginalCredentialUserId() : UserHandle.USER_NULL;
+        if (deferSurfaceBehindRequestWhileDraining(
+                requestUserId, credentialGeneration, credentialUserId)) {
+            return;
+        }
+        final long requestSequence;
+        synchronized (mSurfaceBehindRequestLock) {
+            requestSequence = ++mSurfaceBehindRequestSequence;
+            mActiveSurfaceBehindRequestSequence = requestSequence;
+            mDispatchedSurfaceBehindRequestSequence = 0;
+        }
+        mSurfaceBehindCredentialGeneration = credentialGeneration;
+        mSurfaceBehindCredentialUserId = credentialUserId;
         mSurfaceBehindRemoteAnimationRequested = true;
 
         if (ENABLE_NEW_KEYGUARD_SHELL_TRANSITIONS && !KeyguardWmStateRefactor.isEnabled()) {
-            mGoingAwayRequestedForUserId = mSelectedUserInteractor.getSelectedUserId();
+            mGoingAwayRequestedForUserId = requestUserId;
             startKeyguardTransition(false /* keyguardShowing */, false /* aodShowing */);
             return;
         }
@@ -3802,28 +4214,277 @@ public class KeyguardViewMediator implements CoreStartable,
 
         if (!KeyguardWmStateRefactor.isEnabled()) {
             // Handled in WmLockscreenVisibilityManager.
-            mGoingAwayRequestedForUserId = mSelectedUserInteractor.getSelectedUserId();
+            mGoingAwayRequestedForUserId = requestUserId;
             final int goingAwayFlags = flags;
             mUiBgExecutor.execute(() -> {
+                if (!markSurfaceBehindRequestDispatched(
+                        requestSequence, requestUserId, credentialGeneration)) {
+                    Log.d(TAG, "Dropping stale keyguardGoingAway request sequence="
+                            + requestSequence + " generation=" + credentialGeneration);
+                    mHandler.post(() -> handleSurfaceBehindDispatchFailure(
+                            requestSequence, credentialGeneration, credentialUserId));
+                    return;
+                }
                 Log.d(TAG, "keyguardGoingAway requested for userId: "
                         + mGoingAwayRequestedForUserId);
                 try {
                     mActivityTaskManagerService.keyguardGoingAway(goingAwayFlags);
                 } catch (RemoteException e) {
-                    mSurfaceBehindRemoteAnimationRequested = false;
                     Log.e(TAG, "Failed to report keyguardGoingAway", e);
+                    mHandler.post(() -> handleSurfaceBehindDispatchFailure(
+                            requestSequence, credentialGeneration, credentialUserId));
                 }
             });
         }
     }
 
+    private boolean markSurfaceBehindRequestDispatched(
+            long sequence, int userId, long generation) {
+        synchronized (mSurfaceBehindRequestLock) {
+            if (!isSurfaceBehindRequestValid(sequence, userId, generation)
+                    || mActiveSurfaceBehindRequestSequence != sequence) {
+                return false;
+            }
+            // Cancellation takes the same lock before deciding whether a tombstone is required.
+            // Once this assignment is visible, exactly one START/CANCEL callback must be drained
+            // before another request may be sent to WM.
+            mDispatchedSurfaceBehindRequestSequence = sequence;
+            return true;
+        }
+    }
+
+    private boolean isSurfaceBehindRequestValid(long sequence, int userId, long generation) {
+        if (mSurfaceBehindRequestSequence != sequence
+                || !mSurfaceBehindRemoteAnimationRequested
+                || userId != mSelectedUserInteractor.getSelectedUserId()
+                || !mShowing || mGoingToSleep || !mPM.isInteractive() || mPendingLock) {
+            return false;
+        }
+        return generation == 0
+                || SosKeyguardRuntime.isOriginalCredentialSession(generation, userId);
+    }
+
     /** Hides the surface behind the keyguard by re-showing the keyguard/activity lock screen. */
     public void hideSurfaceBehindKeyguard() {
+        mSurfaceBehindRequestSequence++;
         mSurfaceBehindRemoteAnimationRequested = false;
         mKeyguardStateController.notifyKeyguardGoingAway(false);
         if (mShowing) {
             setShowingLocked(true, true, "hideSurfaceBehindKeyguard");
         }
+    }
+
+    /**
+     * Invalidates exactly one credential surface request.
+     *
+     * <p>A tombstone is needed only after the request crossed the WM IPC boundary but before its
+     * START/CANCEL callback arrived. A running remote has already consumed START, while a locally
+     * queued request can be invalidated by its sequence without ever reaching WM.</p>
+     *
+     * @return {@code true} when a terminal WM callback must be drained before another request.
+     */
+    private boolean invalidateOriginalCredentialSurfaceRequest(
+            long generation, int userId, boolean remoteWasRunning) {
+        if (!isSameOriginalCredentialRemoteSession(generation, userId,
+                mSurfaceBehindCredentialGeneration, mSurfaceBehindCredentialUserId)) {
+            return false;
+        }
+        final boolean awaitingWmCallback;
+        synchronized (mSurfaceBehindRequestLock) {
+            final long activeSequence = mActiveSurfaceBehindRequestSequence;
+            awaitingWmCallback = shouldAwaitCanceledSurfaceBehindCallback(
+                    remoteWasRunning,
+                    activeSequence,
+                    mDispatchedSurfaceBehindRequestSequence);
+            mSurfaceBehindRequestSequence++;
+            mActiveSurfaceBehindRequestSequence = 0;
+            if (awaitingWmCallback) {
+                mCanceledSurfaceBehindRequestSequence = activeSequence;
+                mCanceledSurfaceBehindCredentialGeneration = generation;
+                mCanceledSurfaceBehindCredentialUserId = userId;
+            } else if (mDispatchedSurfaceBehindRequestSequence == activeSequence) {
+                mDispatchedSurfaceBehindRequestSequence = 0;
+            }
+        }
+        mSurfaceBehindRemoteAnimationRequested = false;
+        mSurfaceBehindCredentialGeneration = 0;
+        mSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+        mGoingAwayRequestedForUserId = -1;
+        mKeyguardStateController.notifyKeyguardGoingAway(false);
+        if (mShowing) {
+            setShowingLocked(true, true, "cancel R2 credential surface request");
+        }
+        return awaitingWmCallback;
+    }
+
+    @VisibleForTesting
+    static boolean shouldAwaitCanceledSurfaceBehindCallback(boolean remoteWasRunning,
+            long activeSequence, long dispatchedSequence) {
+        return !remoteWasRunning
+                && activeSequence != 0
+                && activeSequence == dispatchedSequence;
+    }
+
+    private boolean deferSurfaceBehindRequestWhileDraining(int requestUserId,
+            long credentialGeneration, int credentialUserId) {
+        synchronized (mSurfaceBehindRequestLock) {
+            if (mCanceledSurfaceBehindRequestSequence == 0) return false;
+            mDeferredSurfaceBehindRequest = true;
+            mDeferredSurfaceBehindRequestUserId = requestUserId;
+            mDeferredSurfaceBehindCredentialGeneration = credentialGeneration;
+            mDeferredSurfaceBehindCredentialUserId = credentialUserId;
+            Log.d(TAG, "Deferring surface-behind request generation=" + credentialGeneration
+                    + " until canceled sequence=" + mCanceledSurfaceBehindRequestSequence
+                    + " is drained");
+            return true;
+        }
+    }
+
+    private void dispatchDeferredSurfaceBehindRequest() {
+        final int requestUserId;
+        final long credentialGeneration;
+        final int credentialUserId;
+        synchronized (mSurfaceBehindRequestLock) {
+            if (!mDeferredSurfaceBehindRequest
+                    || mCanceledSurfaceBehindRequestSequence != 0) {
+                return;
+            }
+            requestUserId = mDeferredSurfaceBehindRequestUserId;
+            credentialGeneration = mDeferredSurfaceBehindCredentialGeneration;
+            credentialUserId = mDeferredSurfaceBehindCredentialUserId;
+            clearDeferredSurfaceBehindRequestLocked();
+        }
+        final int selectedUserId = mSelectedUserInteractor.getSelectedUserId();
+        if (requestUserId != selectedUserId || !mShowing || mGoingToSleep
+                || !mPM.isInteractive() || mPendingLock) {
+            Log.d(TAG, "Dropping invalid deferred surface-behind request generation="
+                    + credentialGeneration + " requestedUser=" + requestUserId
+                    + " selectedUser=" + selectedUserId);
+            return;
+        }
+        final long runtimeGeneration = SosKeyguardRuntime.getOriginalCredentialGeneration();
+        if (credentialGeneration == 0) {
+            if (runtimeGeneration != 0) {
+                Log.d(TAG, "Dropping deferred interactive request behind credential generation="
+                        + runtimeGeneration);
+                return;
+            }
+        } else if (credentialGeneration != runtimeGeneration
+                || credentialUserId != SosKeyguardRuntime.getOriginalCredentialUserId()
+                || !SosKeyguardRuntime.isOriginalCredentialSession(
+                        credentialGeneration, credentialUserId)) {
+            Log.d(TAG, "Dropping stale deferred credential surface generation="
+                    + credentialGeneration + " user=" + credentialUserId);
+            return;
+        }
+        showSurfaceBehindKeyguard();
+    }
+
+    private void clearDeferredSurfaceBehindRequestLocked() {
+        mDeferredSurfaceBehindRequest = false;
+        mDeferredSurfaceBehindRequestUserId = UserHandle.USER_NULL;
+        mDeferredSurfaceBehindCredentialGeneration = 0;
+        mDeferredSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+    }
+
+    private void markSurfaceBehindRequestCallbackReceived() {
+        synchronized (mSurfaceBehindRequestLock) {
+            if (mDispatchedSurfaceBehindRequestSequence
+                    == mActiveSurfaceBehindRequestSequence) {
+                mDispatchedSurfaceBehindRequestSequence = 0;
+            }
+        }
+    }
+
+    private boolean consumeCanceledOriginalCredentialStart(
+            IRemoteAnimationFinishedCallback finishedCallback) {
+        final CanceledSurfaceBehindRequest canceledRequest =
+                consumeCanceledOriginalCredentialRequest();
+        if (canceledRequest == null) return false;
+        Log.w(TAG, "Finishing late WMS start for abandoned R2 credential sequence="
+                + canceledRequest.sequence + " generation="
+                + canceledRequest.credentialGeneration + " user="
+                + canceledRequest.credentialUserId);
+        if (finishedCallback != null) {
+            try {
+                finishedCallback.onAnimationFinished();
+            } catch (RemoteException e) {
+                Slog.w(TAG, "Failed to finish abandoned R2 credential animation", e);
+            }
+        }
+        mKeyguardStateController.notifyKeyguardGoingAway(false);
+        dispatchDeferredSurfaceBehindRequest();
+        return true;
+    }
+
+    @Nullable
+    private CanceledSurfaceBehindRequest consumeCanceledOriginalCredentialRequest() {
+        synchronized (mSurfaceBehindRequestLock) {
+            if (mCanceledSurfaceBehindRequestSequence == 0) return null;
+            final CanceledSurfaceBehindRequest request = new CanceledSurfaceBehindRequest(
+                    mCanceledSurfaceBehindRequestSequence,
+                    mCanceledSurfaceBehindCredentialGeneration,
+                    mCanceledSurfaceBehindCredentialUserId);
+            if (mDispatchedSurfaceBehindRequestSequence == request.sequence) {
+                mDispatchedSurfaceBehindRequestSequence = 0;
+            }
+            mCanceledSurfaceBehindRequestSequence = 0;
+            mCanceledSurfaceBehindCredentialGeneration = 0;
+            mCanceledSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+            return request;
+        }
+    }
+
+    private void handleSurfaceBehindDispatchFailure(long requestSequence,
+            long credentialGeneration, int credentialUserId) {
+        boolean ownsActiveRequest = false;
+        boolean ownsCanceledRequest = false;
+        synchronized (mSurfaceBehindRequestLock) {
+            if (mDispatchedSurfaceBehindRequestSequence == requestSequence) {
+                mDispatchedSurfaceBehindRequestSequence = 0;
+            }
+            if (mActiveSurfaceBehindRequestSequence == requestSequence) {
+                mActiveSurfaceBehindRequestSequence = 0;
+                ownsActiveRequest = true;
+            }
+            if (mCanceledSurfaceBehindRequestSequence == requestSequence) {
+                mCanceledSurfaceBehindRequestSequence = 0;
+                mCanceledSurfaceBehindCredentialGeneration = 0;
+                mCanceledSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+                ownsCanceledRequest = true;
+            }
+        }
+        if (ownsActiveRequest
+                && mSurfaceBehindCredentialGeneration == credentialGeneration
+                && mSurfaceBehindCredentialUserId == credentialUserId) {
+            mSurfaceBehindRemoteAnimationRequested = false;
+            mSurfaceBehindCredentialGeneration = 0;
+            mSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+        }
+        if (ownsActiveRequest || ownsCanceledRequest) {
+            mGoingAwayRequestedForUserId = -1;
+            mKeyguardStateController.notifyKeyguardGoingAway(false);
+            dispatchDeferredSurfaceBehindRequest();
+        }
+    }
+
+    @VisibleForTesting
+    static boolean isSameOriginalCredentialRemoteSession(long expectedGeneration,
+            int expectedUserId, long activeGeneration, int activeUserId) {
+        return expectedGeneration != 0
+                && expectedUserId != UserHandle.USER_NULL
+                && expectedGeneration == activeGeneration
+                && expectedUserId == activeUserId;
+    }
+
+    @VisibleForTesting
+    static boolean isDifferentOriginalCredentialSession(long canceledGeneration,
+            int canceledUserId, long runtimeGeneration, int runtimeUserId, int selectedUserId) {
+        return runtimeGeneration != 0
+                && runtimeGeneration != canceledGeneration
+                && runtimeUserId != UserHandle.USER_NULL
+                && runtimeUserId == selectedUserId
+                && (runtimeUserId != canceledUserId || runtimeGeneration != canceledGeneration);
     }
 
     /**
@@ -3846,13 +4507,25 @@ public class KeyguardViewMediator implements CoreStartable,
      * animation on the surface behind the keyguard. This can be called by
      */
     void finishSurfaceBehindRemoteAnimation(boolean showKeyguard) {
+        finishSurfaceBehindRemoteAnimation(showKeyguard, false /* preserveOriginalCredential */);
+    }
+
+    private void finishSurfaceBehindRemoteAnimation(boolean showKeyguard,
+            boolean preserveOriginalCredential) {
+        final long finishedCredentialGeneration = mSurfaceBehindCredentialGeneration;
         mKeyguardUnlockAnimationControllerLazy.get()
-                .notifyFinishedKeyguardExitAnimation(showKeyguard);
+                .notifyFinishedKeyguardExitAnimation(showKeyguard, preserveOriginalCredential);
 
         mSurfaceBehindRemoteAnimationRequested = false;
         mSurfaceBehindRemoteAnimationRunning = false;
+        synchronized (mSurfaceBehindRequestLock) {
+            if (mDispatchedSurfaceBehindRequestSequence
+                    == mActiveSurfaceBehindRequestSequence) {
+                mDispatchedSurfaceBehindRequestSequence = 0;
+            }
+            mActiveSurfaceBehindRequestSequence = 0;
+        }
         mKeyguardStateController.notifyKeyguardGoingAway(false);
-
         if (mSurfaceBehindRemoteAnimationFinishedCallback != null) {
             try {
                 mSurfaceBehindRemoteAnimationFinishedCallback.onAnimationFinished();
@@ -3862,6 +4535,16 @@ public class KeyguardViewMediator implements CoreStartable,
                         + t.getMessage());
             } finally {
                 mSurfaceBehindRemoteAnimationFinishedCallback = null;
+            }
+        }
+        mSurfaceBehindCredentialGeneration = 0;
+        mSurfaceBehindCredentialUserId = UserHandle.USER_NULL;
+        if (!preserveOriginalCredential) {
+            if (finishedCredentialGeneration != 0) {
+                SosKeyguardRuntime.finishOriginalCredentialTransition(
+                        finishedCredentialGeneration);
+            } else {
+                SosKeyguardRuntime.finishOriginalInteractiveTransition();
             }
         }
 

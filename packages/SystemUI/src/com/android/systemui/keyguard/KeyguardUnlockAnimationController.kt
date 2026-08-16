@@ -28,6 +28,7 @@ import android.os.Handler
 import android.os.PowerManager
 import android.os.RemoteException
 import android.os.Trace
+import android.os.UserHandle
 import android.util.Log
 import android.view.RemoteAnimationTarget
 import android.view.SurfaceControl
@@ -136,6 +137,9 @@ const val SURFACE_BEHIND_SWIPE_FADE_DURATION_MS = 175L
  * before the surface begins appearing.
  */
 const val UNLOCK_ANIMATION_SURFACE_BEHIND_START_DELAY_MS = 67L
+
+/** Maximum post-curtain wait for a broken or missing remote target callback. */
+private const val ORIGINAL_CREDENTIAL_REMOTE_TARGET_TIMEOUT_MS = 250L
 
 /**
  * Initiates, controls, and ends the keyguard unlock animation.
@@ -273,6 +277,16 @@ constructor(
     private var openingWallpaperTargets: Array<RemoteAnimationTarget>? = null
     private var closingWallpaperTargets: Array<RemoteAnimationTarget>? = null
     private var surfaceBehindRemoteAnimationStartTime: Long = 0
+
+    /** True after R2 has atomically placed the real task at its final geometry. */
+    private var originalSurfaceHandoffCommitted = false
+    private var originalCredentialHandoffGeneration = 0L
+    private var originalCredentialHandoffUserId = UserHandle.USER_NULL
+    private var originalCredentialRemoteTargetArrived = false
+    private var originalCredentialSurfaceTransactionCommitted = false
+    private var originalCredentialHostCommitRequested = false
+    private var originalCredentialExitIssued = false
+    private var originalCredentialHandoffTimeout: Runnable? = null
 
     /**
      * Alpha value applied to [surfaceBehindRemoteAnimationTarget], which is the surface of the
@@ -487,8 +501,10 @@ constructor(
      */
     override fun onKeyguardGoingAwayChanged() {
         if (
-            keyguardStateController.isKeyguardGoingAway &&
-                !statusBarStateController.leaveOpenOnKeyguardHide()
+                keyguardStateController.isKeyguardGoingAway &&
+                !statusBarStateController.leaveOpenOnKeyguardHide() &&
+                !SosKeyguardRuntime.isOriginalUnlockAnimationCompletionPending() &&
+                !SosKeyguardRuntime.isOriginalCredentialTransitionActive()
         ) {
             prepareForInWindowLauncherAnimations()
         }
@@ -609,12 +625,41 @@ constructor(
         openingWallpaperTargets = openingWallpapers
         closingWallpaperTargets = closingWallpapers
         surfaceBehindRemoteAnimationStartTime = startTime
+        originalSurfaceHandoffCommitted = false
+        val credentialGeneration = SosKeyguardRuntime.getOriginalCredentialGeneration()
+        val credentialUserId = SosKeyguardRuntime.getOriginalCredentialUserId()
+        val originalCredentialHandoff =
+            SosKeyguardRuntime.isOriginalCredentialSession(
+                credentialGeneration,
+                credentialUserId,
+            )
+        if (originalCredentialHandoff &&
+            originalCredentialHandoffGeneration != credentialGeneration
+        ) {
+            prepareOriginalCredentialSurfaceHandoff(credentialGeneration, credentialUserId)
+        }
+        val originalUnlockCompleted =
+            !originalCredentialHandoff &&
+                SosKeyguardRuntime.consumeOriginalUnlockAnimationCompletion()
 
         // If we specifically requested that the surface behind be made visible (vs. it being made
         // visible because we're unlocking), then we're in the middle of a swipe-to-unlock touch
         // gesture and the surface behind the keyguard should be made visible so that we can animate
         // it in.
-        if (requestedShowSurfaceBehindKeyguard) {
+        if (originalCredentialHandoff) {
+            Log.d(
+                TAG,
+                "R2 credential surface arrived generation=$credentialGeneration; preparing",
+            )
+            surfaceBehindAlpha = 1f
+            launcherPreparedForUnlock = false
+            playingCannedUnlockAnimation = false
+        } else if (originalUnlockCompleted) {
+            Log.d(TAG, "R2 unlock animation complete; exposing surface without canned animation")
+            surfaceBehindAlpha = 1f
+            launcherPreparedForUnlock = false
+            playingCannedUnlockAnimation = false
+        } else if (requestedShowSurfaceBehindKeyguard) {
             // If we're flinging to dismiss here, it means the touch gesture ended in a fling during
             // the time it takes the keyguard exit animation to start. This is an edge case race
             // condition, which we handle by just playing a canned animation on the now-visible
@@ -683,9 +728,246 @@ constructor(
         // Finish the keyguard remote animation if the dismiss amount has crossed the threshold.
         // Check it here in case there is no more change to the dismiss amount after the last change
         // that starts the keyguard animation. @see #updateKeyguardViewMediatorIfThresholdsReached()
-        if (!playingCannedUnlockAnimation) {
+        if (originalCredentialHandoff) {
+            prepareOriginalCredentialRemoteTargets(credentialGeneration)
+        } else if (originalUnlockCompleted) {
+            finishOriginalSurfaceHandoff()
+        } else if (!playingCannedUnlockAnimation) {
             finishKeyguardExitRemoteAnimationIfReachThreshold()
         }
+    }
+
+    /** Initializes a generation before [KeyguardViewMediator] asks WM for remote targets. */
+    fun prepareOriginalCredentialSurfaceHandoff(generation: Long, userId: Int) {
+        if (generation == 0L || userId == UserHandle.USER_NULL) return
+        if (!SosKeyguardRuntime.isOriginalCredentialSession(generation, userId)) return
+        originalCredentialHandoffTimeout?.let(handler::removeCallbacks)
+        originalCredentialHandoffTimeout = null
+        originalCredentialHandoffGeneration = generation
+        originalCredentialHandoffUserId = userId
+        originalCredentialRemoteTargetArrived = false
+        originalCredentialSurfaceTransactionCommitted = false
+        originalCredentialHostCommitRequested = false
+        originalCredentialExitIssued = false
+        originalSurfaceHandoffCommitted = false
+    }
+
+    /**
+     * Records the 300 ms Host boundary.  Completion remains blocked until a real remote target
+     * transaction has committed, so the curtain never hands off to an unprepared Launcher frame.
+     */
+    fun commitOriginalCredentialSurfaceHandoff(generation: Long, userId: Int) {
+        if (!isCurrentOriginalCredentialHandoff(generation, userId)) return
+        originalCredentialHostCommitRequested = true
+        maybeFinishOriginalCredentialSurfaceHandoff(generation)
+        if (!originalCredentialExitIssued && originalCredentialHandoffTimeout == null) {
+            val timeout =
+                Runnable {
+                    if (!isCurrentOriginalCredentialHandoff(generation, userId) ||
+                        originalCredentialExitIssued ||
+                        !originalCredentialHostCommitRequested
+                    ) {
+                        return@Runnable
+                    }
+                    Log.w(
+                        TAG,
+                        "R2 credential remote target timeout generation=$generation " +
+                            "target=$originalCredentialRemoteTargetArrived " +
+                            "transaction=$originalCredentialSurfaceTransactionCommitted",
+                    )
+                    originalCredentialExitIssued = true
+                    originalSurfaceHandoffCommitted =
+                        originalCredentialSurfaceTransactionCommitted
+                    keyguardViewMediator
+                        .get()
+                        .finishOriginalCredentialUnlock(
+                            generation,
+                            originalCredentialHandoffUserId,
+                            originalCredentialSurfaceTransactionCommitted,
+                        )
+                }
+            originalCredentialHandoffTimeout = timeout
+            handler.postDelayed(timeout, ORIGINAL_CREDENTIAL_REMOTE_TARGET_TIMEOUT_MS)
+        }
+    }
+
+    fun cancelOriginalCredentialSurfaceHandoff(generation: Long, userId: Int) {
+        if (
+            generation == 0L ||
+                userId == UserHandle.USER_NULL ||
+                originalCredentialHandoffGeneration != generation ||
+                originalCredentialHandoffUserId != userId
+        ) {
+            return
+        }
+        resetOriginalCredentialSurfaceHandoff()
+    }
+
+    private fun prepareOriginalCredentialRemoteTargets(generation: Long) {
+        if (!isCurrentOriginalCredentialHandoff(generation)) return
+        originalCredentialRemoteTargetArrived = true
+        val transaction = SurfaceControl.Transaction()
+        var hasValidTarget = false
+        surfaceBehindRemoteAnimationTargets?.forEach { target ->
+            val leash = target.leash
+            if (leash.isValid) {
+                surfaceBehindMatrix.reset()
+                surfaceBehindMatrix.setTranslate(
+                    target.screenSpaceBounds.left.toFloat(),
+                    target.screenSpaceBounds.top.toFloat(),
+                )
+                transaction
+                    .setMatrix(leash, surfaceBehindMatrix, tmpFloat)
+                    .setAlpha(leash, 1f)
+                    .setCornerRadius(leash, 0f)
+                    .show(leash)
+                hasValidTarget = true
+            }
+        }
+        openingWallpaperTargets?.forEach { target ->
+            if (target.leash.isValid) transaction.setAlpha(target.leash, 1f).show(target.leash)
+        }
+        closingWallpaperTargets?.forEach { target ->
+            if (target.leash.isValid) transaction.setAlpha(target.leash, 0f)
+        }
+
+        val markPrepared = {
+            if (isCurrentOriginalCredentialHandoff(generation)) {
+                originalCredentialSurfaceTransactionCommitted = true
+                maybeFinishOriginalCredentialSurfaceHandoff(generation)
+            }
+        }
+        if (hasValidTarget) {
+            transaction.addTransactionCommittedListener(
+                java.util.concurrent.Executor { runnable -> handler.post(runnable) },
+                markPrepared,
+            )
+            transaction.apply()
+            transaction.close()
+        } else {
+            transaction.close()
+            // WM delivered the session but no usable app leash. Treat this traversal as prepared;
+            // Framework's safe keyguard_background remains the visual fallback until final exit.
+            handler.post(markPrepared)
+        }
+    }
+
+    private fun maybeFinishOriginalCredentialSurfaceHandoff(generation: Long) {
+        if (!isCurrentOriginalCredentialHandoff(generation) ||
+            originalCredentialExitIssued ||
+            !originalCredentialRemoteTargetArrived ||
+            !originalCredentialSurfaceTransactionCommitted ||
+            !originalCredentialHostCommitRequested
+        ) {
+            return
+        }
+        originalCredentialExitIssued = true
+        originalSurfaceHandoffCommitted = true
+        originalCredentialHandoffTimeout?.let(handler::removeCallbacks)
+        originalCredentialHandoffTimeout = null
+        try {
+            launcherUnlockController?.setUnlockAmount(1f, true /* forceIfAnimating */)
+        } catch (e: RemoteException) {
+            Log.e(TAG, "Unable to restore Launcher after R2 credential unlock", e)
+        }
+        keyguardViewMediator
+            .get()
+            .finishOriginalCredentialUnlock(
+                generation,
+                originalCredentialHandoffUserId,
+                true /* surfacePrepared */,
+            )
+    }
+
+    private fun isCurrentOriginalCredentialHandoff(
+        generation: Long,
+        userId: Int = originalCredentialHandoffUserId,
+    ): Boolean =
+        generation != 0L &&
+            originalCredentialHandoffGeneration == generation &&
+            userId != UserHandle.USER_NULL &&
+            originalCredentialHandoffUserId == userId &&
+            SosKeyguardRuntime.isOriginalCredentialSession(
+                generation,
+                userId,
+            )
+
+    private fun resetOriginalCredentialSurfaceHandoff() {
+        originalCredentialHandoffTimeout?.let(handler::removeCallbacks)
+        originalCredentialHandoffTimeout = null
+        originalCredentialHandoffGeneration = 0L
+        originalCredentialHandoffUserId = UserHandle.USER_NULL
+        originalCredentialRemoteTargetArrived = false
+        originalCredentialSurfaceTransactionCommitted = false
+        originalCredentialHostCommitRequested = false
+        originalCredentialExitIssued = false
+    }
+
+    /** Clears one cancelled WMS attempt while retaining the authenticated Host generation. */
+    private fun resetOriginalCredentialRemoteAttempt() {
+        originalCredentialHandoffTimeout?.let(handler::removeCallbacks)
+        originalCredentialHandoffTimeout = null
+        originalCredentialRemoteTargetArrived = false
+        originalCredentialSurfaceTransactionCommitted = false
+        originalCredentialExitIssued = false
+        originalSurfaceHandoffCommitted = false
+    }
+
+    /**
+     * Places every real remote target at its final geometry after the R2 curtain has finished.
+     * Framework keeps keyguard_background only until a subsequent real-task transaction has
+     * committed, so SystemUI owns no preview resource and cannot open a black-frame gap here.
+     */
+    private fun finishOriginalSurfaceHandoff() {
+        val transaction = SurfaceControl.Transaction()
+        var hasValidTarget = false
+        surfaceBehindRemoteAnimationTargets?.forEach { target ->
+            val leash = target.leash
+            if (leash.isValid) {
+                surfaceBehindMatrix.reset()
+                surfaceBehindMatrix.setTranslate(
+                    target.screenSpaceBounds.left.toFloat(),
+                    target.screenSpaceBounds.top.toFloat(),
+                )
+                transaction
+                    .setMatrix(leash, surfaceBehindMatrix, tmpFloat)
+                    .setAlpha(leash, 1f)
+                    .setCornerRadius(leash, 0f)
+                    .show(leash)
+                hasValidTarget = true
+            }
+        }
+        openingWallpaperTargets?.forEach { target ->
+            if (target.leash.isValid) transaction.setAlpha(target.leash, 1f).show(target.leash)
+        }
+        closingWallpaperTargets?.forEach { target ->
+            if (target.leash.isValid) transaction.setAlpha(target.leash, 0f)
+        }
+
+        val completeHandoff = {
+            originalSurfaceHandoffCommitted = true
+            try {
+                launcherUnlockController?.setUnlockAmount(1f, true /* forceIfAnimating */)
+            } catch (e: RemoteException) {
+                Log.e(TAG, "Unable to restore Launcher after R2 unlock animation", e)
+            }
+            keyguardViewMediator
+                .get()
+                .exitKeyguardAndFinishSurfaceBehindRemoteAnimation(false /* cancelled */)
+        }
+        if (!hasValidTarget) {
+            transaction.close()
+            // No leash was supplied. Keep the prepared preview through this traversal and let the
+            // mediator's finish remove Keyguard on the next loop instead of exposing black.
+            handler.post(completeHandoff)
+            return
+        }
+        transaction.addTransactionCommittedListener(
+            java.util.concurrent.Executor { runnable -> handler.post(runnable) },
+            completeHandoff,
+        )
+        transaction.apply()
+        transaction.close()
     }
 
     /**
@@ -1072,16 +1354,29 @@ constructor(
      * This is generally triggered by us, calling
      * [KeyguardViewMediator.finishSurfaceBehindRemoteAnimation].
      */
-    fun notifyFinishedKeyguardExitAnimation(showKeyguard: Boolean) {
+    fun notifyFinishedKeyguardExitAnimation(showKeyguard: Boolean) =
+        notifyFinishedKeyguardExitAnimation(showKeyguard, false)
+
+    fun notifyFinishedKeyguardExitAnimation(
+        showKeyguard: Boolean,
+        preserveOriginalCredentialHandoff: Boolean,
+    ) {
         // Cancel any pending actions.
         handler.removeCallbacksAndMessages(null)
+        if (preserveOriginalCredentialHandoff) {
+            resetOriginalCredentialRemoteAttempt()
+        } else {
+            resetOriginalCredentialSurfaceHandoff()
+        }
 
         // The lockscreen surface is gone, so it is now safe to re-show the smartspace.
         if (lockscreenSmartspace?.visibility == View.INVISIBLE) {
             lockscreenSmartspace?.visibility = View.VISIBLE
         }
 
-        if (!showKeyguard) {
+        val skipDuplicateOriginalSettle = !showKeyguard && originalSurfaceHandoffCommitted
+        originalSurfaceHandoffCommitted = false
+        if (!showKeyguard && !skipDuplicateOriginalSettle) {
             // Make sure we made the surface behind fully visible, just in case. It should already
             // be fully visible. The exit animation is finished, and we should not hold the leash
             // anymore, so forcing it to 1f.

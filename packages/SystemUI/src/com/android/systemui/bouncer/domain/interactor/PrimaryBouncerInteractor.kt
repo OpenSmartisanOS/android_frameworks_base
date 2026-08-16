@@ -342,6 +342,15 @@ constructor(
         repository.setPrimaryStartDisappearAnimation(runnable)
     }
 
+    /**
+     * R2 credentials own the complete 300 ms pre-hide animation.  Do not bypass the bound
+     * security view merely because Android's bouncer visibility bit was cleared by authentication
+     * one frame before [StatusBarKeyguardViewManager.startPreHideAnimation].
+     */
+    fun startOriginalCredentialDisappearAnimation(runnable: Runnable) {
+        repository.setPrimaryStartDisappearAnimation(runnable)
+    }
+
     /** Returns whether bouncer is fully showing. */
     fun isFullyShowing(): Boolean {
         return (repository.primaryBouncerShowingSoon.value || isBouncerShowing()) &&
