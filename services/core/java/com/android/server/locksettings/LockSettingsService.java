@@ -1478,17 +1478,13 @@ public class LockSettingsService extends ILockSettings.Stub {
      * Gets the PIN length for the given user if it is currently available.
      * Can only be invoked by process/activity that have the right permission.
      * Returns:
-     *      A. Actual PIN length if credential type PIN and auto confirm feature is enabled
-     *         for the user or user's PIN has been successfully verified since the device booted
+     *      A. Actual PIN length if the current credential is a PIN and its current protector has
+     *         length metadata
      *      B. PIN_LENGTH_UNAVAILABLE if pin length is not stored/available
      */
     @Override
     public int getPinLength(int userId) {
         checkPasswordHavePermission();
-        PasswordMetrics passwordMetrics = getUserPasswordMetrics(userId);
-        if (passwordMetrics != null && passwordMetrics.credType == CREDENTIAL_TYPE_PIN) {
-            return passwordMetrics.length;
-        }
         synchronized (mSpManager) {
             final long protectorId = getCurrentLskfBasedProtectorId(userId);
             if (protectorId == SyntheticPasswordManager.NULL_PROTECTOR_ID) {
@@ -2442,6 +2438,7 @@ public class LockSettingsService extends ILockSettings.Stub {
 
         final AuthenticationResult authResult;
         VerifyCredentialResponse response;
+        long verifiedProtectorId = SyntheticPasswordManager.NULL_PROTECTOR_ID;
 
         synchronized (mSpManager) {
             final long protectorId =
@@ -2477,6 +2474,7 @@ public class LockSettingsService extends ILockSettings.Stub {
             response = reportResultToSoftwareRateLimiter(authResult.response, lskfId, credential);
 
             if (response.isMatched()) {
+                verifiedProtectorId = protectorId;
                 if ((flags & VERIFY_FLAG_WRITE_REPAIR_MODE_PW) != 0) {
                     if (!mSpManager.writeRepairModeCredentialLocked(protectorId, userId)) {
                         Slog.e(TAG, "Failed to write repair mode credential");
@@ -2491,7 +2489,8 @@ public class LockSettingsService extends ILockSettings.Stub {
         if (response.isMatched()) {
             Slogf.i(TAG, "Successfully verified lockscreen credential for user %d", userId);
             onCredentialVerified(authResult.syntheticPassword,
-                    PasswordMetrics.computeForCredential(credential), userId);
+                    PasswordMetrics.computeForCredential(credential), userId,
+                    verifiedProtectorId);
             if ((flags & VERIFY_FLAG_REQUEST_GK_PW_HANDLE) != 0) {
                 final long gkHandle = storeGatekeeperPasswordTemporarily(
                         authResult.syntheticPassword.deriveGkPassword());
@@ -3122,8 +3121,8 @@ public class LockSettingsService extends ILockSettings.Stub {
      * Performs unlocking actions after the synthetic password is known, e.g. after LSKF or token
      * protector verification.
      */
-    private void onCredentialVerified(
-            SyntheticPassword sp, @Nullable PasswordMetrics metrics, int userId) {
+    private void onCredentialVerified(SyntheticPassword sp, @Nullable PasswordMetrics metrics,
+            int userId, long verifiedProtectorId) {
         SecureLockDeviceServiceInternal secureLockDeviceServiceInternal =
                 mInjector.getSecureLockDeviceServiceInternal();
         if (secureLockDeviceServiceInternal != null
@@ -3132,6 +3131,27 @@ public class LockSettingsService extends ILockSettings.Stub {
         } else {
             onCredentialVerifiedInternal(sp, metrics, userId);
         }
+        // Existing protectors may predate unconditional PIN-length persistence. A successful
+        // primary-auth verification gives us trusted metrics, so migrate only the length now.
+        if (metrics != null && metrics.credType == CREDENTIAL_TYPE_PIN
+                && verifiedProtectorId != SyntheticPasswordManager.NULL_PROTECTOR_ID) {
+            synchronized (mSpManager) {
+                if (isVerifiedProtectorCurrent(verifiedProtectorId,
+                        getCurrentLskfBasedProtectorId(userId))) {
+                    mSpManager.refreshPinLengthOnDisk(metrics, verifiedProtectorId, userId);
+                } else {
+                    Slogf.w(TAG, "Skipping stale PIN-length migration for user %d protector %016x",
+                            userId, verifiedProtectorId);
+                }
+            }
+        }
+    }
+
+    @VisibleForTesting
+    static boolean isVerifiedProtectorCurrent(long verifiedProtectorId,
+            long currentProtectorId) {
+        return verifiedProtectorId != SyntheticPasswordManager.NULL_PROTECTOR_ID
+                && verifiedProtectorId == currentProtectorId;
     }
 
     private void onCredentialVerifiedInSecureLockDeviceMode(SyntheticPassword sp,
@@ -3532,7 +3552,8 @@ public class LockSettingsService extends ILockSettings.Stub {
 
         Slogf.i(TAG, "Unlocked synthetic password for user %d using escrow token", userId);
         onCredentialVerified(authResult.syntheticPassword,
-                loadPasswordMetrics(authResult.syntheticPassword, userId), userId);
+                loadPasswordMetrics(authResult.syntheticPassword, userId), userId,
+                SyntheticPasswordManager.NULL_PROTECTOR_ID);
         return true;
     }
 
@@ -4018,7 +4039,8 @@ public class LockSettingsService extends ILockSettings.Stub {
                 mSpManager.verifyChallenge(getGateKeeperService(), sp, 0L, userId);
             }
             Slogf.i(TAG, "Restored synthetic password for user %d using reboot escrow", userId);
-            onCredentialVerified(sp, loadPasswordMetrics(sp, userId), userId);
+            onCredentialVerified(sp, loadPasswordMetrics(sp, userId), userId,
+                    SyntheticPasswordManager.NULL_PROTECTOR_ID);
         }
     }
 }

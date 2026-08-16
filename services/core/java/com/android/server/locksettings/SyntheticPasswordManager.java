@@ -393,8 +393,8 @@ class SyntheticPasswordManager {
         // enrolling the stretched LSKF.
         public byte[] passwordHandle;
         /**
-         * Pin length field, only stored in version 2 of the password data and when auto confirm
-         * flag is enabled, otherwise this field contains PIN_LENGTH_UNAVAILABLE
+         * Non-secret PIN length field stored in version 2 of the password data. Non-PIN
+         * credentials contain PIN_LENGTH_UNAVAILABLE.
          */
         public int pinLength;
 
@@ -1135,9 +1135,10 @@ class SyntheticPasswordManager {
     }
 
     private int derivePinLength(int sizeOfCredential, boolean isPinCredential, int userId) {
-        if (!isPinCredential
-                || !mStorage.isAutoPinConfirmSettingEnabled(userId)
-                || sizeOfCredential < LockPatternUtils.MIN_AUTO_PIN_REQUIREMENT_LENGTH) {
+        // R2's PIN bouncer has no confirmation key. Persist only the non-secret length for every
+        // valid PIN so SystemUI can submit exactly once at the right boundary. Authentication and
+        // throttling remain entirely in GateKeeper/LockSettings.
+        if (!isPinCredential || sizeOfCredential < LockPatternUtils.MIN_LOCK_PASSWORD_SIZE) {
             return PIN_LENGTH_UNAVAILABLE;
         }
         return sizeOfCredential;
