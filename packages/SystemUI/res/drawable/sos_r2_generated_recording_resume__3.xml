@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set android:ordering="together"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:aapt="http://schemas.android.com/aapt">
+    <objectAnimator android:interpolator="@drawable/sos_r2_generated_2_recording_resume__3__0" android:duration="120" android:startOffset="0" android:valueFrom="M-38.93 -11.82 C-38.93,-11.82 -38.93,26.68 -38.93,26.68 C-38.93,28.34 -38.96,34.02 -38.93,33.85 C-38.93,33.85 -38.93,38.03 -38.93,38.03 C-56.46,38.02 -71.79,24.02 -71.59,6.87 C-71.59,6.87 -71.59,6.03 -71.59,6.03 C-71.29,-8.31 -60.29,-23.48 -39.09,-23.47 C-39.09,-23.47 -38.93,-18.99 -38.93,-18.99 C-38.96,-18.81 -38.93,-13.48 -38.93,-11.82c " android:valueTo="M-46.76 -18.3 C-46.76,-18.3 -46.76,32.7 -46.76,32.7 C-46.76,34.36 -48.1,35.7 -49.76,35.7 C-49.76,35.7 -61.76,35.7 -61.76,35.7 C-63.42,35.7 -64.76,34.36 -64.76,32.7 C-64.76,32.7 -64.76,-18.3 -64.76,-18.3 C-64.76,-19.96 -63.42,-21.3 -61.76,-21.3 C-61.76,-21.3 -49.76,-21.3 -49.76,-21.3 C-48.1,-21.3 -46.76,-19.96 -46.76,-18.3c " android:valueType="pathType" android:propertyName="pathData" />
+</set>

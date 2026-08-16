@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <FrameLayout android:id="@id/main_screen" android:layout_width="match_parent" android:layout_height="match_parent">
+        <include layout="@layout/tpage_main_layout" />
+    </FrameLayout>
+    <FrameLayout android:id="@id/camera_splash_container" android:background="@android:color/black" android:layout_width="match_parent" android:layout_height="match_parent">
+        <ImageView android:id="@id/camera_splash" android:background="@drawable/capture_camera" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_alignTop="@id/main_screen" android:layout_alignBottom="@id/main_screen" />
+    </FrameLayout>
+    <RelativeLayout android:id="@id/widget_container" android:background="@android:color/transparent" android:paddingLeft="@dimen/tpage_widget_padding" android:paddingRight="@dimen/tpage_widget_padding" android:clipToPadding="false" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/main_screen" android:layout_alignTop="@id/main_screen" android:layout_alignRight="@id/main_screen" android:layout_alignBottom="@id/main_screen">
+        <include layout="@layout/tpage_widgets_layout" />
+    </RelativeLayout>
+</merge>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.smartisanos.keyguard.KeyguardHostView androidprv:orientation="vertical" androidprv:id="@id/keyguard_host_view" androidprv:background="#00000000" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:androidprv="http://schemas.android.com/apk/res/android">
+    <ImageView androidprv:id="@id/app_capture" androidprv:background="#ff000000" androidprv:visibility="gone" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:layout_alignParentTop="true" androidprv:translationZ="0.100000024px" />
+    <ImageView androidprv:id="@id/alpha_layer" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:layout_alignParentTop="true" />
+    <com.smartisanos.keyguard.widgets.KeyguardViewPager androidprv:id="@id/desk_kg" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:layout_alignParentTop="true" androidprv:layout_centerHorizontal="true" />
+    <com.smartisanos.keyguard.blur.BlurView androidprv:id="@id/blur_background" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:scaleType="fitXY" />
+    <include androidprv:layout_width="match_parent" androidprv:layout_height="wrap_content" androidprv:layout_alignParentBottom="true" layout="@layout/tpage_layout" />
+    <com.smartisanos.keyguard.unlock.SecureViewWrapper androidprv:id="@id/kg_unlock_lay" androidprv:background="#00000000" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:layout_alignParentTop="true" />
+    <RelativeLayout androidprv:id="@id/kg_sim_unlock_lay" androidprv:background="#00000000" androidprv:layout_width="match_parent" androidprv:layout_height="match_parent" androidprv:layout_alignParentTop="true" />
+</com.smartisanos.keyguard.KeyguardHostView>

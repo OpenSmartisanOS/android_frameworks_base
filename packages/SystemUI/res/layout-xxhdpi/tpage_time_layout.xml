@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:id="@id/tpage_time_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layerType="hardware"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <LinearLayout android:layout_gravity="center_horizontal" android:orientation="horizontal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_above="@id/tv_time">
+        <TextView android:textSize="27.0px" android:textStyle="bold" android:id="@id/tv_am_pm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginRight="18.0px" />
+        <TextView android:textSize="27.0px" android:textStyle="bold" android:id="@id/tv_week_day" android:layout_width="wrap_content" android:layout_height="wrap_content" />
+        <TextView android:textSize="27.0px" android:textStyle="bold" android:id="@id/tv_date" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="18.0px" />
+    </LinearLayout>
+    <TextView android:textSize="@dimen/delta_time_text_height" android:layout_gravity="center_horizontal" android:id="@id/tv_time" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:includeFontPadding="false" />
+</LinearLayout>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.smartisanos.keyguard.widgets.flipnumber.FlipNumber android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <RelativeLayout android:orientation="horizontal" android:id="@id/upper_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_alignParentTop="true">
+        <ImageView android:id="@id/tens_upper" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+        <ImageView android:id="@id/units_upper" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_toRightOf="@id/tens_upper" />
+        <ImageView android:id="@id/cover_upper_container" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/tens_upper" android:layout_alignTop="@id/tens_upper" android:layout_alignRight="@id/units_upper" android:layout_alignBottom="@id/tens_upper" />
+    </RelativeLayout>
+    <RelativeLayout android:orientation="horizontal" android:id="@id/lower_container" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_below="@id/upper_container" android:layout_alignParentLeft="true">
+        <ImageView android:id="@id/tens_lower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+        <ImageView android:id="@id/units_lower" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_toRightOf="@id/tens_lower" />
+        <ImageView android:id="@id/cover_lower_container" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/tens_lower" android:layout_alignTop="@id/tens_lower" android:layout_alignRight="@id/units_lower" android:layout_alignBottom="@id/tens_lower" />
+        <ImageView android:id="@id/cover_lower_container_shadow" android:visibility="gone" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/tens_lower" android:layout_alignTop="@id/tens_lower" android:layout_alignRight="@id/units_lower" android:layout_alignBottom="@id/tens_lower" />
+    </RelativeLayout>
+    <ImageView android:id="@id/flip_axle_left" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/flip_axle" android:layout_alignLeft="@id/upper_container" android:layout_centerInParent="true" />
+    <ImageView android:id="@id/flip_axle_right" android:layout_width="wrap_content" android:layout_height="wrap_content" android:src="@drawable/flip_axle" android:layout_alignRight="@id/upper_container" android:layout_centerInParent="true" />
+    <RelativeLayout android:orientation="horizontal" android:id="@id/flip_upper_container" android:visibility="invisible" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignLeft="@id/upper_container" android:layout_alignTop="@id/upper_container">
+        <ImageView android:id="@id/tens_upper_flip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+        <ImageView android:id="@id/units_upper_flip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_toRightOf="@id/tens_upper_flip" />
+        <ImageView android:id="@id/cover_flip_upper_container" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/tens_upper_flip" android:layout_alignTop="@id/tens_upper_flip" android:layout_alignRight="@id/units_upper_flip" android:layout_alignBottom="@id/tens_upper_flip" />
+    </RelativeLayout>
+    <RelativeLayout android:orientation="horizontal" android:id="@id/flip_lower_container" android:visibility="invisible" android:clipChildren="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignLeft="@id/lower_container" android:layout_alignTop="@id/lower_container">
+        <ImageView android:id="@id/tens_lower_flip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_alignParentLeft="true" android:layout_alignParentTop="true" />
+        <ImageView android:id="@id/units_lower_flip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_toRightOf="@id/tens_lower_flip" />
+        <ImageView android:id="@id/cover_flip_lower_container" android:clipToPadding="false" android:layout_width="0.0dp" android:layout_height="0.0dp" android:layout_alignLeft="@id/tens_lower_flip" android:layout_alignTop="@id/tens_lower_flip" android:layout_alignRight="@id/units_lower_flip" android:layout_alignBottom="@id/tens_lower_flip" />
+    </RelativeLayout>
+</com.smartisanos.keyguard.widgets.flipnumber.FlipNumber>

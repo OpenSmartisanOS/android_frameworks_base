@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sos_quick_launch_phone">电话</string>
+    <string name="sos_quick_launch_sms">短信</string>
+    <string name="sos_quick_launch_camera">相机</string>
+    <string name="sos_quick_launch_notes">便签</string>
+    <string name="sos_quick_launch_picker_alert">拖动图标来替换快捷启动的选项</string>
+    <string name="sos_quick_launch_cancel">取消</string>
+    <string name="sos_quick_launch_finish">完成</string>
+    <string name="sos_quick_launch_empty_slot">空快捷位 %1$d</string>
+    <string name="forbid_cancel">取消</string>
+</resources>

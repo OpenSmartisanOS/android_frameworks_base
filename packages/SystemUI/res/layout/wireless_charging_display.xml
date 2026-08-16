@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout android:id="@id/wireless_charging_display" android:background="#ff000000" android:visibility="invisible" android:clipChildren="false" android:layout_width="2242.0px" android:layout_height="1080.0px"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <FrameLayout android:layout_gravity="center" android:id="@id/rotation_container" android:clipChildren="false" android:clipToPadding="false" android:layout_width="2242.0px" android:layout_height="1080.0px" android:rotation="270.0">
+        <include android:id="@id/wireless_charging_music" layout="@layout/wireless_charging_music" />
+    </FrameLayout>
+</FrameLayout>

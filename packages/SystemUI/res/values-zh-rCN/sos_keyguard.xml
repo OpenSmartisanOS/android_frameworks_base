@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sos_keyguard_am">上午</string>
+    <string name="sos_keyguard_pm">下午</string>
+    <string name="sos_keyguard_date_separator">.</string>
+    <string name="sos_keyguard_day_suffix"></string>
+    <string name="sos_delta_tools">小工具</string>
+    <string name="sos_delta_camera">相机</string>
+    <string name="sos_delta_unlock">向上滑动解锁</string>
+    <string name="sos_delta_torch">手电筒</string>
+    <string name="sos_delta_weather_no_data">暂无天气信息</string>
+    <string name="sos_delta_music_idle">暂无音乐播放</string>
+    <string name="sos_delta_recorder_ready">录音机</string>
+    <string name="sos_delta_recorder_recording">正在录音</string>
+    <string name="sos_delta_recorder_paused">录音已暂停</string>
+    <string name="sos_delta_recorder_unavailable">录音机不可用</string>
+    <string name="sos_delta_recorder_start">开始录音</string>
+    <string name="sos_delta_recorder_pause">暂停录音</string>
+    <string name="sos_delta_recorder_resume">继续录音</string>
+    <string name="sos_delta_recorder_stop">停止录音</string>
+    <string name="sos_delta_pinned_tasks">锁屏固定任务</string>
+    <string name="sos_delta_pinned_empty">从一步侧边栏固定应用后会显示在这里</string>
+    <string name="sos_delta_unpin_task">取消固定%1$s</string>
+    <!-- Live pinned-task preview. -->
+    <string name="sos_delta_pinned_opening">正在打开固定任务…</string>
+    <string name="sos_delta_pinned_open">解锁并打开固定任务</string>
+    <string name="sos_delta_pinned_close_preview">关闭固定任务预览</string>
+    <string name="sos_delta_main_page_description">锁屏，轻触显示或隐藏控件</string>
+    <string name="sos_delta_aqi_format">空气 %1$s</string>
+    <string-array name="sos_keyguard_months">
+        <item>01</item>
+        <item>02</item>
+        <item>03</item>
+        <item>04</item>
+        <item>05</item>
+        <item>06</item>
+        <item>07</item>
+        <item>08</item>
+        <item>09</item>
+        <item>10</item>
+        <item>11</item>
+        <item>12</item>
+    </string-array>
+</resources>

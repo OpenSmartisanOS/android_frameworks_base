@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="180.0px" android:textColor="#ffffff" android:id="@id/battery_integer" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:layout_centerHorizontal="true" android:textFontWeight="500" />
+    <TextView android:textSize="48.0px" android:textColor="#4dffffff" android:id="@id/battery_decimal" android:layout_width="wrap_content" android:layout_height="wrap_content" android:includeFontPadding="false" android:layout_toRightOf="@id/battery_integer" android:layout_alignBaseline="@id/battery_integer" android:textFontWeight="700" />
+    <TextView android:textSize="72.0px" android:textColor="#ffffff" android:id="@id/battery_percentage" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="10.0px" android:text="%" android:includeFontPadding="false" android:layout_toRightOf="@id/battery_integer" android:layout_above="@id/battery_decimal" android:textFontWeight="900" />
+</RelativeLayout>

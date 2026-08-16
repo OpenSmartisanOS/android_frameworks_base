@@ -1,0 +1,13 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="doze_am_pm_text_size">18.0dp</dimen>
+    <dimen name="doze_battery_padding_top">6.0dp</dimen>
+    <dimen name="doze_offset_from_time_view">208.0dp</dimen>
+    <dimen name="doze_second_container_padding_left">18.0dp</dimen>
+    <dimen name="doze_second_container_padding_top">62.0dp</dimen>
+    <dimen name="doze_time_view_padding_left">36.0dp</dimen>
+    <dimen name="doze_time_view_padding_top">2.399994dp</dimen>
+    <dimen name="doze_time_view_text_size">144.0dp</dimen>
+    <dimen name="doze_week_view_padding_left">9.599976dp</dimen>
+    <dimen name="doze_week_view_text_size">18.0dp</dimen>
+</resources>

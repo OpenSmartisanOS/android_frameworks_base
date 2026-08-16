@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SmartisanOS Keyguard resources converted from KeyguardSmartisan. -->
+    <color name="sos_keyguard_slide_bar_text">#9EFFFFFF</color>
+    <color name="sos_keyguard_slide_bar_secondary_text">#B3FFFFFF</color>
+    <color name="sos_keyguard_status_bar_background">#26000000</color>
+    <color name="sos_keyguard_notification_title">#9A000000</color>
+    <color name="sos_keyguard_notification_text">#66000000</color>
+
+    <string name="sos_keyguard_am">AM</string>
+    <string name="sos_keyguard_pm">PM</string>
+    <string name="sos_keyguard_date_separator">.</string>
+    <string name="sos_keyguard_day_suffix"></string>
+    <string name="sos_delta_tools">Small tools</string>
+    <string name="sos_delta_camera">Camera</string>
+    <string name="sos_delta_unlock">Swipe up to unlock</string>
+    <string name="sos_delta_torch">Flashlight</string>
+    <string name="sos_delta_weather_no_data">Weather unavailable</string>
+    <string name="sos_delta_music_idle">No media playing</string>
+    <string name="sos_delta_recorder_ready">Recorder</string>
+    <string name="sos_delta_recorder_recording">Recording</string>
+    <string name="sos_delta_recorder_paused">Paused</string>
+    <string name="sos_delta_recorder_unavailable">Recorder unavailable</string>
+    <string name="sos_delta_recorder_start">Start recording</string>
+    <string name="sos_delta_recorder_pause">Pause recording</string>
+    <string name="sos_delta_recorder_resume">Resume recording</string>
+    <string name="sos_delta_recorder_stop">Stop recording</string>
+    <string name="sos_delta_pinned_tasks">Pinned apps</string>
+    <string name="sos_delta_pinned_empty">Pin an app from the Smartisan sidebar</string>
+    <string name="sos_delta_unpin_task">Unpin %1$s</string>
+    <!-- Live pinned-task preview shown above the locked Delta surface. -->
+    <string name="sos_delta_pinned_opening">Opening pinned task…</string>
+    <string name="sos_delta_pinned_open">Unlock and open pinned task</string>
+    <string name="sos_delta_pinned_close_preview">Close pinned task preview</string>
+    <string name="sos_delta_main_page_description">Lock screen. Tap to show or hide controls.</string>
+    <string name="sos_delta_battery_format" translatable="false">%1$d%%%2$s</string>
+    <string name="sos_delta_aqi_format">AQI %1$s</string>
+    <string-array name="sos_keyguard_months">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sept</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+
+    <dimen name="sos_keyguard_host_bottom_margin">73dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_height">52dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_bottom_margin">73dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_shadow_height">9dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_background_height">51dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_left_width">156dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_left">162dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_right">5dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_layer_height">58dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_icon_size">51dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_text_size">128px</dimen>
+    <dimen name="sos_keyguard_slide_bar_date_text_size">9sp</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_padding_top">13dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_padding_right">3dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_date_padding_start">4dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_date_padding_top">3dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_am_pm_margin_bottom">1dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_width">3dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_height">40dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_margin_left">155dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_margin_top">7dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_week_margin_right">6dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_bottom">85dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_left">162dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_right">5dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_item_top">3dp</dimen>
+    <dimen name="sos_keyguard_slide_bar_bubble_text_size">15sp</dimen>
+
+    <dimen name="sos_keyguard_notification_top_margin">80dp</dimen>
+    <dimen name="sos_keyguard_notification_bottom_margin">134dp</dimen>
+    <dimen name="sos_keyguard_notification_horizontal_margin">14dp</dimen>
+    <dimen name="sos_keyguard_notification_min_height">60dp</dimen>
+
+    <!-- Delta geometry. Product RROs may override these without device checks in code. -->
+    <dimen name="sos_delta_time_bottom_margin">13dp</dimen>
+    <dimen name="sos_delta_time_text_size">34sp</dimen>
+    <dimen name="sos_delta_date_text_size">9sp</dimen>
+    <!-- Original Delta assets are 114px at xxhdpi (38dp) with a separate 30px edge margin. -->
+    <dimen name="sos_delta_corner_button_size">38dp</dimen>
+    <dimen name="sos_delta_corner_button_margin">10dp</dimen>
+    <dimen name="sos_delta_widget_horizontal_padding">32dp</dimen>
+    <dimen name="sos_delta_widget_top_margin">99dp</dimen>
+    <dimen name="sos_delta_widget_bottom_padding">10dp</dimen>
+    <dimen name="sos_delta_top_gesture_region">64dp</dimen>
+    <dimen name="sos_delta_four_finger_distance">66dp</dimen>
+    <dimen name="sos_delta_aod_burn_in_amplitude">12dp</dimen>
+    <integer name="sos_delta_page_settle_duration">200</integer>
+</resources>

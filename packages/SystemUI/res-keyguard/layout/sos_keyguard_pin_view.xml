@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Original R2 PIN geometry with Android 16 credential/controller bridge nodes. -->
+<com.android.keyguard.SosKeyguardPINView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidprv="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/keyguard_pin_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical">
+
+    <!-- Immutable Smartisan design canvas. SosCredentialLayoutScaler scales this as one unit. -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/pin_container"
+        android:layout_width="1080px"
+        android:layout_height="2242px"
+        android:clipChildren="false"
+        android:clipToPadding="false"
+        android:layoutDirection="ltr">
+
+        <com.android.keyguard.SosBiometricAnimationView
+            android:id="@+id/sos_biometric_animation"
+            android:layout_width="150px"
+            android:layout_height="150px"
+            android:layout_marginTop="390px"
+            android:visibility="invisible"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Original R2 owns this prompt directly. It must never enter Android's bouncer-message
+             visibility/animation pipeline, otherwise a lockout can count down without drawing. -->
+        <com.android.keyguard.SosPinMessageArea
+            android:id="@+id/easy_password_tip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="588px"
+            android:accessibilityLiveRegion="polite"
+            android:fontFamily="@font/smartisan_compact_bold"
+            android:gravity="center"
+            android:maxLines="2"
+            android:minHeight="58px"
+            android:text="@string/please_enter_easy_password"
+            android:textColor="@color/sm_password_tip"
+            android:textSize="48px"
+            android:textStyle="bold"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Non-rendering Android 16 controller bridge. The visible R2 prompt above is authoritative. -->
+        <com.android.keyguard.BouncerKeyguardMessageArea
+            android:id="@+id/bouncer_message_area"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            android:alpha="0"
+            android:importantForAccessibility="no"
+            android:visibility="invisible"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Android 16's revamped bouncer message bridge. It never participates in geometry. -->
+        <com.android.systemui.bouncer.ui.BouncerMessageView
+            android:id="@+id/bouncer_message_view"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            android:visibility="invisible"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <!-- Authoritative credential buffer. It is intentionally not a visual password field. -->
+        <com.android.keyguard.SosPasswordTextView
+            android:id="@+id/pinEntry"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            android:layout_marginTop="36px"
+            android:alpha="0"
+            android:contentDescription="@string/keyguard_accessibility_pin_area"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:importantForAccessibility="yes"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toBottomOf="@id/easy_password_tip"
+            androidprv:scaledTextSize="24" />
+
+        <com.android.keyguard.SosPinDotContainer
+            android:id="@+id/password_container"
+            android:layout_width="match_parent"
+            android:layout_height="45px"
+            android:layout_marginTop="96px"
+            android:gravity="center"
+            android:orientation="horizontal"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toBottomOf="@id/easy_password_tip" />
+
+        <!-- Four original 222px rows: 198px selector art plus 12px top/bottom spacing. -->
+        <com.android.keyguard.KeyguardPinFlowView
+            android:id="@+id/flow1"
+            android:layout_width="984px"
+            android:layout_height="888px"
+            android:layout_marginBottom="78px"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            androidprv:constraint_referenced_ids="key1,key2,key3,key4,key5,key6,key7,key8,key9,emergency_call_button,key0,delete_button"
+            androidprv:flow_horizontalGap="24px"
+            androidprv:flow_horizontalStyle="packed"
+            androidprv:flow_maxElementsWrap="3"
+            androidprv:flow_verticalGap="24px"
+            androidprv:flow_verticalStyle="packed"
+            androidprv:flow_wrapMode="aligned"
+            androidprv:layout_constraintBottom_toBottomOf="parent"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent" />
+
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key1"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_1"
+            android:contentDescription="@string/description_1"
+            androidprv:digit="1"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key2"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_2"
+            android:contentDescription="@string/description_2"
+            androidprv:digit="2"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key3"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_3"
+            android:contentDescription="@string/description_3"
+            androidprv:digit="3"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key4"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_4"
+            android:contentDescription="@string/description_4"
+            androidprv:digit="4"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key5"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_5"
+            android:contentDescription="@string/description_5"
+            androidprv:digit="5"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key6"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_6"
+            android:contentDescription="@string/description_6"
+            androidprv:digit="6"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key7"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_7"
+            android:contentDescription="@string/description_7"
+            androidprv:digit="7"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key8"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_8"
+            android:contentDescription="@string/description_8"
+            androidprv:digit="8"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key9"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_9"
+            android:contentDescription="@string/description_9"
+            androidprv:digit="9"
+            androidprv:textView="@id/pinEntry" />
+
+        <com.android.keyguard.EmergencyButton
+            android:id="@+id/emergency_call_button"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_emergency"
+            android:fontFamily="@font/smartisan_compact_bold"
+            android:gravity="center"
+            android:text="@string/unlock_screen_btn_emergency"
+            android:textColor="@color/sm_password_tip"
+            android:textSize="42px"
+            android:textStyle="bold" />
+        <com.android.keyguard.SosNumPadKey
+            android:id="@+id/key0"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_0"
+            android:contentDescription="@string/description_0"
+            androidprv:digit="0"
+            androidprv:textView="@id/pinEntry" />
+        <com.android.keyguard.SosNumPadButton
+            android:id="@+id/delete_button"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:background="@drawable/secletor_easy_password_keyboard_delete"
+            android:contentDescription="@string/keyboardview_keycode_delete" />
+
+        <!-- Normally hidden. Legacy protectors without PIN-length metadata use this original
+             Smartisan-styled confirmation control exactly once. -->
+        <com.android.keyguard.SosNumPadButton
+            android:id="@+id/key_enter"
+            android:layout_width="120px"
+            android:layout_height="120px"
+            android:layout_marginEnd="48px"
+            android:background="@drawable/secletor_simpin_password_conform"
+            android:contentDescription="@string/kg_enter_confirm_pin_hint"
+            android:visibility="gone"
+            androidprv:layout_constraintBottom_toBottomOf="@id/password_container"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintTop_toTopOf="@id/password_container" />
+
+        <View
+            android:id="@+id/keyguard_selector_fade_container"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.android.keyguard.SosKeyguardPINView>

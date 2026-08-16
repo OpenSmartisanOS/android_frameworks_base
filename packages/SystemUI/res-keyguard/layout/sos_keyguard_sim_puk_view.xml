@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.android.keyguard.SosKeyguardSimPukView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidprv="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/keyguard_sim_puk_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+    <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent" android:layoutDirection="ltr">
+        <com.android.keyguard.SosSimStatusView
+            android:id="@+id/sos_sim_status"
+            android:layout_width="798px"
+            android:layout_height="312px"
+            android:layout_marginTop="90px"
+            android:visibility="gone"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+        <com.android.keyguard.SosBiometricAnimationView android:id="@+id/sos_biometric_animation" android:layout_width="150px" android:layout_height="150px" android:layout_marginTop="132px" android:visibility="invisible" androidprv:layout_constraintEnd_toEndOf="parent" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toTopOf="parent" />
+        <ImageView android:id="@+id/keyguard_sim" android:layout_width="72px" android:layout_height="72px" android:layout_marginTop="330px" android:src="@drawable/ic_lockscreen_sim" androidprv:layout_constraintEnd_toEndOf="parent" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toTopOf="parent" />
+        <com.android.keyguard.BouncerKeyguardMessageArea android:id="@+id/bouncer_message_area" android:layout_width="match_parent" android:layout_height="180px" android:layout_marginTop="24px" android:accessibilityLiveRegion="polite" android:gravity="center" android:maxLines="4" android:paddingStart="72px" android:paddingEnd="72px" android:textColor="#ffffffff" android:textSize="48px" androidprv:layout_constraintEnd_toEndOf="parent" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toBottomOf="@id/keyguard_sim" />
+        <RelativeLayout android:id="@+id/sos_sim_entry_container" android:layout_width="798px" android:layout_height="132px" android:layout_marginTop="30px" android:background="@drawable/password_input_bg" androidprv:layout_constraintEnd_toEndOf="parent" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toBottomOf="@id/bouncer_message_area">
+            <com.android.keyguard.SosPasswordTextView android:id="@+id/pukEntry" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginEnd="132px" android:contentDescription="@string/keyguard_accessibility_pin_area" android:focusable="true" android:focusableInTouchMode="true" />
+            <com.android.keyguard.SosNumPadButton android:id="@+id/key_enter" android:layout_width="132px" android:layout_height="match_parent" android:layout_alignParentEnd="true" android:background="@drawable/secletor_simpin_password_conform" android:contentDescription="@string/keyboardview_keycode_enter" />
+        </RelativeLayout>
+        <com.android.systemui.bouncer.ui.BouncerMessageView android:id="@+id/bouncer_message_view" android:layout_width="1px" android:layout_height="1px" android:visibility="invisible" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toTopOf="parent" />
+        <include layout="@layout/sos_sim_keyboard" />
+        <View android:id="@+id/keyguard_selector_fade_container" android:layout_width="1px" android:layout_height="1px" androidprv:layout_constraintStart_toStartOf="parent" androidprv:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.android.keyguard.SosKeyguardSimPukView>

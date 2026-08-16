@@ -154,6 +154,84 @@
     <!-- NotificationPanelView -->
     <item type="id" name="notification_panel" />
 
+    <!-- SmartisanOS R2 Delta keyguard -->
+    <item type="id" name="sos_keyguard_host_view" />
+    <item type="id" name="sos_keyguard_slide_content" />
+    <item type="id" name="sos_keyguard_statusbar_bg" />
+    <item type="id" name="sos_keyguard_content" />
+    <item type="id" name="sos_keyguard_wall" />
+    <item type="id" name="sos_keyguard_music_layer" />
+    <item type="id" name="sos_keyguard_base_bar_shadow" />
+    <item type="id" name="sos_keyguard_slide_bar" />
+    <item type="id" name="sos_keyguard_base_bar_bg" />
+    <item type="id" name="sos_keyguard_base_bar_left" />
+    <item type="id" name="sos_keyguard_slide_bar_shadow" />
+    <item type="id" name="sos_keyguard_slide_bar_time" />
+    <item type="id" name="sos_keyguard_slide_bar_am_pm" />
+    <item type="id" name="sos_keyguard_slide_bar_week_day" />
+    <item type="id" name="sos_keyguard_slide_bar_date" />
+    <item type="id" name="sos_keyguard_slide_bar_separator" />
+    <item type="id" name="sos_keyguard_slide_bar_shortcuts" />
+    <item type="id" name="sos_keyguard_missed_info_1" />
+    <item type="id" name="sos_keyguard_missed_info_2" />
+    <item type="id" name="sos_keyguard_missed_info_3" />
+    <item type="id" name="sos_delta_wallpaper" />
+    <item type="id" name="sos_delta_page_container" />
+    <item type="id" name="sos_delta_widget_page" />
+    <item type="id" name="sos_delta_main_page" />
+    <item type="id" name="sos_delta_camera_page" />
+    <item type="id" name="sos_delta_main_chrome" />
+    <item type="id" name="sos_delta_time" />
+    <item type="id" name="sos_delta_am_pm" />
+    <item type="id" name="sos_delta_week_day" />
+    <item type="id" name="sos_delta_date" />
+    <item type="id" name="sos_delta_widget_button" />
+    <item type="id" name="sos_delta_camera_button" />
+    <item type="id" name="sos_delta_weather_panel" />
+    <item type="id" name="sos_delta_weather_temperature_row" />
+    <item type="id" name="sos_delta_weather_details" />
+    <item type="id" name="sos_delta_weather_temperature" />
+    <item type="id" name="sos_delta_weather_unit" />
+    <item type="id" name="sos_delta_weather_summary" />
+    <item type="id" name="sos_delta_weather_aqi" />
+    <item type="id" name="sos_delta_battery" />
+    <item type="id" name="sos_delta_music_panel" />
+    <item type="id" name="sos_delta_music_title" />
+    <item type="id" name="sos_delta_music_artist" />
+    <item type="id" name="sos_delta_music_artwork" />
+    <item type="id" name="sos_delta_music_controls" />
+    <item type="id" name="sos_delta_music_previous" />
+    <item type="id" name="sos_delta_music_play_pause" />
+    <item type="id" name="sos_delta_music_next" />
+    <item type="id" name="sos_delta_recorder_panel" />
+    <item type="id" name="sos_delta_recorder_controls" />
+    <item type="id" name="sos_delta_recorder_torch_row" />
+    <item type="id" name="sos_delta_recorder_status" />
+    <item type="id" name="sos_delta_recorder_wave" />
+    <item type="id" name="sos_delta_recorder_time" />
+    <item type="id" name="sos_delta_recorder_start" />
+    <item type="id" name="sos_delta_recorder_start_stop" />
+    <item type="id" name="sos_delta_recorder_mark" />
+    <item type="id" name="sos_delta_recorder_pause" />
+    <item type="id" name="sos_delta_recorder_stop" />
+    <item type="id" name="sos_delta_pinned_panel" />
+    <item type="id" name="sos_delta_pinned_tasks" />
+    <item type="id" name="sos_delta_pinned_empty" />
+    <item type="id" name="sos_delta_torch_panel" />
+    <item type="id" name="sos_delta_torch" />
+    <item type="id" name="sos_delta_unlock_handle" />
+    <item type="id" name="sos_delta_aod_layer" />
+    <item type="id" name="sos_delta_aod_content" />
+    <item type="id" name="sos_delta_aod_time" />
+    <item type="id" name="sos_delta_aod_secondary" />
+    <item type="id" name="sos_delta_aod_second_container" />
+    <item type="id" name="sos_delta_aod_battery" />
+    <item type="id" name="sos_delta_aod_charge" />
+    <item type="id" name="sos_delta_aod_fingerprint" />
+    <item type="id" name="sos_delta_charging_overlay" />
+    <item type="id" name="sos_delta_charging_video" />
+    <item type="id" name="sos_delta_charging_frames" />
+
     <!-- Screen Recording -->
     <item type="id" name="screen_recording_options" />
     <item type="id" name="screen_recording_dialog_source_text" />

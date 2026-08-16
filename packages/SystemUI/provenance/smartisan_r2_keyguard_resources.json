@@ -1,0 +1,4345 @@
+{
+  "designCanvas": {
+    "width": 1080,
+    "height": 2242
+  },
+  "files": [
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_02.png",
+      "targetPath": "res/drawable-400dpi/battery_02.png",
+      "density": "400dpi",
+      "sha256": "dd74df72b3c2756da01b3bb37152b2c372a2bd55477453964a972e5c7791d0a3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_03.png",
+      "targetPath": "res/drawable-400dpi/battery_03.png",
+      "density": "400dpi",
+      "sha256": "4d25cb8eb53139c26ce38c34012c0265aeb080d4babdf7afcf810545276431af",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_04.png",
+      "targetPath": "res/drawable-400dpi/battery_04.png",
+      "density": "400dpi",
+      "sha256": "57c3ecf045cc9c220c67df4960e179b03f38e1aaab272baf540955b3bc0b1344",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_05.png",
+      "targetPath": "res/drawable-400dpi/battery_05.png",
+      "density": "400dpi",
+      "sha256": "6d72b98762e967038fc369b59578404890c47ec6624415f0ab4ce07ea98bbca2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_06.png",
+      "targetPath": "res/drawable-400dpi/battery_06.png",
+      "density": "400dpi",
+      "sha256": "031e1c27798eee673333ea013faae68c8ddd9decc0c08bc4588000cda6fbc823",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_07.png",
+      "targetPath": "res/drawable-400dpi/battery_07.png",
+      "density": "400dpi",
+      "sha256": "1143ff329b17348680f074f4baba8f9eda3f803ef761dc5f05c082a25eca12e7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_08.png",
+      "targetPath": "res/drawable-400dpi/battery_08.png",
+      "density": "400dpi",
+      "sha256": "5e5eb623f9e11d54f726f17d1af32e1ae5d5d7850bc3ad10c039f472317c1ba9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_09.png",
+      "targetPath": "res/drawable-400dpi/battery_09.png",
+      "density": "400dpi",
+      "sha256": "d955fe3cffe35a3b5500bb79810a82bb298f1651821a2168c538ccd97783ea02",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_10.png",
+      "targetPath": "res/drawable-400dpi/battery_10.png",
+      "density": "400dpi",
+      "sha256": "bcb79bee1acbdc1e591e9707c8568c25503ede5a833e96dd0c4f6dc5a9536ef3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_charge.png",
+      "targetPath": "res/drawable-400dpi/battery_charge.png",
+      "density": "400dpi",
+      "sha256": "3cb8007dbf866db40fc9499c5d53f57676ee47fe3408989614c8c78d215f5a6a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_frame.png",
+      "targetPath": "res/drawable-400dpi/battery_frame.png",
+      "density": "400dpi",
+      "sha256": "146b544228ae3cb774b08b0165e762de480d75765af92227c7e63f56c61976ec",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-400dpi/battery_full.png",
+      "targetPath": "res/drawable-400dpi/battery_full.png",
+      "density": "400dpi",
+      "sha256": "4b3e5f0c1692b6e2d53cda0ea6df97455cd040fc8226363070299da8f98df9c2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/capture_camera.9.png",
+      "targetPath": "res/drawable-400dpi/capture_camera.9.png",
+      "density": "400dpi",
+      "sha256": "bc79911aef120de1322a993cc03d5b20f197e3aea4a66def93b898f024dca684",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/capture_camera_darwin.9.png",
+      "targetPath": "res/drawable-400dpi/capture_camera_darwin.9.png",
+      "density": "400dpi",
+      "sha256": "6c8f0fe704650a2aa3068b6d6c2562d2a8b033414f8513bcdddafddbd3be8377",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/flashlight_off_static.png",
+      "targetPath": "res/drawable-400dpi/flashlight_off_static.png",
+      "density": "400dpi",
+      "sha256": "89f263c936ba2b7978003bd97e7f6fd93a36f5cf73ca525eff553193486dffa1",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/flashlight_on_static.png",
+      "targetPath": "res/drawable-400dpi/flashlight_on_static.png",
+      "density": "400dpi",
+      "sha256": "bade9c161974640ab7064393f0599af21622ade238768e1657d49c5cdcf278bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/flip_axle.png",
+      "targetPath": "res/drawable-400dpi/flip_axle.png",
+      "density": "400dpi",
+      "sha256": "88fb0f8255e2bfccd3daad83513814c23ce375172d70c57403c3d01e2dfddbc2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_goto_camera.png",
+      "targetPath": "res/drawable-400dpi/icon_goto_camera.png",
+      "density": "400dpi",
+      "sha256": "698dee751c446f0f19647eccfbf0753ce0dec155d7679109921a8dd22c0120f2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_goto_camera_dark.png",
+      "targetPath": "res/drawable-400dpi/icon_goto_camera_dark.png",
+      "density": "400dpi",
+      "sha256": "a6cae27f015421093f2b8493a637d0bde03ab3b6108a78be2958bea32c468b9d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_goto_widget.png",
+      "targetPath": "res/drawable-400dpi/icon_goto_widget.png",
+      "density": "400dpi",
+      "sha256": "7861a07fa48a594a9367ecfcb8303f1605ef4f3aa9c3ad1210d0734e1ce2e964",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_goto_widget_dark.png",
+      "targetPath": "res/drawable-400dpi/icon_goto_widget_dark.png",
+      "density": "400dpi",
+      "sha256": "c929f602306cd5b8e47a14726bcb3ff13e0aae0799f93064933d3bdcd6132b03",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_slide_unlock_dark.png",
+      "targetPath": "res/drawable-400dpi/icon_slide_unlock_dark.png",
+      "density": "400dpi",
+      "sha256": "32576f0f8da5020637efa07572e9cbee94730ba59f5c089719697393b3b1fcab",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/icon_slide_unlock_light.png",
+      "targetPath": "res/drawable-400dpi/icon_slide_unlock_light.png",
+      "density": "400dpi",
+      "sha256": "2dac5bfd24458f17cf745aef632b1fbbf55ef1a6656cedc1978c373ee6425047",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/music_pause_in_album.png",
+      "targetPath": "res/drawable-400dpi/music_pause_in_album.png",
+      "density": "400dpi",
+      "sha256": "e30acdfce949331056ff658246dfae19de4f2428d8ea96a7ae1713f3af6d1915",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/music_play_in_album.png",
+      "targetPath": "res/drawable-400dpi/music_play_in_album.png",
+      "density": "400dpi",
+      "sha256": "805fcb79ba426b4ba2d2d3763d641be1f5642e584d43f34f8518be925a66c244",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no0.png",
+      "targetPath": "res/drawable-400dpi/no0.png",
+      "density": "400dpi",
+      "sha256": "def7bf2c298b7b6fa8900c4a49d00e8f78f661f279c390ab7f22a4d51fc741df",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no1.png",
+      "targetPath": "res/drawable-400dpi/no1.png",
+      "density": "400dpi",
+      "sha256": "a87b68608bb136d675149005a0d5513e999cbe5a5618f14f2bd8d8dffd6ee4c7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no2.png",
+      "targetPath": "res/drawable-400dpi/no2.png",
+      "density": "400dpi",
+      "sha256": "53d0074c7c02d34ca74205508f52602ebe5d42b0b60043423f1e334aadccc8cf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no3.png",
+      "targetPath": "res/drawable-400dpi/no3.png",
+      "density": "400dpi",
+      "sha256": "c12ae89fe804ac79b9d0ae12df63f602519852bc58486ffeb6c6270e648c9fef",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no4.png",
+      "targetPath": "res/drawable-400dpi/no4.png",
+      "density": "400dpi",
+      "sha256": "46d78007e72284f09e513c2cff7831cb1ee092902f5e161f2ee68f3b1fa7d2e6",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no5.png",
+      "targetPath": "res/drawable-400dpi/no5.png",
+      "density": "400dpi",
+      "sha256": "04a47a58f5e96ca025f5875f28c5ed98c0c7c17c5a513c90ebcb02c5fe7c3877",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no6.png",
+      "targetPath": "res/drawable-400dpi/no6.png",
+      "density": "400dpi",
+      "sha256": "2371c2967c0a27539e0417081bc2354f382ba7bff21967864199e4a353977402",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no7.png",
+      "targetPath": "res/drawable-400dpi/no7.png",
+      "density": "400dpi",
+      "sha256": "273e4b421d514b41bfbde9eecebe544ba596b6ac4c1a889afaae2bdb478edb12",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no8.png",
+      "targetPath": "res/drawable-400dpi/no8.png",
+      "density": "400dpi",
+      "sha256": "f836531b992991d0fd2c641b9517c9a42ea275188775ad1d78a8f5e5b75e6a1a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/no9.png",
+      "targetPath": "res/drawable-400dpi/no9.png",
+      "density": "400dpi",
+      "sha256": "6c72bea15905c1c6742db9e8412ac743018a749babdba50ba9d807f063e981e5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/pinned_task_outer_frame.9.png",
+      "targetPath": "res/drawable-400dpi/pinned_task_outer_frame.9.png",
+      "density": "400dpi",
+      "sha256": "93d50c886aa0c96aae57072f4cdfbc852e571c411123f69411e98b380271de73",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_add_mark.png",
+      "targetPath": "res/drawable-400dpi/recording_add_mark.png",
+      "density": "400dpi",
+      "sha256": "b863e642272fda37bcac3f74b188a234567e92a06426f0e463ae910d31dd2f6e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_add_mark_disable.png",
+      "targetPath": "res/drawable-400dpi/recording_add_mark_disable.png",
+      "density": "400dpi",
+      "sha256": "c9a35781229fa6568c717b9b64c1111a78779035a17c6f92a88086a0b7abb143",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_pause_static.png",
+      "targetPath": "res/drawable-400dpi/recording_pause_static.png",
+      "density": "400dpi",
+      "sha256": "cf436a867c19ee4285359fa7a296c7c350285bd6becfbe8a45ab829c5bd5e0bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_resume_static.png",
+      "targetPath": "res/drawable-400dpi/recording_resume_static.png",
+      "density": "400dpi",
+      "sha256": "cb20dcc0870440645ad064ed7a382776c6cf2014f9d9203d9f3f803899c34992",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_start_static.png",
+      "targetPath": "res/drawable-400dpi/recording_start_static.png",
+      "density": "400dpi",
+      "sha256": "17d6e5a136584f113dcacaabee46a574ae6800d0e04b70d160705290d11ccd00",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/recording_stop_static.png",
+      "targetPath": "res/drawable-400dpi/recording_stop_static.png",
+      "density": "400dpi",
+      "sha256": "f9d8c0acc3abc78e289ba1b24a45c7d2db6930bcfc69c4fc7ae9c6ad775587e8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/tpage_round_corner_mask.9.png",
+      "targetPath": "res/drawable-400dpi/tpage_round_corner_mask.9.png",
+      "density": "400dpi",
+      "sha256": "9d085c53514e2425ef587386afe5564c9205a53959c0afedb2c1f21443e76ed2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_01.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_01.png",
+      "density": "400dpi",
+      "sha256": "1da7354df2385308e25147fa6a484e0cf8c619b0052be400ed977dd12816660a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_02.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_02.png",
+      "density": "400dpi",
+      "sha256": "6406a0995705233435c52c82563fc17b26b95bddb3fbeae20576463736d60204",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_03.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_03.png",
+      "density": "400dpi",
+      "sha256": "5529160a66836c5111719c0a04ebe6e44107a7adb4614fac544a83938afc16fb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_04.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_04.png",
+      "density": "400dpi",
+      "sha256": "2be216d804056d02eec3204839c01bd51272af9f1ef5a70be0fecd52721cabda",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_05.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_05.png",
+      "density": "400dpi",
+      "sha256": "6a3ee44cbe45a6a4e706b3e00f951ad1383ee4053c109945349c8a1d1c815d2b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_06.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_06.png",
+      "density": "400dpi",
+      "sha256": "302fc1d946c9a9f07fee874b6ba98f6cbd9b41fac7d4db767c8b9ade493c1942",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_07.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_07.png",
+      "density": "400dpi",
+      "sha256": "2ad070134649d64e535ba3b1b28413b222402a30209ca19b3c4d9ac56f46c8c3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_08.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_08.png",
+      "density": "400dpi",
+      "sha256": "41914bd8b88f984e515e5dfacdfe37e0b09829800c617ae452d1b97912220137",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_09.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_09.png",
+      "density": "400dpi",
+      "sha256": "433380e2d04e3426097cae3819ddf2a572a400b53180040ebe69f25a9a671d60",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_10.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_10.png",
+      "density": "400dpi",
+      "sha256": "11e507062ab39139461f14e77b7a95a1395669f8fab61bad886577f4b1c16595",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_empty.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_empty.png",
+      "density": "400dpi",
+      "sha256": "1b0f4a8a30ebe120ef07f821df9821ee82ac21dcff79fa2c5d65fcae5c6018c9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_battery_full.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_battery_full.png",
+      "density": "400dpi",
+      "sha256": "74cf2ba521e70f84edc2c7e62228a0b74b5b03f52d50866108d84b4be3a01a11",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_fav.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_fav.png",
+      "density": "400dpi",
+      "sha256": "e81298857b43e9b77424a27dd172cc0dd4e2d45f6d25e95253270d1a71444302",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_fav_active.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_fav_active.png",
+      "density": "400dpi",
+      "sha256": "4faf3caaf90036b24c925eff2096b5b4faf370282a17a323556eb320150f8992",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_last_disable.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_last_disable.png",
+      "density": "400dpi",
+      "sha256": "ecfb62ae0d929fc16272e43311a276c75971ec8182796031b276177243d0fe07",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_last_n.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_last_n.png",
+      "density": "400dpi",
+      "sha256": "4b7822e662345262ce29c5828d524c6057120430a7abc754cbfc0760c5df3ddc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_last_p.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_last_p.png",
+      "density": "400dpi",
+      "sha256": "aa71bd842bc84712c401a7155232595760a16450b1ad12ac4a84ea54e4ca9083",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_next_disable.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_next_disable.png",
+      "density": "400dpi",
+      "sha256": "ee26f2cac0298e41ea1505b79a92a58e8d001c5329b537c039114c042e401d30",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_next_n.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_next_n.png",
+      "density": "400dpi",
+      "sha256": "0278a04c13608757099e4c25b50c1feb1eb76e77167755c2a23e6f751d714561",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_next_p.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_next_p.png",
+      "density": "400dpi",
+      "sha256": "2ea150de03ceff24d04c8359616ec108d3b8e8e28db24142067ba1b30cda9925",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_pause_n.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_pause_n.png",
+      "density": "400dpi",
+      "sha256": "1bc401298f5744d1f17f8eb661484502cba33ccef7e863d729eb15e04ce1ca96",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_pause_p.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_pause_p.png",
+      "density": "400dpi",
+      "sha256": "a18bb124e926bbcecbe8c89889d45d57bb76826a26912a1880e517e3703c2fb8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_repeat_all.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_repeat_all.png",
+      "density": "400dpi",
+      "sha256": "24987d083ea279b449ec058926a2126578fc5adf7ff7001b185b0aa51878a4e2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_repeat_all_active.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_repeat_all_active.png",
+      "density": "400dpi",
+      "sha256": "824aa23d7487bad3c56078f06b9316d4907e6dee0ae1d9b60bb09721243db69c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_repeat_once.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_repeat_once.png",
+      "density": "400dpi",
+      "sha256": "bd74ad13a3834d5123bbb99820d45afa4cfdf22728ae7b954cce0b781296a056",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_btn_repeat_once_active.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_btn_repeat_once_active.png",
+      "density": "400dpi",
+      "sha256": "3529bd465176b3e5a68ad59f9ad6b7e5e546d0be2b4b9f5255605e2133dd9b8a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-400dpi/wireless_charging_default_album.png",
+      "targetPath": "res/drawable-400dpi/wireless_charging_default_album.png",
+      "density": "400dpi",
+      "sha256": "382bf37f15aa7f9a37f92d573b0367045b7a17d5ff0b88190ecb4d6cabaa0cc9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_000.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_000.png",
+      "density": "nodpi",
+      "sha256": "67e903e66d9f94d79760126e338ae9749ce232766a44dfed2cf20f842b612a45",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_001.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_001.png",
+      "density": "nodpi",
+      "sha256": "1d3b81b1185a3fa5ce3d67aff785a3b8441bbe9d5314306e2b304c166cc727a3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_002.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_002.png",
+      "density": "nodpi",
+      "sha256": "3c897d021e88bb531e27486d5a7ef946ab69feeeed758a58aa83a095de09bd6e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_003.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_003.png",
+      "density": "nodpi",
+      "sha256": "26231d498c22d7c98b309266162b380fdec355c955b9272549856a91b666cac8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_004.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_004.png",
+      "density": "nodpi",
+      "sha256": "302ccac7cdf93935a4cad3212a82761057b7dd0797da00ec4853bf426c8508bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_005.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_005.png",
+      "density": "nodpi",
+      "sha256": "bb936ff89679dbf497e737c79d55084ea200748fd6f141effd9425258e9315a7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_006.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_006.png",
+      "density": "nodpi",
+      "sha256": "e28981d8cbcd114ab106bf1eae65e2cdc8f2fdec4f96d037b42bb48f02fe7198",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_007.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_007.png",
+      "density": "nodpi",
+      "sha256": "758714c89dd9e85382559901853a3db97e8ad2642379af9569fd60511b148359",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_008.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_008.png",
+      "density": "nodpi",
+      "sha256": "16f1be7f0eff528fd2161072634d66150889537d7258d5f0eb5a0724359ab7b0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_009.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_009.png",
+      "density": "nodpi",
+      "sha256": "5c1d0d7c745066af508ba743172426e461a13a4ac159f7dae2f615fb90cc5797",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_010.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_010.png",
+      "density": "nodpi",
+      "sha256": "8915893b286e374dc6ce9f8a5231a44cf6e3e58c2092946223c40311e4ac6b26",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_011.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_011.png",
+      "density": "nodpi",
+      "sha256": "61c3e5731ae79711b6c9e29f56d3df2e9ff7608f81cbbb49991b5f143b1f50c7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_012.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_012.png",
+      "density": "nodpi",
+      "sha256": "241f583691a74aa60bbe250fdae8fb774de07a5d8d30223322ef490c9727b1b0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_013.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_013.png",
+      "density": "nodpi",
+      "sha256": "35ffa9e52511fd216da38ff2f6d17119a46bbaa0f94c6db01ccb76ad1ccef926",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_014.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_014.png",
+      "density": "nodpi",
+      "sha256": "fee90dc6b9d37631e6a3740a5e7b48709f326d75c78bbad348bd174306e510cf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_015.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_015.png",
+      "density": "nodpi",
+      "sha256": "8a0aa2d325a3b9e2249ddf4725f42cdd3c104ec45fe8d134ebba4fde501b2f05",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_016.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_016.png",
+      "density": "nodpi",
+      "sha256": "a9dbf9561c02ced7a98126ad91bd91a596083d684cb66a1c1904679fcc5e39f4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_017.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_017.png",
+      "density": "nodpi",
+      "sha256": "a9e79d44b0f355da9c861d3e35a342add152eae61d2af52e580e18ecb43aebd5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_018.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_018.png",
+      "density": "nodpi",
+      "sha256": "75d2ed7ec6a37d9d9b4eabe567dc640e2d54954bdcbbb1e5fc697965f426b508",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_019.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_019.png",
+      "density": "nodpi",
+      "sha256": "a6cf6873329cb885d3551f585322e5cf4affeaf703206541700ede5648d93867",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_020.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_020.png",
+      "density": "nodpi",
+      "sha256": "ff35ae5fd61563304435b2b529083c9a65718b802d59d27145ddc1e929e152c2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_021.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_021.png",
+      "density": "nodpi",
+      "sha256": "fd72581b06140b4e49abbe31aa5861e8f25a254294527aeb326defc3ecd62065",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_022.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_022.png",
+      "density": "nodpi",
+      "sha256": "2b2de6e758cf77ffb65a237710d761b20f2a3571dd82fdb41d6ac10eae374dcd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_023.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_023.png",
+      "density": "nodpi",
+      "sha256": "5b8d78d434fe56c9211ce3a8b5c50b931ace66f0bf73bb426a1c7b399c1dd1b0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_024.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_024.png",
+      "density": "nodpi",
+      "sha256": "05bb9063fa208dd64038c69857c246c4861ab1a783869048558e97663fb6b8cd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_025.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_025.png",
+      "density": "nodpi",
+      "sha256": "e753a09aa47eff8dfde00e08b89f9438846d4c497aec3a9c0eba63905bf54609",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_026.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_026.png",
+      "density": "nodpi",
+      "sha256": "e08797bae1dafc44ac8377b2ad29d62a83ca9389cf2635f3c2a3a9a9651ee57d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_027.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_027.png",
+      "density": "nodpi",
+      "sha256": "93fef73347cafaf5c5572b3b142659d62f172a98efd68fc42477da03e6380cc5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_028.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_028.png",
+      "density": "nodpi",
+      "sha256": "192a4a555ddb96cfbd492440e8be3bceddf09406df1e60cf42e79e0a94bd1f8d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_029.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_029.png",
+      "density": "nodpi",
+      "sha256": "ea2a4492a63bccdf320d1bb400a7585d4aae5d6da6f499918786cf2fe734dfbc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_030.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_030.png",
+      "density": "nodpi",
+      "sha256": "026a7f63efdf6efaa404ef6ac428618ac64080a64192723ea2cda7ae72e9667e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_031.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_031.png",
+      "density": "nodpi",
+      "sha256": "063769c7c248a5ccd39bc390a02146183113d2e61315592615e90318b80e3f11",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_032.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_032.png",
+      "density": "nodpi",
+      "sha256": "46a25540eca6af9705a49b4cc629ba23f304a843046323523ae402c5960c162d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_033.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_033.png",
+      "density": "nodpi",
+      "sha256": "2dee0ee3098366d4f1c40b46ca268a527b8d0f944f786c9e13fe2598fea53249",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_034.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_034.png",
+      "density": "nodpi",
+      "sha256": "41d201730ac3eef2ae172382be5c5cc02b916b366e219c77aeb286eb2a6b7064",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_035.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_035.png",
+      "density": "nodpi",
+      "sha256": "1aae366d96e793504efb9e1686f40a67da41aa8ca162174de4fa026b9b5485af",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_036.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_036.png",
+      "density": "nodpi",
+      "sha256": "9ded6d072db9c5a782e90439662223264248d9ff2ed3dd5aee046743db066e73",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_037.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_037.png",
+      "density": "nodpi",
+      "sha256": "70f27a6a47bdfedce30b192664de18f9c1a84fb3c93fd18cf1482034d698d599",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_038.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_038.png",
+      "density": "nodpi",
+      "sha256": "f30fad794bb4b43cd6f0191798184faef523c77b97e0520c04322ffd5bb31c03",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_039.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_039.png",
+      "density": "nodpi",
+      "sha256": "4617c31a85332a0f69e4e11f92fb0fc4daa59d9a0fad7ddb2143986681ef9d6c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_040.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_040.png",
+      "density": "nodpi",
+      "sha256": "a6636d94980303c2f33c0906cb6ce731db889a27b3d9ba5d63bbba82ee08bae2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_041.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_041.png",
+      "density": "nodpi",
+      "sha256": "41d2a65af17fe123ee10afea229ffc84a9d51a15772fa1ac54ed9915e7d7af73",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_042.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_042.png",
+      "density": "nodpi",
+      "sha256": "b094a4ba86314e073257a2d07585fe1cc77b4f9cfa92d404a4bbe70142aa610a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_043.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_043.png",
+      "density": "nodpi",
+      "sha256": "5a5d1f4109b00d1b9922c8a01500a411f5bf1111891430726bd281fa72747f11",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_044.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_044.png",
+      "density": "nodpi",
+      "sha256": "e4f6adcfb016b25c333b6203cf8149faa66396bb807fd2cc43167a62e6b89c1d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_045.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_045.png",
+      "density": "nodpi",
+      "sha256": "f3f711f8b101f857dc520f6f4d6825432d7b3d4f6ac853ca7da2f3c8446d7b69",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_046.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_046.png",
+      "density": "nodpi",
+      "sha256": "81acf56b4f628a8c71eab03383d152c2dd7ec0feed313cc6e985776e8f030a3e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_047.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_047.png",
+      "density": "nodpi",
+      "sha256": "4e442941e677aab95722bd3a6dda09825d737893fc057e7b4749800f45693678",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_048.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_048.png",
+      "density": "nodpi",
+      "sha256": "bb077f6e17d780d857445e509724bb9befc2b4862228b2bb36cba3cf04cda6ac",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_049.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_049.png",
+      "density": "nodpi",
+      "sha256": "35ab1985db9969bd82089b8094ed616c3a165d658df8a0bd6c19fcf0c24ce102",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_050.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_050.png",
+      "density": "nodpi",
+      "sha256": "d8f4cc815dc25631b35eebd7eeb9275ace0a0f80b0365d5452687131c17fc4a8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_051.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_051.png",
+      "density": "nodpi",
+      "sha256": "2040973aaa63b09b11c817f5463091b7629fe29287c537710822728e02658e93",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_052.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_052.png",
+      "density": "nodpi",
+      "sha256": "ce0b132683d108de176172c77088ce3d62848f76c3d39f07b4ba5cbc5de59edb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_053.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_053.png",
+      "density": "nodpi",
+      "sha256": "fc4e130ce6e246651c909e2b21a3d84bdd09c2f742dbcab8eb03a0040a6886df",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_054.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_054.png",
+      "density": "nodpi",
+      "sha256": "839a0d12d198f91abcccfb6276f36728688fed997689402f85b1acf1734b0ec4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_055.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_055.png",
+      "density": "nodpi",
+      "sha256": "ec8279f84b3b19384df64fcf5d53352fc430b709a1e726feda88f483db218ca0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_056.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_056.png",
+      "density": "nodpi",
+      "sha256": "475769a9c5feb661e9d506a099588553da4277ec4f62a76c7a0f87a3a606a9e2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_057.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_057.png",
+      "density": "nodpi",
+      "sha256": "49ea1e1580d60c29fc77264c7a8ffdb2a5161f73b21840e38cdd1cf8942925cd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_058.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_058.png",
+      "density": "nodpi",
+      "sha256": "e029f2a31c3497513789e30e3c371d66132e88c2439409388010052db3c1b121",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_059.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_059.png",
+      "density": "nodpi",
+      "sha256": "7ebf6655b81997b6a1ce3f823a486e379b52cc608eceaaeab1c48f283e7c3c09",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_060.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_060.png",
+      "density": "nodpi",
+      "sha256": "6abc2ac88e2400614a3477fef3285f55083e4f50e4a91eca0381b72acf428ad7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_061.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_061.png",
+      "density": "nodpi",
+      "sha256": "d7954128ad5aaee34737f75ce841c2456c6aff1ceb8fb4d25938fbbc7d6031d1",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_062.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_062.png",
+      "density": "nodpi",
+      "sha256": "bff2acf64d105441d2d0f88656fdb4a30b8bf00001ebe9a3652f67e919f3265a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_063.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_063.png",
+      "density": "nodpi",
+      "sha256": "b097e5c674c0454d5511d2a2e5f9523c98190752ce6bfdb439e3cd916bc4a76b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_064.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_064.png",
+      "density": "nodpi",
+      "sha256": "20a15d074e1e4f4e2451eb4d84d6d0f196e4a2717e74c34b1c607059163ebca9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_065.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_065.png",
+      "density": "nodpi",
+      "sha256": "97cd9d1243da1651e61324cec8c20b864ab206ec54feed7ab11b6bcb203d72de",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_066.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_066.png",
+      "density": "nodpi",
+      "sha256": "66e8f83eeeb7dbf6d448827fbe3765572052246a0fe2197b1c79b6adaa39c137",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_067.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_067.png",
+      "density": "nodpi",
+      "sha256": "feca497b088a8ecec748d5ddd71c54f195838d1916f63bb93075def5a6821346",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_068.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_068.png",
+      "density": "nodpi",
+      "sha256": "ea1f4a07ebb5b4e8b26a1da7ed67781eada7253d4e115e25711fc9f5c69faa14",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_069.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_069.png",
+      "density": "nodpi",
+      "sha256": "4bce0f1a965bc5c119c6c6adc3a9eb77fc33b78ae186f62b947408766c36f69e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_070.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_070.png",
+      "density": "nodpi",
+      "sha256": "7e0541f9e8a50e602364314908194db7ca9b0fdd63d2cc8cd01f90c951587a44",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_071.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_071.png",
+      "density": "nodpi",
+      "sha256": "0a1e67464772006908cf634386c4462d20dc61a3ad072f456565e306ae9b9823",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_072.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_072.png",
+      "density": "nodpi",
+      "sha256": "01f734901f641ee569fa01c8d3db18156277baf478e1a09f0202eeedcecd6bb7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_073.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_073.png",
+      "density": "nodpi",
+      "sha256": "3d3ecfdd6b66d80d6323f3c3223f7a5f6ac3bb78f09266f1bb96efc0254ac74e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_074.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_074.png",
+      "density": "nodpi",
+      "sha256": "bbf8d25398107f6f471d1fd4273831fd52c3de3e25b8be532889a8e0a429a5e7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_075.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_075.png",
+      "density": "nodpi",
+      "sha256": "8346545c41800fca78b6aac1f748e0c31715a893600e6dcca1df62336ec644ba",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_076.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_076.png",
+      "density": "nodpi",
+      "sha256": "20f563fc2350e3b1a24ed637d68ad8dc6432c27f8725666ee56f723261350b13",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_077.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_077.png",
+      "density": "nodpi",
+      "sha256": "41025c749762e26decfa5071909de0a381aac94c550fafeac26857484c534274",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_078.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_078.png",
+      "density": "nodpi",
+      "sha256": "eb83a5f64ec852cdd9f39e956aadc22d2e8f074e681f46f241177980a9713556",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_079.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_079.png",
+      "density": "nodpi",
+      "sha256": "eaaff4f25c963d7dd51c9515d2e2c9898c04da6a14d04811ee6609101ce5e6d2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_080.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_080.png",
+      "density": "nodpi",
+      "sha256": "214ac3c6316896746f2bbffb5e99763f437815404839d2fab8264ac4fdf438b8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_081.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_081.png",
+      "density": "nodpi",
+      "sha256": "bbb8ca000997f7b1a6f40bf4f0a7ddb6a66d630cf940bc9e602b8651be22562e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_082.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_082.png",
+      "density": "nodpi",
+      "sha256": "6b8ab1126f5928cd32d1dab3662b68586cca4977a5abcb34de61d62ceb190f33",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_083.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_083.png",
+      "density": "nodpi",
+      "sha256": "cf6aa487f20c2c25268e5a911667429e0621779097080c9a9c2b277177550456",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_084.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_084.png",
+      "density": "nodpi",
+      "sha256": "b6451c4fd6927fbe1fe07e66e8c55b98a0509938ea02bba5d18a4827a45468e0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_085.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_085.png",
+      "density": "nodpi",
+      "sha256": "78b0d3f8833ac5cb50040cf635873e8118a872e39c69f6d904c291875b67de6e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_086.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_086.png",
+      "density": "nodpi",
+      "sha256": "a27399f8314e3820d37fd1e8d74793d78fdf47e04a5df91bb65389e3acc185ee",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_087.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_087.png",
+      "density": "nodpi",
+      "sha256": "969d12cb6e73a619f0f1773c0f522f8bf08e2081f06d7b888d66bcd45dd050ef",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_088.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_088.png",
+      "density": "nodpi",
+      "sha256": "bf236709cac3f310e57f3248fcd69c877c9f3d5595c0e32eb1ead97f8a43dea3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_089.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_089.png",
+      "density": "nodpi",
+      "sha256": "36914b9b7769695e72685cabe4f9c64ac7f19485bd7f874c99eb20d472a4969b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_090.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_090.png",
+      "density": "nodpi",
+      "sha256": "fc41e4477551691930ea8b5efe270b891700661a45397603e7228f60a6c4c05f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_091.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_091.png",
+      "density": "nodpi",
+      "sha256": "c000bc8cb53fdf8f3aa2ee7217ab35422c08d360b402ec022c76fc51b0307dc3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_092.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_092.png",
+      "density": "nodpi",
+      "sha256": "7e6a02eadf2dff7a891ee192a2750d8474a3cd0977d04581733c464bf2602304",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_093.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_093.png",
+      "density": "nodpi",
+      "sha256": "5c8c7766b20836909f5d4396f37292e87876f57712c2c05e26db4e5660fe7e66",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_094.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_094.png",
+      "density": "nodpi",
+      "sha256": "80d981dd43577d1239773507bd2f169aa951ee0f007ecc7644c9f2ea537cb06c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_095.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_095.png",
+      "density": "nodpi",
+      "sha256": "c2401c25d01a84b5d7d45ae189d4c356df53208a5337ac853fe407202af80cc2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_096.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_096.png",
+      "density": "nodpi",
+      "sha256": "e077fb231e72a5e5e9c4f3d4df96bef9b2b8cac33ceb274d56289bfe4d4bf965",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_097.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_097.png",
+      "density": "nodpi",
+      "sha256": "b399a1e092addcd69a60ba69b6a054a13190770181363c680492d27e585303f7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_098.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_098.png",
+      "density": "nodpi",
+      "sha256": "1c125f45b86d5d9da5f33a34747a2fc4515843122d89ddc283f846efb5881f70",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_099.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_099.png",
+      "density": "nodpi",
+      "sha256": "2bf4195812e6a430810cc65803b6f7297637fc1158425d5e72268aaee3969c70",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_100.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_100.png",
+      "density": "nodpi",
+      "sha256": "8a1ad95d0c32b1a0e5f89fbecfa30484750ecd6ad4ed1374940bab3d415d527c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_101.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_101.png",
+      "density": "nodpi",
+      "sha256": "4210b8a106487dccd64b13524d447eee23858882cde63d920094dec03c5de84c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_102.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_102.png",
+      "density": "nodpi",
+      "sha256": "adfc64bfd63ae51dcf713954a58239bf593fac70df7cf60efbd39cd34d88ba87",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_103.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_103.png",
+      "density": "nodpi",
+      "sha256": "f8d8a031332a44804ffdd7d8a0efa1a4e4839d1170d0a43aa645dfa1b3fac9f0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_104.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_104.png",
+      "density": "nodpi",
+      "sha256": "8c4a7ac267baa20f6f4288132e1de820cc8291ac2589139bd9918906aca4a9cf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_105.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_105.png",
+      "density": "nodpi",
+      "sha256": "15efa3a830995fedf948f244d37f928c4d995c600a8307c0be90f43c92defd8b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_106.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_106.png",
+      "density": "nodpi",
+      "sha256": "37f6f0db4fe35bc28b1020f9cd621292903fb6a877cf8d761ae44be2f7376f32",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_107.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_107.png",
+      "density": "nodpi",
+      "sha256": "c2d2d50dc8c8156cdf7f2a0ce1b924d64ec26d52c912463c3e9ed865998dab30",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_108.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_108.png",
+      "density": "nodpi",
+      "sha256": "4ada49bdcea2cfe7618c9a540aa26cc3e5f02d44cb82526c3d56ab623619f56a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_109.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_109.png",
+      "density": "nodpi",
+      "sha256": "4eb4bb359998e4e0c8448ca50ea91b8f89244036efe7309b3312d89e14f47af9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_110.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_110.png",
+      "density": "nodpi",
+      "sha256": "b409dac8f4297f6fcaee0b82c448e52587893f083e4fe7727dde8334826372e5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_111.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_111.png",
+      "density": "nodpi",
+      "sha256": "2d24645de29eb2321dec88b3aa4f187c2c06407496b62e1cdc9715c8e26cd4be",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_112.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_112.png",
+      "density": "nodpi",
+      "sha256": "a9a525c02e32452aed40347420e790c76156383cf80c73d0241c44438ad26b9d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_113.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_113.png",
+      "density": "nodpi",
+      "sha256": "acb698aa02c1e0e79c1652b3058616123df20e5af53c5c77f45c952905ef083a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_114.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_114.png",
+      "density": "nodpi",
+      "sha256": "e5b8307ef9f6fe9aeb066db2b2218bc87ff4c0d25a5d052297ee63b459d277e6",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_115.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_115.png",
+      "density": "nodpi",
+      "sha256": "26ed7e35c8598fb2b5dd670d73cf39220a6d983e23720ea2ff600ea5e46da2e9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_116.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_116.png",
+      "density": "nodpi",
+      "sha256": "22251e8d838627783cdb3a38123c2e7c1cf3ba88b832c8af431d5fac0591984c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_117.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_117.png",
+      "density": "nodpi",
+      "sha256": "bcbb731c298f9bc0abd378e6f392292981409c21b6ff97ffd0725d2cf36d0595",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_118.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_118.png",
+      "density": "nodpi",
+      "sha256": "6ebfcc974a7f27b02ec3e5df5c270e2bedc6ff69d8f50d273340c7a3e08acf62",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_119.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_119.png",
+      "density": "nodpi",
+      "sha256": "4292da058cf5eed4e884d5b9ebf8264f14d0f9491761968c9ff3e2cb65a681a7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_120.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_120.png",
+      "density": "nodpi",
+      "sha256": "2488c2838e982e2eccd9d89a92aeb27625c9ee6aaf690ff0baa336f51ee08854",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_121.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_121.png",
+      "density": "nodpi",
+      "sha256": "f5f0d791ba460a3f8f4d4529d0bd099079100195e1c56e338628118ac966afa7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_122.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_122.png",
+      "density": "nodpi",
+      "sha256": "33ef10617ff35a1da2ad1eec4af436d5e35ecc160a9bafaac5e03db3d488b9dd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_123.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_123.png",
+      "density": "nodpi",
+      "sha256": "5c78100112b4c525de4a1ac3ee0ae0bbd933eb09c59478e40036713dc4f74d60",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_124.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_124.png",
+      "density": "nodpi",
+      "sha256": "4586b8df6fe61e10ed54f6eae8bb693ce119dffd28e787bc1ed657c08e702c3f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_125.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_125.png",
+      "density": "nodpi",
+      "sha256": "e2dd8a3ba55f466958ff168c722c68f979fba67a8cf8662613fea73c054b6fb0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_126.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_126.png",
+      "density": "nodpi",
+      "sha256": "dd98672e08c4381826c6a2e00e1da96fe15a2d203495989489bde496dd957de9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_127.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_127.png",
+      "density": "nodpi",
+      "sha256": "ebdc82a811e19387a145e82626736d042317a74dbf775263a4a5247cb54c8086",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_128.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_128.png",
+      "density": "nodpi",
+      "sha256": "d8afb0ea11b90f46b7918d00f5398aa8fd5cafaf56e1a891815274f2433e5ebf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_129.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_129.png",
+      "density": "nodpi",
+      "sha256": "88003ede4adac8d10963359252c3d0ced09bea035e860378d8fae1b12fce8efb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_130.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_130.png",
+      "density": "nodpi",
+      "sha256": "f16a5ee8ce5a59d4303fe02efd7a635eee18f77ee39a8c4c4d89cc5be11eb8b0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_131.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_131.png",
+      "density": "nodpi",
+      "sha256": "74583376f4d578e5601c20acecb07dda597b0fe16386ab2ca857a4fe1fa7988e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_132.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_132.png",
+      "density": "nodpi",
+      "sha256": "64b13c19f11adcf44a4b151bc71493cb85b70da179b3e964eaa0a3306fc45259",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_133.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_133.png",
+      "density": "nodpi",
+      "sha256": "6e298662313dce136264788671c2347ba3a2dde2a25d819a35e686f1357afc24",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_134.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_134.png",
+      "density": "nodpi",
+      "sha256": "7042fc951ad6e1bc448f58a3294c633745bc2b0d1a487aa82f7ad261809aa307",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_135.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_135.png",
+      "density": "nodpi",
+      "sha256": "cef448c3d5c28722a96bab6c3e207595c9e6c6325396865e35d856c0f07ce53f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_136.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_136.png",
+      "density": "nodpi",
+      "sha256": "6d0f4d451b7cd1e0aaa426fba8b63205ef6bc5f43ad80446987c3e0bee51b7b0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_137.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_137.png",
+      "density": "nodpi",
+      "sha256": "be75b9b8b91051508649293e36d214a4b4a6d79dbec56d03cb1a000191021c4e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_138.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_138.png",
+      "density": "nodpi",
+      "sha256": "28c28ef2cad81a0cca07dc5588b5b37491fc2e13d74af3f4d18802b71da02ab4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_139.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_139.png",
+      "density": "nodpi",
+      "sha256": "1752f5604c7eed3af7465e0874205b34920e79b4221df9fce417382342d5dc93",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_140.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_140.png",
+      "density": "nodpi",
+      "sha256": "bae22b0f353a759a52e982ee3bfe732b64324c692c4cc4fefc47517b9d534bf0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_141.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_141.png",
+      "density": "nodpi",
+      "sha256": "26ffd3629e549afd5bd1b9ccc6a74e79a558923c5bb16ba15b4f6623507d3e52",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_142.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_142.png",
+      "density": "nodpi",
+      "sha256": "e2751d085a509777aee77482bf15c9ceaacc952db33ae4587837051d040d365b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_143.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_143.png",
+      "density": "nodpi",
+      "sha256": "ee413f37b8733af9a091c031a7114b40e96afdec101d8692bf02a743f6ec067c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_144.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_144.png",
+      "density": "nodpi",
+      "sha256": "c2304de869865407d8ba2d93d0be113b1c1251f11a74e64f77bd0918d5b847af",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/charging_anim_145.png",
+      "targetPath": "res/drawable-nodpi/charging_anim_145.png",
+      "density": "nodpi",
+      "sha256": "82acbb30619ed23be1f37c485a93dd38266aab7f5b56afaa568c8d45c233ffda",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-nodpi/fingerprint_icon_in_doze.png",
+      "targetPath": "res/drawable-nodpi/fingerprint_icon_in_doze.png",
+      "density": "nodpi",
+      "sha256": "243b78ba3f2e5eb75fc056e87dbdd4a21f5e754e90c95e3e53e11d8aab70a358",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_0.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_0.png",
+      "density": "nodpi",
+      "sha256": "5edbf08e081ded1df40a32f24a8faa73e28d7699d236080e773039e93bc0940c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_1.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_1.png",
+      "density": "nodpi",
+      "sha256": "b343221f69ffe5a097e638c7f7f0c4246cd7b8445304327e33c11f01badfaff4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_2.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_2.png",
+      "density": "nodpi",
+      "sha256": "f0f121058d9ad6c1b6cc3305957b8485d3eedceac13198078d36457518924f81",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_3.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_3.png",
+      "density": "nodpi",
+      "sha256": "71a2cf77b45d61347e6397b214d383bfa4f758b99c00973a7d93819d816a7465",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_4.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_4.png",
+      "density": "nodpi",
+      "sha256": "009ddef0cce0b83e327c9c3ada62226ee897085651d85ebf3b792fb84d5afc7a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_5.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_5.png",
+      "density": "nodpi",
+      "sha256": "bdbba575a703787e1bd50b509ec22bff39a95437d24047ef6e9b6945c44b67ac",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_down_6.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_down_6.png",
+      "density": "nodpi",
+      "sha256": "c4ae643ee42e4035737d341509efaeac6a122fef8c3a2d4f0275373c17826d70",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_0.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_0.png",
+      "density": "nodpi",
+      "sha256": "59de32407260a53f1eaa1687b42b780568df15d960e2b0406e57c1594ec76e8e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_1.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_1.png",
+      "density": "nodpi",
+      "sha256": "b580dc52c2dadf5dc7584700fadbf7bb87921c561588e8d7506270163da7f604",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_2.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_2.png",
+      "density": "nodpi",
+      "sha256": "7dffc8819ddf8cfe3b0cb963310da151055a4d0e2d4d3e1e4cf51239d0d91827",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_3.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_3.png",
+      "density": "nodpi",
+      "sha256": "4f1c35df8aaddd38c3445e4599f71e914b9af14aa4702bf20cb261543f22a459",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_4.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_4.png",
+      "density": "nodpi",
+      "sha256": "ca8020901b4443a808fb8df7c5801905db602edd56bf79b36a12ee70bc92652c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_5.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_5.png",
+      "density": "nodpi",
+      "sha256": "8de317367048b7c8c17ce6b60db1b22cb09e605d6240e6f1e027c3e113399c07",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/pinned_nail_up_6.png",
+      "targetPath": "res/drawable-nodpi/pinned_nail_up_6.png",
+      "density": "nodpi",
+      "sha256": "5e280162b4be0f9b08a0c31d3d5370498856b7e2cd8df58b1370f2df2bbe1922",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-nodpi/wireless_charging_album_cover.png",
+      "targetPath": "res/drawable-nodpi/wireless_charging_album_cover.png",
+      "density": "nodpi",
+      "sha256": "8ff42d383f55c38e4edd07c64328c471020c11fe3fae6c3e81708af615fcdcef",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_02.png",
+      "targetPath": "res/drawable-xxhdpi/battery_02.png",
+      "density": "xxhdpi",
+      "sha256": "dd74df72b3c2756da01b3bb37152b2c372a2bd55477453964a972e5c7791d0a3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_03.png",
+      "targetPath": "res/drawable-xxhdpi/battery_03.png",
+      "density": "xxhdpi",
+      "sha256": "4d25cb8eb53139c26ce38c34012c0265aeb080d4babdf7afcf810545276431af",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_04.png",
+      "targetPath": "res/drawable-xxhdpi/battery_04.png",
+      "density": "xxhdpi",
+      "sha256": "57c3ecf045cc9c220c67df4960e179b03f38e1aaab272baf540955b3bc0b1344",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_05.png",
+      "targetPath": "res/drawable-xxhdpi/battery_05.png",
+      "density": "xxhdpi",
+      "sha256": "6d72b98762e967038fc369b59578404890c47ec6624415f0ab4ce07ea98bbca2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_06.png",
+      "targetPath": "res/drawable-xxhdpi/battery_06.png",
+      "density": "xxhdpi",
+      "sha256": "031e1c27798eee673333ea013faae68c8ddd9decc0c08bc4588000cda6fbc823",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_07.png",
+      "targetPath": "res/drawable-xxhdpi/battery_07.png",
+      "density": "xxhdpi",
+      "sha256": "1143ff329b17348680f074f4baba8f9eda3f803ef761dc5f05c082a25eca12e7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_08.png",
+      "targetPath": "res/drawable-xxhdpi/battery_08.png",
+      "density": "xxhdpi",
+      "sha256": "5e5eb623f9e11d54f726f17d1af32e1ae5d5d7850bc3ad10c039f472317c1ba9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_09.png",
+      "targetPath": "res/drawable-xxhdpi/battery_09.png",
+      "density": "xxhdpi",
+      "sha256": "d955fe3cffe35a3b5500bb79810a82bb298f1651821a2168c538ccd97783ea02",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_10.png",
+      "targetPath": "res/drawable-xxhdpi/battery_10.png",
+      "density": "xxhdpi",
+      "sha256": "bcb79bee1acbdc1e591e9707c8568c25503ede5a833e96dd0c4f6dc5a9536ef3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_charge.png",
+      "targetPath": "res/drawable-xxhdpi/battery_charge.png",
+      "density": "xxhdpi",
+      "sha256": "3cb8007dbf866db40fc9499c5d53f57676ee47fe3408989614c8c78d215f5a6a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_frame.png",
+      "targetPath": "res/drawable-xxhdpi/battery_frame.png",
+      "density": "xxhdpi",
+      "sha256": "146b544228ae3cb774b08b0165e762de480d75765af92227c7e63f56c61976ec",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable-xxhdpi/battery_full.png",
+      "targetPath": "res/drawable-xxhdpi/battery_full.png",
+      "density": "xxhdpi",
+      "sha256": "4b3e5f0c1692b6e2d53cda0ea6df97455cd040fc8226363070299da8f98df9c2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_next.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_next.png",
+      "density": "xxhdpi",
+      "sha256": "652e1e41c34caa86b0bc1770297557dfdec4eb302ba19ea78adb8f669df12ac1",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_next_down.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_next_down.png",
+      "density": "xxhdpi",
+      "sha256": "7b71cc28d8da2d3092177b0effb1e659dea629c291e780bd1a9cc0d8027ca1dc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_pause_down.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_pause_down.png",
+      "density": "xxhdpi",
+      "sha256": "b0e1fc779b0ff6d20db5d0055073b6456c6e577fb7dc21f2acf52d4dae4093fc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_play_down.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_play_down.png",
+      "density": "xxhdpi",
+      "sha256": "b50bf664d99d168c37194086d6b5cbacd42e6582b6c415708f5bcc63ed7d478d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_prev.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_prev.png",
+      "density": "xxhdpi",
+      "sha256": "02e380fa0d264fb2ad29b06ec78d0f170bdb3287ca7d1f8e2319597c6e93877f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/btn_playing_prev_down.png",
+      "targetPath": "res/drawable-xxhdpi/btn_playing_prev_down.png",
+      "density": "xxhdpi",
+      "sha256": "3b95ca9ebd951bee94c3b3bf0a427f36c7558e1e2dacfe644e0472559982d378",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/capture_camera.9.png",
+      "targetPath": "res/drawable-xxhdpi/capture_camera.9.png",
+      "density": "xxhdpi",
+      "sha256": "bc79911aef120de1322a993cc03d5b20f197e3aea4a66def93b898f024dca684",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/capture_camera_darwin.9.png",
+      "targetPath": "res/drawable-xxhdpi/capture_camera_darwin.9.png",
+      "density": "xxhdpi",
+      "sha256": "6c8f0fe704650a2aa3068b6d6c2562d2a8b033414f8513bcdddafddbd3be8377",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_00.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_00.png",
+      "density": "xxhdpi",
+      "sha256": "e2dfc21ffe5c7b5f0c6b5eb51eb079b70ef7a5db4d13e00221a73858ca08855b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_01.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_01.png",
+      "density": "xxhdpi",
+      "sha256": "381558d38c04bcd0cfdfd4117cffc46c67e120afe5738525ce9c069452493ff7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_02.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_02.png",
+      "density": "xxhdpi",
+      "sha256": "a8ab3b08e30c67b046d1ff673a9150f55dadaa375c4462f4b9aac41b09a704f6",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_03.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_03.png",
+      "density": "xxhdpi",
+      "sha256": "ef0fa3590baa3b96d5749bc79adbd7749058e1e16e354176e8d1fec900e3172a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_04.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_04.png",
+      "density": "xxhdpi",
+      "sha256": "dcb7829c0c19c8b1079452d2fff800151119ba432ad9d7ea510f3c49ad55e227",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_05.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_05.png",
+      "density": "xxhdpi",
+      "sha256": "cbe8819569532266b243ea1d6fedf12b5ddb1f2b72a03b9e026b9928077f0878",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_06.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_06.png",
+      "density": "xxhdpi",
+      "sha256": "1c0518f49eb4d7241d93ebcecd5acb67d02052c58d61c2f805f527393ac9259a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_07.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_07.png",
+      "density": "xxhdpi",
+      "sha256": "dde8fd94c871694b77fa0214afef5847691cbf146b629024914b7c09beb8ad96",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_08.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_08.png",
+      "density": "xxhdpi",
+      "sha256": "62e10b105aa848b31737288bd2e0e8a2531d66efcd15ee5d085dbebe9fba1c52",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_09.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_09.png",
+      "density": "xxhdpi",
+      "sha256": "003378ea816da8d5c5270f8821257f360f01e5b8754eec99cf261eee9d177dfa",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_10.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_10.png",
+      "density": "xxhdpi",
+      "sha256": "5d6cb3c099164d5ee9b382a153ae069ee076f83f511df429acd5e3ea0dd3c3bd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_empty.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_empty.png",
+      "density": "xxhdpi",
+      "sha256": "6a7e38b96bd00cd582231b421f7f86b1588a290d7a6a579ec86687e13b54dfb0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_power_01.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_power_01.png",
+      "density": "xxhdpi",
+      "sha256": "d33b9f5ed25474d3ad1f83bc8ce824dba3e2ec3057d2eab36dd9c0496f37f668",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_power_02.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_power_02.png",
+      "density": "xxhdpi",
+      "sha256": "b64c0fc72d91a17604121d7c8c00036667739a79b528fe3a71f66a9f67723094",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_power_03.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_power_03.png",
+      "density": "xxhdpi",
+      "sha256": "b974e83ce3b724f0d6ca0a2231be58319d197c5da8d1b7c7c8a26e0417c27280",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_power_04.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_power_04.png",
+      "density": "xxhdpi",
+      "sha256": "89175cab73622e8e00b998292961a5c3592bb45386dc77b5c7d788791fc547f5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_01_cut_power_05.png",
+      "targetPath": "res/drawable-xxhdpi/clock_01_cut_power_05.png",
+      "density": "xxhdpi",
+      "sha256": "e5fbe08ee663826d271519ddb856c0e835201c11c41e535f5d6ff7c9b80b46ce",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_cut_bg.9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_cut_bg.9.png",
+      "density": "xxhdpi",
+      "sha256": "c0160f3bb33f2153066fae7c06861ec5e3997654a7ca23acde5384776bde5f88",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_cut_bg2.9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_cut_bg2.9.png",
+      "density": "xxhdpi",
+      "sha256": "adc2cd6dbcd3f60abe54e28aa8c22b9fca4e64b4d79a12e7b73cbc4d3c0c863e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_cut_bg3.9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_cut_bg3.9.png",
+      "density": "xxhdpi",
+      "sha256": "95f61387e596fa88e079c9e16f1bbb2a2beb2d7fd85bb3e816803db56f302a0a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_cut_colon.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_cut_colon.png",
+      "density": "xxhdpi",
+      "sha256": "1b342b82634c7bbeac34ebe096c35d867450d77d876a2e6c74e0dff49ff03994",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_0.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_0.png",
+      "density": "xxhdpi",
+      "sha256": "0c2282c203056f5b167fa6369a650a370db6a641806480147707fff9fa1b1ba9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_1.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_1.png",
+      "density": "xxhdpi",
+      "sha256": "0946d746d8dd1ecd665f09e835c8477328c7ef268d6afe58df87ca94af61d34a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_2.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_2.png",
+      "density": "xxhdpi",
+      "sha256": "252f9eb0eb85fae0bc699648e634f6fc3c66e7594dac2b09a572e8eee72821bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_3.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_3.png",
+      "density": "xxhdpi",
+      "sha256": "e5f002b679203f9c784052e75cfc6b5b5c76857f54efdb1ece02c62b19b128b7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_4.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_4.png",
+      "density": "xxhdpi",
+      "sha256": "25612a857abc9c031e83bc6c3aaf0a3285e72a9ed41921fe7955e1c171bb52e9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_5.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_5.png",
+      "density": "xxhdpi",
+      "sha256": "6be2708b84c4150bb22f16ff177d25188b1798c6666cae5992991715949b865f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_6.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_6.png",
+      "density": "xxhdpi",
+      "sha256": "eb6871725366bf864f8294ea8967575966796053a960239542da87abacb02aa4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_7.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_7.png",
+      "density": "xxhdpi",
+      "sha256": "ca98a7c2e26bd3f2141e0976f120f7ff85bf2b1ece2216c382355fee6eebfe50",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_8.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_8.png",
+      "density": "xxhdpi",
+      "sha256": "98e4ba8a80ac24828f07483143c4678d18cbdf490c8208c9a4c7d42f29c89716",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_left_9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_left_9.png",
+      "density": "xxhdpi",
+      "sha256": "cc0beb2788dae8c229951ef9be7df09f37153eb6d6e4bb8e87cd2fdf90df4c46",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_number_above.9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_number_above.9.png",
+      "density": "xxhdpi",
+      "sha256": "4a6b7779cf7def9ca6f425569c7d736035e69c731ffd7072c89e60dfbad341bd",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_0.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_0.png",
+      "density": "xxhdpi",
+      "sha256": "2f6c4a318d84d90e5c92e785be66857bf80ba9213dda4d2a3169599277c97189",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_1.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_1.png",
+      "density": "xxhdpi",
+      "sha256": "5b14233a34aafd07efa868dcdf24abdaa8fac7918d5ffc3e12d82ef27ebe06c9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_2.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_2.png",
+      "density": "xxhdpi",
+      "sha256": "2064279240d25a2b2c33e524cd38ddb78dada11c8b04539edde471cf45f54509",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_3.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_3.png",
+      "density": "xxhdpi",
+      "sha256": "d44c873a969b2a7c2f6356fcc0ad76c9c548d3ae1ca88259870154d9da042d07",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_4.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_4.png",
+      "density": "xxhdpi",
+      "sha256": "541a5c7b925c298086dba66304273243ae21ed5040dfebaa209bc8450728f65f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_5.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_5.png",
+      "density": "xxhdpi",
+      "sha256": "5e90196f5f83366bf4643ee1b9871afaaaa208d5016375a7e1b487da6d797b20",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_6.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_6.png",
+      "density": "xxhdpi",
+      "sha256": "546dde0e5d81fde48694cc2b310b2b1becda79059ae658418cf1cf1fae87bb23",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_7.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_7.png",
+      "density": "xxhdpi",
+      "sha256": "bcf1725b89946389f797eba452e6d6877aba91137593576b63b331e38fd43f85",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_8.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_8.png",
+      "density": "xxhdpi",
+      "sha256": "6f712b06f986f5073f85fa403ccd85cb44b0d23333164c0bb617bee420c5dbfb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_02_right_9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_02_right_9.png",
+      "density": "xxhdpi",
+      "sha256": "b0dbb3ea327d7e5b7a614ea923e9f7e5edb1caa3383e2b379aa3c66dfccbfd2a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_0.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_0.png",
+      "density": "xxhdpi",
+      "sha256": "71dd20633d6fc408a116ef0feb10fe6ae2c506663fa34d1ee5e41557f735d92a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_1.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_1.png",
+      "density": "xxhdpi",
+      "sha256": "cf9b649bb76fc23a8039f3f917e14d1bdea6ae274eaef1a5ff717be3548e76d5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_2.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_2.png",
+      "density": "xxhdpi",
+      "sha256": "4197ab51d085f5c835d12995267c718e8bfd5945687dc2484a05964dbdacfae8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_3.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_3.png",
+      "density": "xxhdpi",
+      "sha256": "a5b61f5628b090e6e7c7a21d9c35ba4cf1c3a3f11cfaf37009272615ca5388fe",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_4.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_4.png",
+      "density": "xxhdpi",
+      "sha256": "44f6e1774b44c3b77885060fd6a3411a256e5ec6ba98ca9bc79e55c4a73fa699",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_5.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_5.png",
+      "density": "xxhdpi",
+      "sha256": "f6f380f1dcff698f723e19a97a334c2bc8b4ce450c0e567f13f32b3211c1a782",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_6.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_6.png",
+      "density": "xxhdpi",
+      "sha256": "94522a13db15ac29cd2dfafc0849439afa2e5eb8dc8f5858aae4783e12b46edc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_7.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_7.png",
+      "density": "xxhdpi",
+      "sha256": "8106cbf91da560979a19414d017dc17b3178ffd961c1971cbffa692909e845df",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_8.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_8.png",
+      "density": "xxhdpi",
+      "sha256": "86d13ae7ba5d92a350b7776e0af97b6978a8ba1e25749bb8f8c8180fa93fc8e1",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_9.png",
+      "density": "xxhdpi",
+      "sha256": "73ec140f49b3f2a53ee9e7d2dfcc13b4ae1fdaefc4b7e63804891ba86278552a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_cut_axle.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_cut_axle.png",
+      "density": "xxhdpi",
+      "sha256": "24f620d6d800c89adc788f9aaf5e0e1827b95a9b40d7bb24556c153effe51f40",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_cut_left_bg.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_cut_left_bg.png",
+      "density": "xxhdpi",
+      "sha256": "696032ffa2f1138e64b3ce1664b212d8ce75b68cd34bd0be8c1512744c5639db",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_cut_right_bg.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_cut_right_bg.png",
+      "density": "xxhdpi",
+      "sha256": "486f7cc400d6f0aa328618825b601ccec32ad34e3abbda2846b666588023015f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/clock_03_number_above.9.png",
+      "targetPath": "res/drawable-xxhdpi/clock_03_number_above.9.png",
+      "density": "xxhdpi",
+      "sha256": "27d256b8d4487981edeb4091697bdefa01bca88a81f9351233786874354cc721",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/colon.png",
+      "targetPath": "res/drawable-xxhdpi/colon.png",
+      "density": "xxhdpi",
+      "sha256": "72565416c89568e778a9370850acba1f3fb3eae827910ffa6d2af00f881984ce",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/flashlight_off_static.png",
+      "targetPath": "res/drawable-xxhdpi/flashlight_off_static.png",
+      "density": "xxhdpi",
+      "sha256": "89f263c936ba2b7978003bd97e7f6fd93a36f5cf73ca525eff553193486dffa1",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/flashlight_on_static.png",
+      "targetPath": "res/drawable-xxhdpi/flashlight_on_static.png",
+      "density": "xxhdpi",
+      "sha256": "bade9c161974640ab7064393f0599af21622ade238768e1657d49c5cdcf278bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/flip_axle.png",
+      "targetPath": "res/drawable-xxhdpi/flip_axle.png",
+      "density": "xxhdpi",
+      "sha256": "88fb0f8255e2bfccd3daad83513814c23ce375172d70c57403c3d01e2dfddbc2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_goto_camera.png",
+      "targetPath": "res/drawable-xxhdpi/icon_goto_camera.png",
+      "density": "xxhdpi",
+      "sha256": "698dee751c446f0f19647eccfbf0753ce0dec155d7679109921a8dd22c0120f2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_goto_camera_dark.png",
+      "targetPath": "res/drawable-xxhdpi/icon_goto_camera_dark.png",
+      "density": "xxhdpi",
+      "sha256": "a6cae27f015421093f2b8493a637d0bde03ab3b6108a78be2958bea32c468b9d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_goto_widget.png",
+      "targetPath": "res/drawable-xxhdpi/icon_goto_widget.png",
+      "density": "xxhdpi",
+      "sha256": "7861a07fa48a594a9367ecfcb8303f1605ef4f3aa9c3ad1210d0734e1ce2e964",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_goto_widget_dark.png",
+      "targetPath": "res/drawable-xxhdpi/icon_goto_widget_dark.png",
+      "density": "xxhdpi",
+      "sha256": "c929f602306cd5b8e47a14726bcb3ff13e0aae0799f93064933d3bdcd6132b03",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_slide_unlock_dark.png",
+      "targetPath": "res/drawable-xxhdpi/icon_slide_unlock_dark.png",
+      "density": "xxhdpi",
+      "sha256": "32576f0f8da5020637efa07572e9cbee94730ba59f5c089719697393b3b1fcab",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/icon_slide_unlock_light.png",
+      "targetPath": "res/drawable-xxhdpi/icon_slide_unlock_light.png",
+      "density": "xxhdpi",
+      "sha256": "2dac5bfd24458f17cf745aef632b1fbbf55ef1a6656cedc1978c373ee6425047",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/lockscreen_recorder_wave_bg.png",
+      "targetPath": "res/drawable-xxhdpi/lockscreen_recorder_wave_bg.png",
+      "density": "xxhdpi",
+      "sha256": "f66ab591264e34f139d36f2b6aab26c6aa805cb00fb5328f639c09bd41145ec2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/music_pause_in_album.png",
+      "targetPath": "res/drawable-xxhdpi/music_pause_in_album.png",
+      "density": "xxhdpi",
+      "sha256": "e30acdfce949331056ff658246dfae19de4f2428d8ea96a7ae1713f3af6d1915",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/music_play_in_album.png",
+      "targetPath": "res/drawable-xxhdpi/music_play_in_album.png",
+      "density": "xxhdpi",
+      "sha256": "805fcb79ba426b4ba2d2d3763d641be1f5642e584d43f34f8518be925a66c244",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no0.png",
+      "targetPath": "res/drawable-xxhdpi/no0.png",
+      "density": "xxhdpi",
+      "sha256": "def7bf2c298b7b6fa8900c4a49d00e8f78f661f279c390ab7f22a4d51fc741df",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no1.png",
+      "targetPath": "res/drawable-xxhdpi/no1.png",
+      "density": "xxhdpi",
+      "sha256": "a87b68608bb136d675149005a0d5513e999cbe5a5618f14f2bd8d8dffd6ee4c7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no2.png",
+      "targetPath": "res/drawable-xxhdpi/no2.png",
+      "density": "xxhdpi",
+      "sha256": "53d0074c7c02d34ca74205508f52602ebe5d42b0b60043423f1e334aadccc8cf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no3.png",
+      "targetPath": "res/drawable-xxhdpi/no3.png",
+      "density": "xxhdpi",
+      "sha256": "c12ae89fe804ac79b9d0ae12df63f602519852bc58486ffeb6c6270e648c9fef",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no4.png",
+      "targetPath": "res/drawable-xxhdpi/no4.png",
+      "density": "xxhdpi",
+      "sha256": "46d78007e72284f09e513c2cff7831cb1ee092902f5e161f2ee68f3b1fa7d2e6",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no5.png",
+      "targetPath": "res/drawable-xxhdpi/no5.png",
+      "density": "xxhdpi",
+      "sha256": "04a47a58f5e96ca025f5875f28c5ed98c0c7c17c5a513c90ebcb02c5fe7c3877",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no6.png",
+      "targetPath": "res/drawable-xxhdpi/no6.png",
+      "density": "xxhdpi",
+      "sha256": "2371c2967c0a27539e0417081bc2354f382ba7bff21967864199e4a353977402",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no7.png",
+      "targetPath": "res/drawable-xxhdpi/no7.png",
+      "density": "xxhdpi",
+      "sha256": "273e4b421d514b41bfbde9eecebe544ba596b6ac4c1a889afaae2bdb478edb12",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no8.png",
+      "targetPath": "res/drawable-xxhdpi/no8.png",
+      "density": "xxhdpi",
+      "sha256": "f836531b992991d0fd2c641b9517c9a42ea275188775ad1d78a8f5e5b75e6a1a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/no9.png",
+      "targetPath": "res/drawable-xxhdpi/no9.png",
+      "density": "xxhdpi",
+      "sha256": "6c72bea15905c1c6742db9e8412ac743018a749babdba50ba9d807f063e981e5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_close_btn_normal.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_close_btn_normal.png",
+      "density": "xxhdpi",
+      "sha256": "1629db8d2c0242cf1392bf102889e7a8caeaa333e55d3459e9ea9a2da7468d5d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_close_btn_pressed.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_close_btn_pressed.png",
+      "density": "xxhdpi",
+      "sha256": "304d696ea0798cf7606a8a4d6f32ebc312e5092bd562f84652b408efb418cc31",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_dialog_icon.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_dialog_icon.png",
+      "density": "xxhdpi",
+      "sha256": "f96b34790fb246acddd1860a245146667b30664cbd717751ffd45f1e3ef0ea91",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_task_outer_frame.9.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_task_outer_frame.9.png",
+      "density": "xxhdpi",
+      "sha256": "93d50c886aa0c96aae57072f4cdfbc852e571c411123f69411e98b380271de73",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_view_loading_progress_b.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_view_loading_progress_b.png",
+      "density": "xxhdpi",
+      "sha256": "315d1aeda12f25e3be85fe56e79c3ecfe7924b8c6b83130bdd62be364f0e1174",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/pinned_view_loading_progress_w.png",
+      "targetPath": "res/drawable-xxhdpi/pinned_view_loading_progress_w.png",
+      "density": "xxhdpi",
+      "sha256": "da0a5527d181ef3139a4c6def5f3dac7e353f376ba95edae3fc672269de5a79d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/point.png",
+      "targetPath": "res/drawable-xxhdpi/point.png",
+      "density": "xxhdpi",
+      "sha256": "d3fb26c6e892db5b192b2529fabe9a692241daa8f3d410c9e477da4e35d5ef6f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/reboot_unlock_hint_bg.9.png",
+      "targetPath": "res/drawable-xxhdpi/reboot_unlock_hint_bg.9.png",
+      "density": "xxhdpi",
+      "sha256": "a6f2a7888527f3b937ccf011e379469bb57c70a6ff5c7987d9cb3c598db23138",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_add_mark.png",
+      "targetPath": "res/drawable-xxhdpi/recording_add_mark.png",
+      "density": "xxhdpi",
+      "sha256": "b863e642272fda37bcac3f74b188a234567e92a06426f0e463ae910d31dd2f6e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_add_mark_disable.png",
+      "targetPath": "res/drawable-xxhdpi/recording_add_mark_disable.png",
+      "density": "xxhdpi",
+      "sha256": "c9a35781229fa6568c717b9b64c1111a78779035a17c6f92a88086a0b7abb143",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_pause_static.png",
+      "targetPath": "res/drawable-xxhdpi/recording_pause_static.png",
+      "density": "xxhdpi",
+      "sha256": "cf436a867c19ee4285359fa7a296c7c350285bd6becfbe8a45ab829c5bd5e0bc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_resume_static.png",
+      "targetPath": "res/drawable-xxhdpi/recording_resume_static.png",
+      "density": "xxhdpi",
+      "sha256": "cb20dcc0870440645ad064ed7a382776c6cf2014f9d9203d9f3f803899c34992",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_start_static.png",
+      "targetPath": "res/drawable-xxhdpi/recording_start_static.png",
+      "density": "xxhdpi",
+      "sha256": "17d6e5a136584f113dcacaabee46a574ae6800d0e04b70d160705290d11ccd00",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/recording_stop_static.png",
+      "targetPath": "res/drawable-xxhdpi/recording_stop_static.png",
+      "density": "xxhdpi",
+      "sha256": "f9d8c0acc3abc78e289ba1b24a45c7d2db6930bcfc69c4fc7ae9c6ad775587e8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/tpage_round_corner_mask.9.png",
+      "targetPath": "res/drawable-xxhdpi/tpage_round_corner_mask.9.png",
+      "density": "xxhdpi",
+      "sha256": "9d085c53514e2425ef587386afe5564c9205a53959c0afedb2c1f21443e76ed2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/weatherbg.9.png",
+      "targetPath": "res/drawable-xxhdpi/weatherbg.9.png",
+      "density": "xxhdpi",
+      "sha256": "2b2c07eaa09ec775fd72531aa838c675c26277dcc062a81a7a01683e6c640398",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_01.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_01.png",
+      "density": "xxhdpi",
+      "sha256": "1da7354df2385308e25147fa6a484e0cf8c619b0052be400ed977dd12816660a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_02.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_02.png",
+      "density": "xxhdpi",
+      "sha256": "6406a0995705233435c52c82563fc17b26b95bddb3fbeae20576463736d60204",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_03.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_03.png",
+      "density": "xxhdpi",
+      "sha256": "5529160a66836c5111719c0a04ebe6e44107a7adb4614fac544a83938afc16fb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_04.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_04.png",
+      "density": "xxhdpi",
+      "sha256": "2be216d804056d02eec3204839c01bd51272af9f1ef5a70be0fecd52721cabda",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_05.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_05.png",
+      "density": "xxhdpi",
+      "sha256": "6a3ee44cbe45a6a4e706b3e00f951ad1383ee4053c109945349c8a1d1c815d2b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_06.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_06.png",
+      "density": "xxhdpi",
+      "sha256": "302fc1d946c9a9f07fee874b6ba98f6cbd9b41fac7d4db767c8b9ade493c1942",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_07.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_07.png",
+      "density": "xxhdpi",
+      "sha256": "2ad070134649d64e535ba3b1b28413b222402a30209ca19b3c4d9ac56f46c8c3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_08.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_08.png",
+      "density": "xxhdpi",
+      "sha256": "41914bd8b88f984e515e5dfacdfe37e0b09829800c617ae452d1b97912220137",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_09.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_09.png",
+      "density": "xxhdpi",
+      "sha256": "433380e2d04e3426097cae3819ddf2a572a400b53180040ebe69f25a9a671d60",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_10.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_10.png",
+      "density": "xxhdpi",
+      "sha256": "11e507062ab39139461f14e77b7a95a1395669f8fab61bad886577f4b1c16595",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_empty.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_empty.png",
+      "density": "xxhdpi",
+      "sha256": "1b0f4a8a30ebe120ef07f821df9821ee82ac21dcff79fa2c5d65fcae5c6018c9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_battery_full.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_battery_full.png",
+      "density": "xxhdpi",
+      "sha256": "74cf2ba521e70f84edc2c7e62228a0b74b5b03f52d50866108d84b4be3a01a11",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_fav.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_fav.png",
+      "density": "xxhdpi",
+      "sha256": "e81298857b43e9b77424a27dd172cc0dd4e2d45f6d25e95253270d1a71444302",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_fav_active.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_fav_active.png",
+      "density": "xxhdpi",
+      "sha256": "4faf3caaf90036b24c925eff2096b5b4faf370282a17a323556eb320150f8992",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_last_disable.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_last_disable.png",
+      "density": "xxhdpi",
+      "sha256": "ecfb62ae0d929fc16272e43311a276c75971ec8182796031b276177243d0fe07",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_last_n.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_last_n.png",
+      "density": "xxhdpi",
+      "sha256": "4b7822e662345262ce29c5828d524c6057120430a7abc754cbfc0760c5df3ddc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_last_p.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_last_p.png",
+      "density": "xxhdpi",
+      "sha256": "aa71bd842bc84712c401a7155232595760a16450b1ad12ac4a84ea54e4ca9083",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_next_disable.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_next_disable.png",
+      "density": "xxhdpi",
+      "sha256": "ee26f2cac0298e41ea1505b79a92a58e8d001c5329b537c039114c042e401d30",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_next_n.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_next_n.png",
+      "density": "xxhdpi",
+      "sha256": "0278a04c13608757099e4c25b50c1feb1eb76e77167755c2a23e6f751d714561",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_next_p.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_next_p.png",
+      "density": "xxhdpi",
+      "sha256": "2ea150de03ceff24d04c8359616ec108d3b8e8e28db24142067ba1b30cda9925",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_pause_n.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_pause_n.png",
+      "density": "xxhdpi",
+      "sha256": "1bc401298f5744d1f17f8eb661484502cba33ccef7e863d729eb15e04ce1ca96",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_pause_p.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_pause_p.png",
+      "density": "xxhdpi",
+      "sha256": "a18bb124e926bbcecbe8c89889d45d57bb76826a26912a1880e517e3703c2fb8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_repeat_all.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_repeat_all.png",
+      "density": "xxhdpi",
+      "sha256": "24987d083ea279b449ec058926a2126578fc5adf7ff7001b185b0aa51878a4e2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_repeat_all_active.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_repeat_all_active.png",
+      "density": "xxhdpi",
+      "sha256": "824aa23d7487bad3c56078f06b9316d4907e6dee0ae1d9b60bb09721243db69c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_repeat_once.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_repeat_once.png",
+      "density": "xxhdpi",
+      "sha256": "bd74ad13a3834d5123bbb99820d45afa4cfdf22728ae7b954cce0b781296a056",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_btn_repeat_once_active.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_btn_repeat_once_active.png",
+      "density": "xxhdpi",
+      "sha256": "3529bd465176b3e5a68ad59f9ad6b7e5e546d0be2b4b9f5255605e2133dd9b8a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable-xxhdpi/wireless_charging_default_album.png",
+      "targetPath": "res/drawable-xxhdpi/wireless_charging_default_album.png",
+      "density": "xxhdpi",
+      "sha256": "382bf37f15aa7f9a37f92d573b0367045b7a17d5ff0b88190ecb4d6cabaa0cc9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/animation_frame_charging.xml",
+      "targetPath": "res/drawable/animation_frame_charging.xml",
+      "density": null,
+      "sha256": "8af3f73bdd36b2f5b8dd3c5573b591befa41bb88023e60011660fe3167870e62",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_next_selector.xml",
+      "targetPath": "res/drawable/btn_playing_next_selector.xml",
+      "density": null,
+      "sha256": "ba58fb91a73c2f6fba3bc980afde954ad1514b615a33c14606cac47b9ed0f8cc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_pause.xml",
+      "targetPath": "res/drawable/btn_playing_pause.xml",
+      "density": null,
+      "sha256": "ebbaf7f582001d5e0f60d303efd60bf8926733b9146323989b72903f092142e9",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_pause_selector.xml",
+      "targetPath": "res/drawable/btn_playing_pause_selector.xml",
+      "density": null,
+      "sha256": "a49e10d73b27568d9eba2fcfd42e740c18cd4f5a076d448bfae30fa9ddc5e3f2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_play.xml",
+      "targetPath": "res/drawable/btn_playing_play.xml",
+      "density": null,
+      "sha256": "30e7da6467c01c69e0c1bef1e486772d4d61b3ba46fafeacb1a1b81b62c85fa9",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_play_selector.xml",
+      "targetPath": "res/drawable/btn_playing_play_selector.xml",
+      "density": null,
+      "sha256": "38c193497dcffd6f84b8a652495cdcce2c2234beee4cfcde2b17f67504afd563",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_playing_prev_selector.xml",
+      "targetPath": "res/drawable/btn_playing_prev_selector.xml",
+      "density": null,
+      "sha256": "14f853fc3d9d8bcf24c6f1a95190d64cb9476115ae68c1abfbb466a733bdf57a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/btn_record_mark_selector.xml",
+      "targetPath": "res/drawable/btn_record_mark_selector.xml",
+      "density": null,
+      "sha256": "48d4b7b233744a6fe68508740fd9402c8970ed68993f926068fd27a55d308f75",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/checkbox_music_playmode_all_repeat.xml",
+      "targetPath": "res/drawable/checkbox_music_playmode_all_repeat.xml",
+      "density": null,
+      "sha256": "a3840158a78999d5b9c113b96dd4c65cfbcde8f4327d6f6ecf3d8e0cbaecd94c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/checkbox_music_playmode_one_repeat.xml",
+      "targetPath": "res/drawable/checkbox_music_playmode_one_repeat.xml",
+      "density": null,
+      "sha256": "05735567c423377b8810ad404f411d002e65f721ad6647c68fc8f5c502b68bca",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "drawable/doze_battery_level_icon.xml",
+      "targetPath": "res/drawable/doze_battery_level_icon.xml",
+      "density": null,
+      "sha256": "556c7361c9649d230d1c0e90991302204ee25e0f4e504160bc07ea2ffdc73b34",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/lcd_charging_clock_battery_level.xml",
+      "targetPath": "res/drawable/lcd_charging_clock_battery_level.xml",
+      "density": null,
+      "sha256": "923d575106a5c6a12cec59d9952440c30369ab14ce38a2d1715e981e3216e3b5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/lcd_charging_clock_number.xml",
+      "targetPath": "res/drawable/lcd_charging_clock_number.xml",
+      "density": null,
+      "sha256": "9f245b2978d548012634e89f20bb10db9606df55ad82c6c3ff4b4c8d626e3fb2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/lcd_charging_clock_number_hour_tens.xml",
+      "targetPath": "res/drawable/lcd_charging_clock_number_hour_tens.xml",
+      "density": null,
+      "sha256": "f8319bc173418714f48218afafd7d423ff9f3c926154b19e87622968939313d0",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_close_btn.xml",
+      "targetPath": "res/drawable/pinned_close_btn.xml",
+      "density": null,
+      "sha256": "d76d81bafafea450bbfd981a3300012128d2cf811e9191b756c8c9c5677f7fe5",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_0.xml",
+      "targetPath": "res/drawable/pinned_indicator_0.xml",
+      "density": null,
+      "sha256": "902f4ceff3b8f0830961bde61e2e45f7d2dc24d64750b7e4c21d71b664cb0c14",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_1.xml",
+      "targetPath": "res/drawable/pinned_indicator_1.xml",
+      "density": null,
+      "sha256": "075b1bf124f4a08b7f6aac3a4803aaea4aaa3a72b00aa3e111c2773b2a0f33a4",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_2.xml",
+      "targetPath": "res/drawable/pinned_indicator_2.xml",
+      "density": null,
+      "sha256": "7f35439ca20bdc4f5606b3a050bfacbd061dc48040e24e9a13d4b4d2d70ae741",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_3.xml",
+      "targetPath": "res/drawable/pinned_indicator_3.xml",
+      "density": null,
+      "sha256": "eac9e09d9bd1522e870ed471f8d92e346c7cc40586d9a2e3f7eda2cc27a83a25",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_4.xml",
+      "targetPath": "res/drawable/pinned_indicator_4.xml",
+      "density": null,
+      "sha256": "7a1dc3aedc9df6d7007f349784b1d0cb3d298744fc932ce008c29a52b6cebb48",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_5.xml",
+      "targetPath": "res/drawable/pinned_indicator_5.xml",
+      "density": null,
+      "sha256": "6eeeae207a2238a1ef8c6909be35ba1f81f84b4463116c7f2f56fa63d7b97a95",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_indicator_6.xml",
+      "targetPath": "res/drawable/pinned_indicator_6.xml",
+      "density": null,
+      "sha256": "87412c69a9d1389d3aa05df0cfa6815a18612973fa162ac58da09aab5290afbb",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_loading_progress_b.xml",
+      "targetPath": "res/drawable/pinned_loading_progress_b.xml",
+      "density": null,
+      "sha256": "8c158e16750778ee463e77c6f62e834dde6cf39900fda55bd190a676e574b718",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_loading_progress_w.xml",
+      "targetPath": "res/drawable/pinned_loading_progress_w.xml",
+      "density": null,
+      "sha256": "5f28aec0e83a14e554abea578d6a6b5a74d5e45275f9774c343a86a0ac23ef7e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_0.xml",
+      "targetPath": "res/drawable/pinned_nail_0.xml",
+      "density": null,
+      "sha256": "7bf3c6dc6ac9eece9f17568280aaca75b9dde29a6c1bb93545167ac4482dac13",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_1.xml",
+      "targetPath": "res/drawable/pinned_nail_1.xml",
+      "density": null,
+      "sha256": "bc8ee515be79f4b5c53ccc6582bd4453e5c04e6420aed42131dd6a578ac49f6e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_2.xml",
+      "targetPath": "res/drawable/pinned_nail_2.xml",
+      "density": null,
+      "sha256": "6845bf15b0b04bfade6848f44114eefd051ce06807ff4888f61ebe47fcce8b1b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_3.xml",
+      "targetPath": "res/drawable/pinned_nail_3.xml",
+      "density": null,
+      "sha256": "7a0e5c8095b12a5ba4a198dfd637a447912d94d0aa09074bc451ac1077f0cec8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_4.xml",
+      "targetPath": "res/drawable/pinned_nail_4.xml",
+      "density": null,
+      "sha256": "66d137d1c29f20df4676604a3395b2edf24497ad600f417b971a4ed9a44f0b5d",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_5.xml",
+      "targetPath": "res/drawable/pinned_nail_5.xml",
+      "density": null,
+      "sha256": "0d33b97265e87d1f0ca2b688f3ab8937a0c928468e9aa5b01e90fe489264de9b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_nail_6.xml",
+      "targetPath": "res/drawable/pinned_nail_6.xml",
+      "density": null,
+      "sha256": "c0bd0ba46c2820652e2a56940aeb9095a078ea6bca2a8e6bf7854eee9f3f1aca",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_stack_view_bg_b.xml",
+      "targetPath": "res/drawable/pinned_stack_view_bg_b.xml",
+      "density": null,
+      "sha256": "ed75a815a35684404374585c188877381401747107ab72b303c3f96d63faafc3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/pinned_stack_view_bg_w.xml",
+      "targetPath": "res/drawable/pinned_stack_view_bg_w.xml",
+      "density": null,
+      "sha256": "702d088a746a3ae6c7d1b08bc8903ca461b58cebaf6f4099e6bfd9e9dd6aa19e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/recording_pause.xml",
+      "targetPath": "res/drawable/recording_pause.xml",
+      "density": null,
+      "sha256": "0adcba1159bbc35405e28499b6117d99f0ed7582817e91254388ad42642dc5f9",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/recording_resume.xml",
+      "targetPath": "res/drawable/recording_resume.xml",
+      "density": null,
+      "sha256": "f774c3b0b48d005d8bf2b3e0cb8312d87ce5fb6498b5eece2ecb47d4d1ce12e4",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/recording_start.xml",
+      "targetPath": "res/drawable/recording_start.xml",
+      "density": null,
+      "sha256": "313caa96dfc01b2205b19277b99b08b32de1ffa3dbcefc6d343462e248cc484e",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/recording_stop.xml",
+      "targetPath": "res/drawable/recording_stop.xml",
+      "density": null,
+      "sha256": "6e657e88e6785ac261a44c81065573877298ee36c94e54959f3c1fa14af358c7",
+      "transformation": "generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/rolling_2_charging_clock_number.xml",
+      "targetPath": "res/drawable/rolling_2_charging_clock_number.xml",
+      "density": null,
+      "sha256": "6b22fc1994fe9e8f765e3f4ce98b84132dd142be8fa1a1384798b579365ebea7",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/rolling_charging_clock_battery_level.xml",
+      "targetPath": "res/drawable/rolling_charging_clock_battery_level.xml",
+      "density": null,
+      "sha256": "5f28b6967dfd817340df2ca90e8dadc1937fed5bb6be6970136eb996543859aa",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/rolling_charging_clock_number_left.xml",
+      "targetPath": "res/drawable/rolling_charging_clock_number_left.xml",
+      "density": null,
+      "sha256": "04e9288cf30176f3efb875ffe88a0aeef5477549fcd6b527d6ee57542d512cef",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/rolling_charging_clock_number_right.xml",
+      "targetPath": "res/drawable/rolling_charging_clock_number_right.xml",
+      "density": null,
+      "sha256": "ecd83103581acf58bc5948b3cbeaee2e005bf4bb408222896e2a5fc7f4bcb509",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$btn_playing_pause__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_btn_playing_pause__1__0.xml",
+      "density": null,
+      "sha256": "c5a8ea0ca73f56579b6cf26975698fef0d6c9f67ab245382aa8ec97d83c238c7",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$btn_playing_pause__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_btn_playing_pause__2__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$btn_playing_play__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_btn_playing_play__1__0.xml",
+      "density": null,
+      "sha256": "733d84432ed677c528eb2e9104ff4c629df891891726f684f51669cd591ca84f",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$btn_playing_play__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_btn_playing_play__2__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__1__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__2__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__3__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__3__0.xml",
+      "density": null,
+      "sha256": "733d84432ed677c528eb2e9104ff4c629df891891726f684f51669cd591ca84f",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__4__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__4__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__4__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__4__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__5__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__5__0.xml",
+      "density": null,
+      "sha256": "733d84432ed677c528eb2e9104ff4c629df891891726f684f51669cd591ca84f",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__6__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__6__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_pause__6__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_pause__6__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__1__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__2__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__3__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__3__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__4__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__4__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__4__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__4__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__5__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__5__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__6__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__6__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_resume__6__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_resume__6__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__1__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__2__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__3__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__3__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__4__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__4__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__5__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__5__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__6__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__6__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__6__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__6__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_start__7__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_start__7__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__1__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__1__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__2__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__2__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__3__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__3__0.xml",
+      "density": null,
+      "sha256": "935b6f55a8382b744c1da418098090c57bceb01e669abff08169bb10dec5645d",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__4__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__4__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__5__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__5__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__6__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__6__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__7__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__7__0.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__7__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__7__1.xml",
+      "density": null,
+      "sha256": "fd3c82578bb25453108f5d4c454033c232c9b6e0e4b935da73b25b4e0aa7ef4c",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$$recording_stop__8__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_2_recording_stop__8__0.xml",
+      "density": null,
+      "sha256": "fdb131d4d2af5252d58cbd00930be62cc34c8086dbbc07fdf2bcd220d2bffd53",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_pause__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_pause__0.xml",
+      "density": null,
+      "sha256": "20685810f0361f8c9413e10587e86eb3582351e514f1cab5dde476ea78579864",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_pause__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_pause__1.xml",
+      "density": null,
+      "sha256": "304fab2d54bb7d074af63574aa5d5076fa10b244808ee93ab82a6529ffdc515f",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_pause__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_pause__2.xml",
+      "density": null,
+      "sha256": "3cd2c88328e9d75a50195e5b2e0d8419294bb4a3167ebf5df2b9172a668c6f90",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_pause__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_pause__3.xml",
+      "density": null,
+      "sha256": "9987961493e6e129e997bdb0e6fa9a20f4252e02f6bf05a854af49029c9ab0f2",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_play__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_play__0.xml",
+      "density": null,
+      "sha256": "6673b579a875b2eac0f1b317a07944e3dfaa794842200cea98010e2e80b7ef7b",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_play__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_play__1.xml",
+      "density": null,
+      "sha256": "4d9664572cabbc77de72b9ab27455b080a9c7f98af2de6fa9f899c67d6fd12f5",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_play__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_play__2.xml",
+      "density": null,
+      "sha256": "799826c5495121aef9b62fc5df2841685f75c93c8434805b110eee5f162d0ea2",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$btn_playing_play__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_btn_playing_play__3.xml",
+      "density": null,
+      "sha256": "9987961493e6e129e997bdb0e6fa9a20f4252e02f6bf05a854af49029c9ab0f2",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__0.xml",
+      "density": null,
+      "sha256": "9692d1f813d291f813acd098bd6ddff4e9ce02a7db916cb47bc04fcfb2b0c1a7",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__1.xml",
+      "density": null,
+      "sha256": "522ba52bc1e09d3348e9578aeaa5523ef256d49db1830b5079d378c78734829a",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__2.xml",
+      "density": null,
+      "sha256": "ef983a327dbd2d6153ef19b4a92f467b2a2f9cb7c06f88d921085ad082ade77f",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__3.xml",
+      "density": null,
+      "sha256": "0eeea1940e156c1378a87cea8c72fdbca1be9848eca4c25eec5f4a709c19ccd9",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__4.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__4.xml",
+      "density": null,
+      "sha256": "fd58177013df9ea36158efcdf710dd03e2a905cc417b42d501f8a0bfdd78bfeb",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__5.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__5.xml",
+      "density": null,
+      "sha256": "f2e3bd4c5b6959723a14b4d510c5930dc840557ad1060832025ab4899e621799",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__6.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__6.xml",
+      "density": null,
+      "sha256": "048c3cf3c607c2947886bf96ea5df32c8fa1530ee600f59ed59e72999d352dcc",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_pause__7.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_pause__7.xml",
+      "density": null,
+      "sha256": "9987961493e6e129e997bdb0e6fa9a20f4252e02f6bf05a854af49029c9ab0f2",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__0.xml",
+      "density": null,
+      "sha256": "19f29b40cc9f7505d4b773cb061eeff7e2cc5073fc2e640a2eff3a4910fe5f27",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__1.xml",
+      "density": null,
+      "sha256": "950be4d995ef50449b597a28ef8e567d04e94a4be4f771a0fd33a648fcbec543",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__2.xml",
+      "density": null,
+      "sha256": "1bdd66861aed2ad9a19c69a000ae65adba9480c8c7412c29b0d15313c3df959a",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__3.xml",
+      "density": null,
+      "sha256": "11bcf4fda62ca71ab8a505049d6e1199cf8390adeb7138776c3b519013276246",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__4.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__4.xml",
+      "density": null,
+      "sha256": "788830ea17fe9b0212035491adc33a3c041f1cfc7102b66c157299329648881d",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__5.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__5.xml",
+      "density": null,
+      "sha256": "923743d6d33435fdcd7f82985bcfd80ea026c41983ba0191074feee09e6de1dc",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__6.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__6.xml",
+      "density": null,
+      "sha256": "28f9f8117f81bac1685fe7ec5dbc01bbc4356da6e3d8d99d8353de21d40dda8c",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_resume__7.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_resume__7.xml",
+      "density": null,
+      "sha256": "9987961493e6e129e997bdb0e6fa9a20f4252e02f6bf05a854af49029c9ab0f2",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__0.xml",
+      "density": null,
+      "sha256": "3f65a940bc320dbb5e691374449d478de60f9b3cceca28dc77261000a69813a2",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__1.xml",
+      "density": null,
+      "sha256": "5c580d36bf5b1360ab21e7b1fa0a7e9440253793b48bf1d974a44ddc0ee9a97e",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__2.xml",
+      "density": null,
+      "sha256": "9df2fe001cf517ca4bdc7084b7f3d85ba0b0a0af934c997ac63a72b7fb565c02",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__3.xml",
+      "density": null,
+      "sha256": "fd57e2abc0216f8b0b06c8fd7a1aced371730c8068bf4abe629d315c41d05388",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__4.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__4.xml",
+      "density": null,
+      "sha256": "5b7e18fdf2d51dbedf96419c14c0b2a806eff914fcf790adec1c271b16a0fc19",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__5.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__5.xml",
+      "density": null,
+      "sha256": "4f9754841de4eab4b3b3419f07661fa3383e1326fcf0428516f143df32a09ce5",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__6.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__6.xml",
+      "density": null,
+      "sha256": "4e7744f86f8df2084286da7cd74dfc4e2dd677f1d6b531d948a320befe1786cc",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__7.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__7.xml",
+      "density": null,
+      "sha256": "6e4f5db9375a6ea1ac8459a2f94080ed177c12b0e8b25fa49eb2773e7fa2a9cf",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_start__8.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_start__8.xml",
+      "density": null,
+      "sha256": "74d34bda658a72a5a6a33ec51696f3dcf2b61b74908bda1b42fbe95434506f46",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__0.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__0.xml",
+      "density": null,
+      "sha256": "6aaa51bf0018bdb02e5cf60e1dbb2b46060e7b097d2a6c2dbfbad92a09c11f06",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__1.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__1.xml",
+      "density": null,
+      "sha256": "936acfff0b08bf3c9a82495a6538ba97b9a7d81b2548bfe82e039ec7ed00a87c",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__2.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__2.xml",
+      "density": null,
+      "sha256": "5370a32cc3ae777294bc971c179da70f550ac3057fbb870a49bf1d8def1ccadb",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__3.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__3.xml",
+      "density": null,
+      "sha256": "4e4b7b5b38e1e5f1026d56ca742599ba23c9437f69a6807a9ed9ce4be158f26f",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__4.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__4.xml",
+      "density": null,
+      "sha256": "6b86010783bf86e452772db226f8d3aacb5b9d67e63663386a1c95810a52c3a4",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__5.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__5.xml",
+      "density": null,
+      "sha256": "a0e5745b3ea454ee613e66e361b32633b52c9a8140c5911589774b455da7bb6f",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__6.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__6.xml",
+      "density": null,
+      "sha256": "c9c4e77bbb66518b52299666bcaf68cefd9e4149c33b5f7f623f1904cdb54b48",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__7.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__7.xml",
+      "density": null,
+      "sha256": "d67d5a379d074d6b5eb78e92dac976cdbc9d7383967bf512c800c8f9f7b627a6",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__8.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__8.xml",
+      "density": null,
+      "sha256": "7610c2c724128a28dac9f6543c89d8f4f08b08afad7d7168779dafc3d1a7748b",
+      "transformation": "generated-aapt-name-namespace+generated-aapt-reference-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/$recording_stop__9.xml",
+      "targetPath": "res/drawable/sos_r2_generated_recording_stop__9.xml",
+      "density": null,
+      "sha256": "74d34bda658a72a5a6a33ec51696f3dcf2b61b74908bda1b42fbe95434506f46",
+      "transformation": "generated-aapt-name-namespace"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/wc_btn_playing_next_selector.xml",
+      "targetPath": "res/drawable/wc_btn_playing_next_selector.xml",
+      "density": null,
+      "sha256": "6351cb509b9fb8869d131a71f24de7ac5fd1d88c40f2ad8455855228c215db41",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/wc_btn_playing_pause_selector.xml",
+      "targetPath": "res/drawable/wc_btn_playing_pause_selector.xml",
+      "density": null,
+      "sha256": "e3bb570d74f69f73e13a450274a9e9f68a0d06dcb655f50d10aacbb869d418cf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/wc_btn_playing_prev_selector.xml",
+      "targetPath": "res/drawable/wc_btn_playing_prev_selector.xml",
+      "density": null,
+      "sha256": "84610c6c0582b1ac67ae46e85e3ec702792a30e4f544c71cd3171eb349628127",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "drawable/wc_checkbox_heart.xml",
+      "targetPath": "res/drawable/wc_checkbox_heart.xml",
+      "density": null,
+      "sha256": "b0f7c4f2d69992aae6fe8344c066c7c509370c95cd9317a495bae458c1096330",
+      "transformation": null
+    },
+    {
+      "sourceApk": "R2 system font partition",
+      "sourcePath": "system/fonts/Smartisan_Compact-Bold.otf",
+      "targetPath": "res/font/smartisan_compact_bold.otf",
+      "density": null,
+      "sha256": "226aecf336303734faf5fbd7f127323ead3b48b914907f92eb4f9cad0fc5c102",
+      "transformation": "android-resource-name-only"
+    },
+    {
+      "sourceApk": "R2 system font partition",
+      "sourcePath": "system/fonts/Smartisan_Compact-Regular.otf",
+      "targetPath": "res/font/smartisan_compact_regular.otf",
+      "density": null,
+      "sha256": "785eae89c85eb8aabbe6046fab72021337ce332d3eaec2a43fa9db8e702c9613",
+      "transformation": "android-resource-name-only"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout-xxhdpi/tpage_music_widget_view.xml",
+      "targetPath": "res/layout-xxhdpi/tpage_music_widget_view.xml",
+      "density": null,
+      "sha256": "b74bee280ce7126bea8ce7bd2285680b3210be6c391321b0c6fb4f171ceb8f99",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout-xxhdpi/tpage_time_layout.xml",
+      "targetPath": "res/layout-xxhdpi/tpage_time_layout.xml",
+      "density": null,
+      "sha256": "490cfe8e24b6ebd2b6e1279f49eb56e0e594fc0ea742379e13b48bbfd6b1d3dc",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout-xxhdpi/tpage_weather_widget_view.xml",
+      "targetPath": "res/layout-xxhdpi/tpage_weather_widget_view.xml",
+      "density": null,
+      "sha256": "91971d67b4e2c1dea4915465550822e88c90f765ea28af1edf5547cee1dfd34c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/charge_battery_view.xml",
+      "targetPath": "res/layout/charge_battery_view.xml",
+      "density": null,
+      "sha256": "be137e465b5c5bec71894db48008e4a80c6b1ba16186787e192cf56769bd2da8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/charge_battery_view_small.xml",
+      "targetPath": "res/layout/charge_battery_view_small.xml",
+      "density": null,
+      "sha256": "938cb87f891d1fa4accfe9fa975224bb14ca36e01319945fc75d4885f743d6f3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "layout/dream.xml",
+      "targetPath": "res/layout/dream.xml",
+      "density": null,
+      "sha256": "f563ee99651fc0c59c9e84e3003ecfc97cac4cb582cb01a25a9286b8a29517a3",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/flip_charging_clock.xml",
+      "targetPath": "res/layout/flip_charging_clock.xml",
+      "density": null,
+      "sha256": "345e26a5e2c4bae64381b1e51583a9230fc6beb72cb38fcf82a42a7294ca87ff",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/flip_number.xml",
+      "targetPath": "res/layout/flip_number.xml",
+      "density": null,
+      "sha256": "bb5e3600ce34247c9683d86f045f31c40378518aa6331980e514ee23ed147763",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/keyguard_host_view_delta.xml",
+      "targetPath": "res/layout/keyguard_host_view_delta.xml",
+      "density": null,
+      "sha256": "5aa771ca888dd2b64de0da48cf8c8e33e098547a5b31d349efae549274dfe78c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/keystore_lock_tips_main.xml",
+      "targetPath": "res/layout/keystore_lock_tips_main.xml",
+      "density": null,
+      "sha256": "0f74dba42e426a00d6c6448d8cb3009897e5bc14fb0cf3164090d9843376c3e8",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/layout_clock_view.xml",
+      "targetPath": "res/layout/layout_clock_view.xml",
+      "density": null,
+      "sha256": "1b76a2588f5d64f249478aaeeec1e4a674a5a1698d1dfe127512153e60099acf",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/lcd_charging_clock.xml",
+      "targetPath": "res/layout/lcd_charging_clock.xml",
+      "density": null,
+      "sha256": "01f3b8846d26b82f2e4add2aeb6420e03fd82e7d2b2ac8e6b0fc112ca4e00296",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/pinned_loading_bg_b.xml",
+      "targetPath": "res/layout/pinned_loading_bg_b.xml",
+      "density": null,
+      "sha256": "e9cc424b00c58abecaef1ba3786cd1a34b00f1467c0a5e203aa5f65e45b293c2",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/pinned_loading_bg_w.xml",
+      "targetPath": "res/layout/pinned_loading_bg_w.xml",
+      "density": null,
+      "sha256": "7f7d0f854bf307e315365a6d668e3752708bd39351f0d80c8c8eab3b0bedb985",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/pinned_nail_window.xml",
+      "targetPath": "res/layout/pinned_nail_window.xml",
+      "density": null,
+      "sha256": "b3dc1e9b2239b00636e6da030da876281ea174bf3ef2a56a05b4353749988a9e",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/pinned_stack.xml",
+      "targetPath": "res/layout/pinned_stack.xml",
+      "density": null,
+      "sha256": "77faca1f5527c84376d2928394bc9db4a90d76d7c1f6d2eaf02d8578e99f9cff",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/pinned_warning_dialog.xml",
+      "targetPath": "res/layout/pinned_warning_dialog.xml",
+      "density": null,
+      "sha256": "618653c86474dee52da14b64063569e1bb1bfab3d1b79598f8cacaeb0ff3695b",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/rolling_2_charging_clock.xml",
+      "targetPath": "res/layout/rolling_2_charging_clock.xml",
+      "density": null,
+      "sha256": "e720a360f4621d1faea91eee6b67f9c044e17d6370ea7172a33019504554423f",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/rolling_charging_clock.xml",
+      "targetPath": "res/layout/rolling_charging_clock.xml",
+      "density": null,
+      "sha256": "5fb8394a08c433d45764293f33a934cbf068fe96e69295084a2443e31048b64a",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/tpage_layout.xml",
+      "targetPath": "res/layout/tpage_layout.xml",
+      "density": null,
+      "sha256": "4c55157714f2c6b21ed4983442a2fcf724e0da12e5034f4623a4d971cea859a9",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/tpage_main_layout.xml",
+      "targetPath": "res/layout/tpage_main_layout.xml",
+      "density": null,
+      "sha256": "b40694647c4762517d29f68273472397bade0bef75da34b30672d9ec9de12d64",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/tpage_recorder_widget_view.xml",
+      "targetPath": "res/layout/tpage_recorder_widget_view.xml",
+      "density": null,
+      "sha256": "9733102974fbb35c9898d1839b8746ceccb786179a8386ef6dca27fb9737c485",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/tpage_widgets_layout.xml",
+      "targetPath": "res/layout/tpage_widgets_layout.xml",
+      "density": null,
+      "sha256": "aac133bf8858f55eba5f380e57dba9491bc13cc0407eb9685c6f67f1f9467006",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/wireless_charging_display.xml",
+      "targetPath": "res/layout/wireless_charging_display.xml",
+      "density": null,
+      "sha256": "0fe8f378b1e0025d1c226cf76b014867a6929740f9a2b6b87b50c524e5c5e814",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "layout/wireless_charging_music.xml",
+      "targetPath": "res/layout/wireless_charging_music.xml",
+      "density": null,
+      "sha256": "e0c3e3e5f8a7f93468ae9a9bc900e93cc90bd67cd5fb2b8d43506ea5b4c24760",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "raw/charge_anim_1.mp4",
+      "targetPath": "res/raw/charge_anim_1.mp4",
+      "density": null,
+      "sha256": "5fa84d0e23271b21e8e5db09778bc94ebf3d58d449ba4dcdc09ff87dc9adfd28",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "raw/charge_anim_2.mp4",
+      "targetPath": "res/raw/charge_anim_2.mp4",
+      "density": null,
+      "sha256": "289625faca474034a7f744ba94c7f61db9164025d8a3196737f70721b349164c",
+      "transformation": null
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-ja/strings.xml#string/camera",
+      "targetPath": "res/values-ja/smartisan_keyguard_original.xml",
+      "density": "values-ja",
+      "sha256": "06a347dbd02065b19eb339280afdb11a0ea51b53218f72b27efeb03a176add02",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-ko/strings.xml#string/btn_playmode",
+      "targetPath": "res/values-ko/smartisan_keyguard_original.xml",
+      "density": "values-ko",
+      "sha256": "127483e8c3508413465cb8855b5409be0dc81e9ef59e0e695cb9c210442f7f3b",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-sw360dp/dimens.xml#dimen/pin_btn_margin_top",
+      "targetPath": "res/values-sw360dp/smartisan_keyguard_original.xml",
+      "density": "values-sw360dp",
+      "sha256": "dc6ceb98e302d26719bdca1742853b18080c042f9dbac1cd78be91be1e7b148e",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-sw411dp/dimens.xml#dimen/keyguard_album_control_button_h",
+      "targetPath": "res/values-sw411dp/smartisan_keyguard_original.xml",
+      "density": "values-sw411dp",
+      "sha256": "7e6ce5479fbae99de69850333491ab9c7200546f6fbad0fe8a06af5edf5d54be",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-sw432dp-2016x1080/dimens.xml#dimen/record_clock_col_h",
+      "targetPath": "res/values-sw432dp-2016x1080/smartisan_keyguard_original.xml",
+      "density": "values-sw432dp-2016x1080",
+      "sha256": "fa6ea5bd7c9234474b116726f391220fac80cc34a26b00ca86d06a9575c05210",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "values-sw432dp/dimens.xml#dimen/doze_am_pm_text_size",
+      "targetPath": "res/values-sw432dp/smartisan_aod_original.xml",
+      "density": "values-sw432dp",
+      "sha256": "4364d51c6658e09a4f075b22fb1deab1ffc69fbb5463118d7d04648b3de0271f",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-sw432dp/dimens.xml#dimen/pin_btn_margin_top",
+      "targetPath": "res/values-sw432dp/smartisan_keyguard_original.xml",
+      "density": "values-sw432dp",
+      "sha256": "69da06248433d915055507d3c9c989562b08f001d5523816d0d2c5590de5d0ca",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "values-xxhdpi/dimens.xml#dimen/doze_am_pm_text_size",
+      "targetPath": "res/values-xxhdpi/smartisan_aod_original.xml",
+      "density": "values-xxhdpi",
+      "sha256": "e7ec05a478a115f6b23e4317a7ef263fb1a70e5ea35015aa123dd4c20ae70286",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-xxhdpi/dimens.xml#dimen/keyguard_album_control_button_h",
+      "targetPath": "res/values-xxhdpi/smartisan_keyguard_original.xml",
+      "density": "values-xxhdpi",
+      "sha256": "7e6ce5479fbae99de69850333491ab9c7200546f6fbad0fe8a06af5edf5d54be",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-xxxhdpi/dimens.xml#dimen/keyguard_album_control_button_h",
+      "targetPath": "res/values-xxxhdpi/smartisan_keyguard_original.xml",
+      "density": "values-xxxhdpi",
+      "sha256": "7e6ce5479fbae99de69850333491ab9c7200546f6fbad0fe8a06af5edf5d54be",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-zh-rCN/strings.xml#string/btn_playmode",
+      "targetPath": "res/values-zh-rCN/smartisan_keyguard_original.xml",
+      "density": "values-zh-rCN",
+      "sha256": "3c78026875465092d68cf5c2cc542a0e2c9ee83cc2700f31a614a499a883eb29",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values-zh-rTW/strings.xml#string/btn_playmode",
+      "targetPath": "res/values-zh-rTW/smartisan_keyguard_original.xml",
+      "density": "values-zh-rTW",
+      "sha256": "3c78026875465092d68cf5c2cc542a0e2c9ee83cc2700f31a614a499a883eb29",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "SmartisanSystemUI.apk",
+      "sourcePath": "values/dimens.xml#dimen/doze_am_pm_text_size",
+      "targetPath": "res/values/smartisan_aod_original.xml",
+      "density": "values",
+      "sha256": "4364d51c6658e09a4f075b22fb1deab1ffc69fbb5463118d7d04648b3de0271f",
+      "transformation": "values-closure-extraction"
+    },
+    {
+      "sourceApk": "KeyguardSmartisan.apk",
+      "sourcePath": "values/dimens.xml#dimen/delta_time_margin_bottom",
+      "targetPath": "res/values/smartisan_keyguard_original.xml",
+      "density": "values",
+      "sha256": "bb75226b812a763d4b48d2d3d240fe0de512b48734ff265865be8d9bcafe8289",
+      "transformation": "values-closure-extraction"
+    }
+  ],
+  "unresolvedOrConflicting": []
+}

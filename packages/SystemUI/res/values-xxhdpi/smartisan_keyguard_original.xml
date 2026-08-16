@@ -1,0 +1,17 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="wireless_charging_text_size">16.0dp</dimen>
+    <dimen name="wireless_charging_battery_level_text_topMargin">6.0dp</dimen>
+    <dimen name="record_clock_num_w">60.0px</dimen>
+    <dimen name="record_clock_num_h">90.0px</dimen>
+    <dimen name="record_clock_col_w">30.0px</dimen>
+    <dimen name="record_clock_col_h">90.0px</dimen>
+    <dimen name="record_clock_point_w">26.0px</dimen>
+    <dimen name="record_clock_point_h">90.0px</dimen>
+    <dimen name="keyguard_album_control_button_w">138.0px</dimen>
+    <dimen name="keyguard_album_control_button_h">138.0px</dimen>
+    <dimen name="record_clock_top">872.0px</dimen>
+    <dimen name="wc_music_album_track_name_text_size">24.0dp</dimen>
+    <dimen name="wc_music_album_singer_name_text_size">13.5dp</dimen>
+    <dimen name="wc_music_album_album_name_text_size">13.5dp</dimen>
+</resources>

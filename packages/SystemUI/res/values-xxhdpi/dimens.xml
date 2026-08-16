@@ -26,4 +26,33 @@
     <!-- Biometrics fingerprint icon size for full resolution.-->
     <dimen name="biometric_dialog_fingerprint_icon_width">120dp</dimen>
     <dimen name="biometric_dialog_fingerprint_icon_height">120dp</dimen>
+
+    <!-- Original KeyguardSmartisan 1080p base-bar geometry. -->
+    <dimen name="sos_keyguard_slide_bar_left_width">468px</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_left">485px</dimen>
+    <dimen name="sos_keyguard_slide_bar_shortcut_right">15px</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_text_size">96px</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_padding_top">39px</dimen>
+    <dimen name="sos_keyguard_slide_bar_time_padding_right">9px</dimen>
+    <dimen name="sos_keyguard_slide_bar_date_padding_start">12px</dimen>
+    <dimen name="sos_keyguard_slide_bar_date_padding_top">10px</dimen>
+    <dimen name="sos_keyguard_slide_bar_am_pm_margin_bottom">4px</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_width">9px</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_height">120px</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_margin_left">464px</dimen>
+    <dimen name="sos_keyguard_slide_bar_separator_margin_top">20px</dimen>
+    <dimen name="sos_keyguard_slide_bar_week_margin_right">19px</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_left">485px</dimen>
+    <dimen name="sos_keyguard_slide_bar_num_flag_right">15px</dimen>
+
+    <!-- R2's original 1080-wide Delta canvas; scaled by Android on non-xxhdpi products. -->
+    <dimen name="sos_delta_time_bottom_margin">39px</dimen>
+    <dimen name="sos_delta_time_text_size">90px</dimen>
+    <dimen name="sos_delta_date_text_size">27px</dimen>
+    <dimen name="sos_delta_corner_button_size">114px</dimen>
+    <dimen name="sos_delta_corner_button_margin">30px</dimen>
+    <dimen name="sos_delta_widget_horizontal_padding">96px</dimen>
+    <dimen name="sos_delta_widget_top_margin">297px</dimen>
+    <dimen name="sos_delta_widget_bottom_padding">30px</dimen>
+    <dimen name="sos_delta_four_finger_distance">200px</dimen>
 </resources>

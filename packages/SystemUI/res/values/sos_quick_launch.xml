@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sos_quick_launch_phone">Phone</string>
+    <string name="sos_quick_launch_sms">Messages</string>
+    <string name="sos_quick_launch_camera">Camera</string>
+    <string name="sos_quick_launch_notes">Notes</string>
+    <string name="sos_quick_launch_picker_alert">Drag an icon to replace a shortcut</string>
+    <string name="sos_quick_launch_cancel">Cancel</string>
+    <string name="sos_quick_launch_finish">Done</string>
+    <string name="sos_quick_launch_empty_slot">Empty shortcut %1$d</string>
+    <string name="forbid_cancel">Cancel</string>
+</resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:background="@drawable/clock_02_cut_bg" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/bg_2" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginLeft="108.0px" android:layout_marginTop="54.0px" android:layout_marginRight="264.0px" android:layout_marginBottom="54.0px" android:src="@drawable/clock_02_cut_bg2" android:scaleType="fitXY" android:layout_centerVertical="true" />
+    <ImageView android:id="@id/bg_3_1" android:layout_width="924.0px" android:layout_height="match_parent" android:layout_marginLeft="105.0px" android:layout_marginTop="72.0px" android:layout_marginBottom="72.0px" android:src="@drawable/clock_02_cut_bg3" android:scaleType="fitXY" android:layout_centerVertical="true" />
+    <ImageView android:id="@id/bg_3_2" android:layout_width="924.0px" android:layout_height="match_parent" android:layout_marginLeft="30.0px" android:src="@drawable/clock_02_cut_bg3" android:scaleType="fitXY" android:layout_toRightOf="@id/bg_3_1" android:layout_alignTop="@id/bg_3_1" android:layout_alignBottom="@id/bg_3_1" android:layout_centerVertical="true" />
+    <FrameLayout android:id="@id/hour_tens_frame" android:layout_width="390.0px" android:layout_height="936.0px" android:layout_marginLeft="177.0px" android:layout_centerVertical="true">
+        <ImageView android:id="@id/hour_tens" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_left" />
+        <ImageView android:id="@id/hour_tens_lower" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_left" />
+    </FrameLayout>
+    <FrameLayout android:id="@id/hour_units_frame" android:layout_width="390.0px" android:layout_height="936.0px" android:layout_toRightOf="@id/hour_tens_frame" android:layout_alignTop="@id/hour_tens_frame" android:layout_centerVertical="true">
+        <ImageView android:id="@id/hour_units" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_right" />
+        <ImageView android:id="@id/hour_units_lower" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_right" />
+    </FrameLayout>
+    <ImageView android:id="@id/colon" android:layout_width="174.0px" android:layout_height="936.0px" android:src="@drawable/clock_02_cut_colon" android:layout_toRightOf="@id/hour_units_frame" android:layout_alignTop="@id/hour_units_frame" android:layout_centerVertical="true" />
+    <FrameLayout android:id="@id/minute_tens_frame" android:layout_width="390.0px" android:layout_height="936.0px" android:layout_toRightOf="@id/colon" android:layout_alignTop="@id/hour_tens_frame" android:layout_centerVertical="true">
+        <ImageView android:id="@id/minute_tens" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_left" />
+        <ImageView android:id="@id/minute_tens_lower" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_left" />
+    </FrameLayout>
+    <FrameLayout android:id="@id/minute_units_frame" android:layout_width="390.0px" android:layout_height="936.0px" android:layout_toRightOf="@id/minute_tens_frame" android:layout_alignTop="@id/hour_tens_frame" android:layout_centerVertical="true">
+        <ImageView android:id="@id/minute_units" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_right" />
+        <ImageView android:id="@id/minute_units_lower" android:visibility="gone" android:layout_width="match_parent" android:layout_height="match_parent" android:src="@drawable/rolling_charging_clock_number_right" />
+    </FrameLayout>
+    <ImageView android:id="@id/rolling_foreground" android:layout_width="match_parent" android:layout_height="match_parent" android:layout_marginLeft="168.0px" android:layout_marginTop="72.0px" android:layout_marginRight="324.0px" android:layout_marginBottom="72.0px" android:src="@drawable/clock_02_number_above" android:scaleType="fitXY" />
+    <ImageView android:id="@id/battery_level" android:layout_width="105.0px" android:layout_height="64.0px" android:layout_marginTop="96.0px" android:layout_marginRight="117.0px" android:src="@drawable/rolling_charging_clock_battery_level" android:layout_alignParentTop="true" android:layout_alignParentRight="true" />
+    <TextView android:textSize="48.0px" android:textStyle="bold" android:textColor="#4cffffff" android:id="@id/battery_percent" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="18.0px" android:layout_below="@id/battery_level" android:layout_alignLeft="@id/battery_level" />
+    <TextView android:textSize="54.0px" android:textStyle="bold" android:textColor="#ffffff" android:id="@id/time_ampm" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="9.0px" android:layout_alignLeft="@id/battery_level" android:layout_alignBottom="@id/minute_units_frame" />
+</RelativeLayout>

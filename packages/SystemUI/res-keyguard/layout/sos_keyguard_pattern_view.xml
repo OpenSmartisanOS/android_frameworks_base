@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- R2 pattern geometry; Android 16 LockPatternView remains the input/authentication contract. -->
+<com.android.keyguard.SosKeyguardPatternView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidprv="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/keyguard_pattern_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/pattern_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layoutDirection="ltr">
+
+        <androidx.constraintlayout.widget.Guideline
+            android:id="@+id/pattern_top_guideline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            androidprv:layout_constraintGuide_percent="0" />
+
+        <com.android.keyguard.SosBiometricAnimationView
+            android:id="@+id/sos_biometric_animation"
+            android:layout_width="150px"
+            android:layout_height="150px"
+            android:layout_marginTop="390px"
+            android:visibility="invisible"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <com.android.keyguard.SosPatternMessageArea
+            android:id="@+id/bouncer_message_area"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="588px"
+            android:accessibilityLiveRegion="polite"
+            android:ellipsize="end"
+            android:fontFamily="@font/smartisan_compact_bold"
+            android:gravity="center"
+            android:maxLines="2"
+            android:text="@string/please_enter_pattern"
+            android:textColor="#ffffffff"
+            android:textSize="48px"
+            android:textStyle="bold"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <ViewStub
+            android:id="@id/keystore_lock_tips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30px"
+            android:layout="@layout/keystore_lock_tips"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toBottomOf="@id/bouncer_message_area" />
+
+        <com.android.systemui.bouncer.ui.BouncerMessageView
+            android:id="@+id/bouncer_message_view"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            android:visibility="invisible"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+
+        <com.android.keyguard.SosLockPatternView
+            android:id="@+id/lockPatternView"
+            android:layout_width="1080px"
+            android:layout_height="1080px"
+            android:layout_marginBottom="369px"
+            android:focusable="false"
+            android:padding="121px"
+            androidprv:layout_constraintBottom_toBottomOf="parent"
+            androidprv:layout_constraintEnd_toEndOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent" />
+
+        <com.android.keyguard.EmergencyButton
+            android:id="@+id/emergency_call_button"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:layout_marginStart="87px"
+            android:layout_marginBottom="159px"
+            android:background="@null"
+            android:gravity="center"
+            android:text="@string/unlock_screen_btn_emergency"
+            android:textColor="#ffffffff"
+            android:textSize="42px"
+            android:textStyle="bold"
+            androidprv:layout_constraintBottom_toBottomOf="parent"
+            androidprv:layout_constraintStart_toStartOf="parent" />
+
+        <TextView
+            android:id="@+id/cancel_button"
+            android:layout_width="312px"
+            android:layout_height="198px"
+            android:layout_marginEnd="87px"
+            android:layout_marginBottom="159px"
+            android:background="@null"
+            android:gravity="center"
+            android:text="@string/cancel"
+            android:textColor="#ffffffff"
+            android:textSize="42px"
+            android:textStyle="bold"
+            androidprv:layout_constraintBottom_toBottomOf="parent"
+            androidprv:layout_constraintEnd_toEndOf="parent" />
+
+        <View
+            android:id="@+id/keyguard_selector_fade_container"
+            android:layout_width="1px"
+            android:layout_height="1px"
+            androidprv:layout_constraintStart_toStartOf="parent"
+            androidprv:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.android.keyguard.SosKeyguardPatternView>

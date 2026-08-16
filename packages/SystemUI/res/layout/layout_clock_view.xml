@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.smartisanos.keyguard.widgets.ClockView android:orientation="horizontal" android:id="@id/clock_view_recording_time" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ImageView android:id="@id/hour_second" android:visibility="gone" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/hour_first" android:visibility="gone" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/hour_colon" android:visibility="gone" android:layout_width="@dimen/record_clock_col_w" android:layout_height="@dimen/record_clock_col_h" android:src="@drawable/colon" />
+    <ImageView android:id="@id/minute_second" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/minute_first" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:layout_width="@dimen/record_clock_col_w" android:layout_height="@dimen/record_clock_col_h" android:src="@drawable/colon" />
+    <ImageView android:id="@id/second_second" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/second_first" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/mill_second_point" android:layout_width="@dimen/record_clock_point_w" android:layout_height="@dimen/record_clock_point_h" android:src="@drawable/point" />
+    <ImageView android:id="@id/mill_second" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+    <ImageView android:id="@id/mill_first" android:layout_width="@dimen/record_clock_num_w" android:layout_height="@dimen/record_clock_num_h" android:src="@drawable/no0" />
+</com.smartisanos.keyguard.widgets.ClockView>

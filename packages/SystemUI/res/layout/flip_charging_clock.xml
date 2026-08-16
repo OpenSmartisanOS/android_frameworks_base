@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:clipChildren="false" android:clipToPadding="false" android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <com.smartisanos.keyguard.widgets.WirelessChargingTime android:orientation="horizontal" android:id="@id/wireless_charging_time" android:paddingLeft="-144.0px" android:clipChildren="false" android:clipToPadding="false" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true">
+        <include android:id="@id/flip_hour" layout="@layout/flip_number" />
+        <include android:id="@id/flip_minute" layout="@layout/flip_number" />
+    </com.smartisanos.keyguard.widgets.WirelessChargingTime>
+    <com.smartisanos.keyguard.widgets.WirelessChargingBattery android:id="@id/wireless_charging_battery" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="20.0dp" android:layout_marginTop="8.0dp" android:layout_toRightOf="@id/wireless_charging_time" android:layout_alignTop="@id/wireless_charging_time" />
+    <TextView android:textSize="@dimen/wireless_charging_text_size" android:textStyle="bold" android:textColor="#66ffffff" android:id="@id/battery_level_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="@dimen/wireless_charging_battery_level_text_topMargin" android:layout_below="@id/wireless_charging_battery" android:layout_alignLeft="@id/wireless_charging_battery" />
+    <TextView android:textSize="@dimen/wireless_charging_text_size" android:textStyle="bold" android:textColor="#ff7f00" android:id="@id/am_pm_text" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="2.0dp" android:layout_alignLeft="@id/wireless_charging_battery" android:layout_alignBottom="@id/wireless_charging_time" />
+</RelativeLayout>

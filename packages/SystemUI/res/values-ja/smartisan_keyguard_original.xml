@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="pinned_hint_opening">アプリを開いています</string>
+    <string name="pinned_hint_show_here">実行中のアプリはここに表示されます</string>
+    <string name="small_tools">ウィジェット</string>
+    <string name="camera">カメラ</string>
+    <string name="notify_keystore_lock">再起動後、全ての機能の利用には携帯電話のアンロックが必要です</string>
+</resources>

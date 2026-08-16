@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="record_clock_num_w">80.0px</dimen>
+    <dimen name="record_clock_num_h">120.0px</dimen>
+    <dimen name="record_clock_col_w">40.0px</dimen>
+    <dimen name="record_clock_col_h">120.0px</dimen>
+    <dimen name="record_clock_point_w">34.0px</dimen>
+    <dimen name="record_clock_point_h">120.0px</dimen>
+    <dimen name="keyguard_album_control_button_w">138.0px</dimen>
+    <dimen name="keyguard_album_control_button_h">138.0px</dimen>
+    <dimen name="record_clock_top">1162.0px</dimen>
+</resources>

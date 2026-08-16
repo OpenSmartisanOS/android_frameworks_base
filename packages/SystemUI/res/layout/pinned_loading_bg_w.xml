@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout android:layout_gravity="center" android:id="@id/pinned_loading_parent" android:layout_width="wrap_content" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <ProgressBar android:id="@id/pinned_loading_progress" android:layout_width="57.599976dp" android:layout_height="57.599976dp" android:indeterminateDrawable="@drawable/pinned_loading_progress_w" android:layout_centerHorizontal="true" />
+    <TextView android:textSize="22.799988sp" android:textColor="#33000000" android:id="@id/pinned_loading_hint_1" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="25.0dp" android:text="@string/pinned_hint_opening" android:layout_below="@id/pinned_loading_progress" android:layout_centerHorizontal="true" />
+    <TextView android:textSize="18.0sp" android:textColor="#1f000000" android:id="@id/pinned_loading_hint_2" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="5.0dp" android:text="@string/pinned_hint_show_here" android:layout_below="@id/pinned_loading_hint_1" android:layout_centerHorizontal="true" />
+</RelativeLayout>

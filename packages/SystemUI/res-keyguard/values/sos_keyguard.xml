@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Unmodified R2 accessibility labels used by the original numeric-key selectors. -->
+    <string name="description_0">0</string>
+    <string name="description_1">1</string>
+    <string name="description_2">2</string>
+    <string name="description_3">3</string>
+    <string name="description_4">4</string>
+    <string name="description_5">5</string>
+    <string name="description_6">6</string>
+    <string name="description_7">7</string>
+    <string name="description_8">8</string>
+    <string name="description_9">9</string>
+    <string name="unlock_screen_btn_emergency">EMG Call</string>
+
+    <!-- R2 visual skin applied only when the Delta keyguard selects a security view. -->
+    <style name="SosKeyguardBouncerTheme" parent="Theme.SystemUI">
+        <item name="android:textColorPrimary">#FFFFFFFF</item>
+        <item name="android:textColorSecondary">#B3FFFFFF</item>
+        <item name="android:colorAccent">#FFFFFFFF</item>
+        <item name="android:fontFamily">@font/smartisan_compact_regular</item>
+        <item name="numPadKeyStyle">@style/SosNumPadKey</item>
+        <item name="passwordStyle">@style/SosPasswordTheme</item>
+    </style>
+
+    <style name="SosNumPadKey" parent="NumPadKey">
+        <item name="android:background">@drawable/sos_numpad_key_background</item>
+        <item name="android:colorControlHighlight">#33FFFFFF</item>
+    </style>
+
+    <style name="SosPasswordTheme" parent="PasswordTheme">
+        <item name="android:textColor">#FFFFFFFF</item>
+        <item name="android:colorAccent">#FFFFFFFF</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+</resources>

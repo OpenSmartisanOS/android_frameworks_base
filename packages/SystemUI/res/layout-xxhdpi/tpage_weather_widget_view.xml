@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <TextView android:textSize="216.0px" android:textColor="#ffffff" android:id="@id/temp_num" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" android:layout_alignParentLeft="true" android:layout_alignParentBottom="true" />
+    <TextView android:textSize="63.0px" android:textStyle="bold" android:textColor="#ffffff" android:id="@id/temp_unit" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="3.0px" android:layout_marginTop="55.0px" android:maxLines="1" android:layout_toRightOf="@id/temp_num" android:layout_alignTop="@id/temp_num" />
+    <LinearLayout android:gravity="bottom" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="40.0px" android:layout_alignParentRight="true" android:layout_alignParentBottom="true">
+        <TextView android:textSize="42.0px" android:textStyle="bold" android:textColor="#ffffff" android:id="@id/location_dot_type" android:layout_width="wrap_content" android:layout_height="wrap_content" android:maxLines="1" />
+        <TextView android:textSize="30.0px" android:textColor="#ffffff" android:id="@id/aqi" android:background="@drawable/weatherbg" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginLeft="20.0px" android:layout_marginBottom="3.0px" />
+    </LinearLayout>
+    <com.smartisanos.keyguard.widgets.tpager.TPageBatteryView android:id="@id/battery" android:layout_width="327.0px" android:layout_height="174.0px" android:layout_marginTop="76.0px" android:layout_alignParentTop="true" android:layout_alignParentRight="true" />
+    <TextView android:textSize="48.0px" android:textColor="#ffffff" android:id="@id/no_data_message" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="40.0px" android:maxWidth="666.0px" android:text="@string/card_weather_no_weather_info" android:layout_alignParentRight="true" android:layout_alignParentBottom="true" />
+</merge>

@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <dimen name="pin_btn_margin_top">45.329987dp</dimen>
+    <dimen name="pin_btn_size">53.329987dp</dimen>
+    <dimen name="pinned_close_btn_margin">8.0dp</dimen>
+    <dimen name="pinned_close_btn_size">30.0dp</dimen>
+    <dimen name="pinned_icon_distance_to_indicator_point">26.0dp</dimen>
+    <dimen name="pinned_icon_selected_translation">41.669983dp</dimen>
+    <dimen name="pinned_icon_size">30.0dp</dimen>
+    <dimen name="pinned_indicator_child_margin">3.0dp</dimen>
+    <dimen name="pinned_indicator_child_size">6.0dp</dimen>
+    <dimen name="pinned_indicator_margin_bottom">33.669983dp</dimen>
+    <dimen name="pinned_indicator_padding_others">38.0dp</dimen>
+    <dimen name="pinned_indicator_padding_top">7.0dp</dimen>
+    <dimen name="pinned_inner_radius">222.0dp</dimen>
+    <dimen name="pinned_middle_radius">292.0dp</dimen>
+    <dimen name="pinned_nail_anim_offset">170.0dp</dimen>
+    <dimen name="pinned_nail_height">40.0dp</dimen>
+    <dimen name="pinned_nail_margin">53.329987dp</dimen>
+    <dimen name="pinned_nail_size">53.0dp</dimen>
+    <dimen name="pinned_nail_width">28.669983dp</dimen>
+    <dimen name="pinned_outer_radius">484.0dp</dimen>
+    <dimen name="pinned_stack_view_corner_radius">14.199982dp</dimen>
+    <dimen name="pinned_stack_view_margin_bottom">45.0dp</dimen>
+    <dimen name="pinned_stack_view_margin_left">27.0dp</dimen>
+    <dimen name="pinned_stack_view_margin_right">27.0dp</dimen>
+    <dimen name="pinned_stack_view_margin_top">72.0dp</dimen>
+</resources>

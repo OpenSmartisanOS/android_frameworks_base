@@ -1,0 +1,31 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="pinned_hint_opening">正在打開應用程式</string>
+    <string name="pinned_hint_show_here">打開的應用程式將在這裡顯示</string>
+    <string name="small_tools">小工具</string>
+    <string name="camera">相機</string>
+    <string name="description_previous_song">上一首</string>
+    <string name="description_play">播放</string>
+    <string name="description_next_song">下一首</string>
+    <string name="description_track_name">歌曲名称</string>
+    <string name="description_singer_name">歌手名称</string>
+    <string name="description_record">录音</string>
+    <string name="description_pause">暂停</string>
+    <string name="description_mark">标记</string>
+    <string name="description_album_name">专辑名称</string>
+    <string name="btn_playmode">单曲循环</string>
+    <string name="description_favorite">喜欢</string>
+    <string name="notify_keystore_lock">重啟後需解鎖手機使用全部功能</string>
+    <string name="please_enter_easy_password">請輸入密碼</string>
+    <string name="easy_password_wrong">密碼錯誤</string>
+    <string name="please_enter_pattern">繪製圖案</string>
+    <string name="sos_original_wrong_pattern">圖案錯誤</string>
+    <plurals name="kg_pattern_try_later">
+        <item quantity="one">%d 秒後再試</item>
+        <item quantity="other">%d 秒後再試</item>
+    </plurals>
+    <plurals name="kg_pattern_try_later_minute">
+        <item quantity="one">%d 分鐘後再試</item>
+        <item quantity="other">%d 分鐘後再試</item>
+    </plurals>
+</resources>
