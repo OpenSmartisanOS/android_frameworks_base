@@ -34,6 +34,7 @@ constructor(
     bigPictureLayoutInflaterFactory: BigPictureLayoutInflaterFactory,
     optimizedLinearLayoutFactory: NotificationOptimizedLinearLayoutFactory,
     notificationViewFlipperFactory: Provider<NotificationViewFlipperFactory>,
+    @Suppress("UNUSED_PARAMETER")
     notificationRowIconViewInflaterFactory: NotificationRowIconViewInflaterFactory,
 ) : NotifRemoteViewsFactoryContainer {
     override val factories: Set<NotifRemoteViewsFactory> = buildSet {
@@ -43,8 +44,5 @@ constructor(
         }
         add(optimizedLinearLayoutFactory)
         add(notificationViewFlipperFactory.get())
-        if (android.app.Flags.notificationsRedesignAppIcons()) {
-            add(notificationRowIconViewInflaterFactory)
-        }
     }
 }

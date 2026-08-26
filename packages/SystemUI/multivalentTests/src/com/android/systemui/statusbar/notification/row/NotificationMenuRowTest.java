@@ -124,8 +124,10 @@ public class NotificationMenuRowTest extends LeakCheckedTest {
         row.createMenu(mRow);
 
         ViewGroup container = (ViewGroup) row.getMenuView();
-        // Clear menu
-        assertEquals(0, container.getChildCount());
+        assertEquals(1, container.getChildCount());
+        assertNotNull(row.getLongpressMenuItem(mContext));
+        assertNull(row.getSnoozeMenuItem(mContext));
+        assertNull(row.getFeedbackMenuItem(mContext));
     }
 
     @Test

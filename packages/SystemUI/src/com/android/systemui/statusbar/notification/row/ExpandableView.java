@@ -644,6 +644,11 @@ public abstract class ExpandableView extends FrameLayout implements Dumpable, Ro
         updateClipping();
     }
 
+    /** Whether this view currently clips its drawing to the animated actual height. */
+    public boolean isClipToActualHeight() {
+        return mClipToActualHeight;
+    }
+
     public boolean willBeGone() {
         return mWillBeGone;
     }

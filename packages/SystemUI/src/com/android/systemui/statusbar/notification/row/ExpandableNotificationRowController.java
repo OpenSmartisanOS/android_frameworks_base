@@ -20,7 +20,6 @@ import static com.android.systemui.Dependency.ALLOW_NOTIFICATION_LONG_PRESS_NAME
 import static com.android.systemui.statusbar.NotificationRemoteInputManager.ENABLE_REMOTE_INPUT;
 import static com.android.systemui.statusbar.StatusBarState.KEYGUARD;
 import static com.android.systemui.statusbar.notification.NotificationUtils.logKey;
-import static com.android.systemui.util.kotlin.JavaAdapterKt.collectFlow;
 
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -40,7 +39,6 @@ import androidx.annotation.VisibleForTesting;
 import com.android.internal.logging.MetricsLogger;
 import com.android.internal.logging.UiEventLogger;
 import com.android.internal.statusbar.IStatusBarService;
-import com.android.systemui.Flags;
 import com.android.systemui.flags.FeatureFlagsClassic;
 import com.android.systemui.plugins.FalsingManager;
 import com.android.systemui.plugins.PluginManager;
@@ -418,11 +416,8 @@ public class ExpandableNotificationRowController implements NotifViewController 
                     mMSDLPlayer.playToken(MSDLToken.LONG_PRESS, null);
                 }
 
-                if (mView.isSummaryWithChildren() && !mView.isBundle()) {
-                    mView.expandNotification();
-                    return true;
-                }
-                return mNotificationGutsManager.openGuts(v, x, y, item);
+                return NotificationBlockMenuRow.isBlockItem(item)
+                        && NotificationBlockDialogController.show(mView);
             });
         }
         if (ENABLE_REMOTE_INPUT) {
@@ -460,10 +455,6 @@ public class ExpandableNotificationRowController implements NotifViewController 
             }
         });
 
-        if (Flags.notificationRowTransparency()) {
-            collectFlow(mView, mWindowRootViewBlurInteractor.isBlurCurrentlySupported(),
-                    mView::setIsBlurSupported);
-        }
     }
 
     private final StatusBarStateController.StateListener mStatusBarStateListener =

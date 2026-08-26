@@ -40,12 +40,14 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.graphics.ColorUtils;
 import com.android.internal.util.ContrastColorUtil;
 import com.android.internal.widget.CachingIconView;
+import com.android.internal.widget.MessagingLayout;
 import com.android.systemui.statusbar.CrossFadeHelper;
 import com.android.systemui.statusbar.TransformableView;
 import com.android.systemui.statusbar.notification.FeedbackIcon;
 import com.android.systemui.statusbar.notification.NotificationFadeAware;
 import com.android.systemui.statusbar.notification.TransformState;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
+import com.android.systemui.statusbar.notification.row.NotificationCustomViewContainer;
 import com.android.systemui.statusbar.notification.shared.NotificationBundleUi;
 
 /**
@@ -68,7 +70,7 @@ public abstract class NotificationViewWrapper implements TransformableView {
                 return new NotificationBigTextTemplateViewWrapper(ctx, v, row);
             } else if ("media".equals(v.getTag()) || "bigMediaNarrow".equals(v.getTag())) {
                 return new NotificationMediaTemplateViewWrapper(ctx, v, row);
-            } else if ("messaging".equals(v.getTag())) {
+            } else if ("messaging".equals(v.getTag()) && v instanceof MessagingLayout) {
                 return new NotificationMessagingTemplateViewWrapper(ctx, v, row);
             } else if ("conversation".equals(v.getTag())) {
                 return new NotificationConversationTemplateViewWrapper(ctx, v, row);
@@ -93,6 +95,8 @@ public abstract class NotificationViewWrapper implements TransformableView {
                 return new NotificationDecoratedCustomViewWrapper(ctx, v, row);
             }
             return new NotificationTemplateViewWrapper(ctx, v, row);
+        } else if (v instanceof NotificationCustomViewContainer) {
+            return new NotificationCustomViewWrapper(ctx, v, row);
         } else if (v instanceof NotificationHeaderView) {
             return new NotificationHeaderViewWrapper(ctx, v, row);
         } else if (v instanceof ComposeView && row.isBundle()) {

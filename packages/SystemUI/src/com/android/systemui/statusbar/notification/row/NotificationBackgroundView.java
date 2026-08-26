@@ -16,14 +16,12 @@
 
 package com.android.systemui.statusbar.notification.row;
 
-import static com.android.systemui.Flags.notificationRowTransparency;
 import static com.android.systemui.util.ColorUtilKt.hexColorString;
 
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Path;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
@@ -39,9 +37,7 @@ import androidx.annotation.Nullable;
 
 import com.android.internal.util.ContrastColorUtil;
 import com.android.systemui.Dumpable;
-import com.android.systemui.common.shared.colors.SurfaceEffectColors;
 import com.android.systemui.res.R;
-import com.android.systemui.statusbar.notification.shared.NotificationAddXOnHoverToDismiss;
 import com.android.systemui.util.DrawableDumpKt;
 
 import java.io.PrintWriter;
@@ -60,7 +56,6 @@ public class NotificationBackgroundView extends View implements Dumpable,
     private int mBottomOverlap;
     private int mClipBottomAmount;
     private int mTintColor;
-    private boolean mSosPressed;
     @Nullable private Integer mRippleColor;
     private final float[] mCornerRadii = new float[8];
     private final float[] mFocusOverlayCornerRadii = new float[8];
@@ -76,12 +71,6 @@ public class NotificationBackgroundView extends View implements Dumpable,
     private final ColorStateList mLightColoredStatefulColors;
     private final ColorStateList mDarkColoredStatefulColors;
     private int mNormalColor;
-    private final int convexR = 9;
-    private final int concaveR = 22;
-
-    // True only if the dismiss button is visible.
-    private boolean mDrawDismissButtonCutout = false;
-
     public NotificationBackgroundView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mDontModifyCorners = getResources().getBoolean(R.bool.config_clipNotificationsToOutline);
@@ -89,25 +78,13 @@ public class NotificationBackgroundView extends View implements Dumpable,
                 R.color.notification_state_color_light);
         mDarkColoredStatefulColors = getResources().getColorStateList(
                 R.color.notification_state_color_dark);
-        if (notificationRowTransparency()) {
-            mNormalColor = SurfaceEffectColors.surfaceEffect1(getContext());
-        } else  {
-            mNormalColor = mContext.getColor(
-                    com.android.internal.R.color.materialColorSurfaceContainerHigh);
-        }
+        mNormalColor = Color.WHITE;
         mFocusOverlayStroke = getResources().getDimension(R.dimen.notification_focus_stroke_width);
     }
 
     @Override
     public void onTargetVisibilityChanged(boolean targetVisible) {
-        if (NotificationAddXOnHoverToDismiss.isUnexpectedlyInLegacyMode()) {
-            return;
-        }
-
-        if (mDrawDismissButtonCutout != targetVisible) {
-            mDrawDismissButtonCutout = targetVisible;
-            invalidate();
-        }
+        // R2 rows never expose the Android hover-dismiss button or carve its circular cutout.
     }
 
     @Override
@@ -121,81 +98,9 @@ public class NotificationBackgroundView extends View implements Dumpable,
                         getActualHeight() - clipBottomAmount);
             }
 
-            if (!NotificationAddXOnHoverToDismiss.isEnabled()) {
-                draw(canvas, mBackground);
-                canvas.restore();
-                return;
-            }
-
-            Rect backgroundBounds = null;
-            if (mBackground != null || mDrawDismissButtonCutout) {
-                backgroundBounds = calculateBackgroundBounds();
-            }
-
-            if (mDrawDismissButtonCutout) {
-                canvas.clipPath(calculateDismissButtonCutoutPath(backgroundBounds));
-            }
-
-            if (mBackground != null) {
-                mBackground.setBounds(backgroundBounds);
-                mBackground.draw(canvas);
-            }
-
+            draw(canvas, mBackground);
             canvas.restore();
         }
-    }
-
-    private Path calculateDismissButtonCutoutPath(Rect backgroundBounds) {
-        // TODO(b/365585705): Adapt to RTL after the UX design is finalized.
-
-        NotificationAddXOnHoverToDismiss.isUnexpectedlyInLegacyMode();
-
-        Path path = new Path();
-
-        final int left = backgroundBounds.left;
-        final int right = backgroundBounds.right;
-        final int top = backgroundBounds.top;
-        final int bottom = backgroundBounds.bottom;
-
-        // Generate the path clockwise from the left-top corner.
-        path.moveTo(left, top);
-        path.lineTo(right - 2 * convexR - concaveR, top);
-        path.quadTo(right - convexR - concaveR, top, right - convexR - concaveR,
-                top + convexR);
-        path.quadTo(right - convexR - concaveR, top + convexR + concaveR, right - convexR,
-                top + convexR + concaveR);
-        path.quadTo(right, top + convexR + concaveR, right, top + 2 * convexR + concaveR);
-        path.lineTo(right, bottom);
-        path.lineTo(left, bottom);
-        path.lineTo(left, top);
-
-        return path;
-    }
-
-    private Rect calculateBackgroundBounds() {
-        NotificationAddXOnHoverToDismiss.isUnexpectedlyInLegacyMode();
-
-        int top = 0;
-        int bottom = getActualHeight();
-        if (mBottomIsRounded
-                && mBottomAmountClips
-                && !mExpandAnimationRunning) {
-            bottom -= Math.max(mClipBottomAmount, mBottomOverlap);
-        }
-        final boolean alignedToRight = isAlignedToRight();
-        final int width = getWidth();
-        final int actualWidth = getActualWidth();
-
-        int left = alignedToRight ? width - actualWidth : 0;
-        int right = alignedToRight ? width : actualWidth;
-
-        if (mExpandAnimationRunning) {
-            // Horizontally center this background view inside of the container
-            left = (int) ((width - actualWidth) / 2.0f);
-            right = (int) (left + actualWidth);
-        }
-
-        return new Rect(left, top, right, bottom);
     }
 
     /**
@@ -208,8 +113,6 @@ public class NotificationBackgroundView extends View implements Dumpable,
     }
 
     private void draw(Canvas canvas, Drawable drawable) {
-        NotificationAddXOnHoverToDismiss.assertInLegacyMode();
-
         if (drawable != null) {
             int top = 0;
             int bottom = getActualHeight();
@@ -281,20 +184,8 @@ public class NotificationBackgroundView extends View implements Dumpable,
             return;
         }
         mBackground.mutate();
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            mBackground.setCallback(this);
-            updateSosColorFilter();
-            invalidate();
-            return;
-        }
-        if (mBackground != null) {
-            mBackground.setCallback(this);
-            setTint(mTintColor);
-        }
-        if (mBackground instanceof RippleDrawable) {
-            ((RippleDrawable) mBackground).setForceSoftware(true);
-        }
-        updateBackgroundRadii();
+        mBackground.setCallback(this);
+        updateColorFilter();
         invalidate();
     }
 
@@ -312,22 +203,8 @@ public class NotificationBackgroundView extends View implements Dumpable,
     }
 
     public void setTint(int tintColor) {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            mTintColor = tintColor;
-            updateSosColorFilter();
-            invalidate();
-            return;
-        }
-        Drawable baseLayer = getBaseBackgroundLayer();
-        if (notificationRowTransparency()) {
-            ((GradientDrawable) baseLayer.mutate()).setColor(tintColor);
-
-        } else {
-            baseLayer.mutate().setTintMode(PorterDuff.Mode.SRC_ATOP);
-            baseLayer.setTint(tintColor);
-        }
         mTintColor = tintColor;
-        setStatefulColors();
+        updateColorFilter();
         invalidate();
     }
 
@@ -401,48 +278,21 @@ public class NotificationBackgroundView extends View implements Dumpable,
     }
 
     public void setState(int[] drawableState) {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            boolean pressed = false;
-            for (int state : drawableState) {
-                if (state == android.R.attr.state_pressed) {
-                    pressed = true;
-                    break;
-                }
-            }
-            if (mSosPressed != pressed) {
-                mSosPressed = pressed;
-                updateSosColorFilter();
-                invalidate();
-            }
-        }
         if (mBackground != null && mBackground.isStateful()) {
             mBackground.setState(drawableState);
         }
     }
 
-    private void updateSosColorFilter() {
+    private void updateColorFilter() {
         if (mBackground == null) {
             return;
         }
         if (mTintColor == 0 || mTintColor == mNormalColor) {
-            if (mSosPressed) {
-                mBackground.setColorFilter(
-                        new PorterDuffColorFilter(0x14000000, PorterDuff.Mode.SRC_ATOP));
-            } else {
-                mBackground.clearColorFilter();
-            }
+            mBackground.clearColorFilter();
             return;
         }
-        final int color =
-                mSosPressed
-                        ? Color.argb(
-                                Color.alpha(mTintColor),
-                                Math.round(Color.red(mTintColor) * 0.92f),
-                                Math.round(Color.green(mTintColor) * 0.92f),
-                                Math.round(Color.blue(mTintColor) * 0.92f))
-                        : mTintColor;
         mBackground.setColorFilter(
-                new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP));
+                new PorterDuffColorFilter(mTintColor, PorterDuff.Mode.SRC_ATOP));
     }
 
     public void setRippleColor(int color) {
@@ -467,22 +317,7 @@ public class NotificationBackgroundView extends View implements Dumpable,
      * Sets the current top and bottom radius for this background.
      */
     public void setRadius(float topRoundness, float bottomRoundness) {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
-        if (topRoundness == mCornerRadii[0] && bottomRoundness == mCornerRadii[4]) {
-            return;
-        }
-        mBottomIsRounded = bottomRoundness != 0.0f;
-        mCornerRadii[0] = topRoundness;
-        mCornerRadii[1] = topRoundness;
-        mCornerRadii[2] = topRoundness;
-        mCornerRadii[3] = topRoundness;
-        mCornerRadii[4] = bottomRoundness;
-        mCornerRadii[5] = bottomRoundness;
-        mCornerRadii[6] = bottomRoundness;
-        mCornerRadii[7] = bottomRoundness;
-        updateBackgroundRadii();
+        // R2 card corners are encoded in the 9-patch; platform roundness must not distort them.
     }
 
     public void setBottomAmountClips(boolean clips) {

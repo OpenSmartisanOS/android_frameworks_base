@@ -17,13 +17,11 @@
 package com.android.systemui.statusbar.notification.row.icon
 
 import android.annotation.WorkerThread
-import android.app.Flags
 import android.app.Notification
 import android.content.Context
 import android.content.pm.ApplicationInfo
 import android.os.UserManager
 import android.service.notification.StatusBarNotification
-import android.util.Log
 import com.android.systemui.Dumpable
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dump.DumpManager
@@ -35,7 +33,6 @@ import dagger.Module
 import dagger.Provides
 import java.io.PrintWriter
 import javax.inject.Inject
-import javax.inject.Provider
 
 /**
  * A provider used to cache and fetch information about which icon should be displayed by
@@ -127,31 +124,10 @@ constructor(
     }
 }
 
-class NoOpIconStyleProvider : NotificationIconStyleProvider {
-    companion object {
-        const val TAG = "NoOpIconStyleProvider"
-    }
-
-    override fun shouldShowAppIcon(notification: StatusBarNotification, context: Context): Boolean {
-        Log.wtf(TAG, "NoOpIconStyleProvider should not be used anywhere.")
-        return true
-    }
-
-    override fun purgeCache(wantedPackages: Collection<String>) {
-        Log.wtf(TAG, "NoOpIconStyleProvider should not be used anywhere.")
-    }
-}
-
 @Module
 class NotificationIconStyleProviderModule {
     @Provides
     @SysUISingleton
-    fun provideImpl(
-        realImpl: Provider<NotificationIconStyleProviderImpl>
-    ): NotificationIconStyleProvider =
-        if (Flags.notificationsRedesignAppIcons()) {
-            realImpl.get()
-        } else {
-            NoOpIconStyleProvider()
-        }
+    fun provideImpl(realImpl: NotificationIconStyleProviderImpl): NotificationIconStyleProvider =
+        realImpl
 }

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NotificationHeaderView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@*android:id/notification_header"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/sos_notification_group_header_height"
+    android:clipChildren="false"
+    android:orientation="horizontal">
+
+    <com.android.internal.widget.CachingIconView
+        android:id="@android:id/icon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="12dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside" />
+
+    <NotificationTopLineView
+        android:id="@*android:id/notification_top_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentStart="true"
+        android:layout_alignWithParentIfMissing="true"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="38dp"
+        android:layout_toStartOf="@*android:id/expand_button">
+
+        <TextView
+            android:id="@android:id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:singleLine="true"
+            android:textColor="#99000000"
+            android:textSize="13.5dp" />
+
+        <!-- NotificationTopLineView keeps this target even when SOS hides assistant feedback. -->
+        <ImageButton
+            android:id="@*android:id/feedback"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@null"
+            android:visibility="gone" />
+
+    </NotificationTopLineView>
+
+    <TextView
+        android:id="@+id/sos_notification_group_count_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="31dp"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:singleLine="true"
+        android:textColor="#66000000"
+        android:textSize="12.5dp" />
+
+    <TextView
+        android:id="@+id/sos_notification_group_other_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/sos_notification_group_count_desc"
+        android:layout_marginStart="3dp"
+        android:layout_toEndOf="@id/sos_notification_group_count_desc"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:singleLine="true"
+        android:textColor="#66000000"
+        android:textSize="12.5dp" />
+
+    <FrameLayout
+        android:id="@*android:id/alternate_expand_target"
+        android:layout_width="0dp"
+        android:layout_height="0dp" />
+
+    <include
+        layout="@*android:layout/smartisan_notification_expand_button"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="7.2dp"
+        android:layout_marginTop="5.2dp"
+        android:layout_marginEnd="7.2dp" />
+
+    <ImageView
+        android:id="@*android:id/profile_badge"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+</NotificationHeaderView>

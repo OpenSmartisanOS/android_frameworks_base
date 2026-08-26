@@ -27,7 +27,6 @@ import com.android.settingslib.notification.data.repository.ZenModeRepositoryImp
 import com.android.settingslib.notification.domain.interactor.NotificationsSoundPolicyInteractor;
 import com.android.settingslib.notification.modes.ZenModesBackend;
 import com.android.systemui.CoreStartable;
-import com.android.systemui.Flags;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.qualifiers.Application;
 import com.android.systemui.dagger.qualifiers.Background;
@@ -91,7 +90,6 @@ import com.android.systemui.statusbar.notification.row.NotificationRebindingTrac
 import com.android.systemui.statusbar.notification.row.OnUserInteractionCallback;
 import com.android.systemui.statusbar.notification.row.ui.viewmodel.ActivatableNotificationViewModelModule;
 import com.android.systemui.statusbar.notification.stack.MagneticNotificationRowManager;
-import com.android.systemui.statusbar.notification.stack.MagneticNotificationRowManagerImpl;
 import com.android.systemui.statusbar.notification.stack.NotificationListContainer;
 import com.android.systemui.statusbar.notification.stack.NotificationSectionsManager;
 import com.android.systemui.statusbar.notification.stack.NotificationStackScrollLayoutController;
@@ -342,19 +340,11 @@ public interface NotificationsModule {
     @SysUISingleton
     ShowPromotedNotificationsOnAOD provideShowPromotedNotificationsOnAOD(
             ShowPromotedNotificationsOnAODImpl impl);
-    /**
-     * Provide an implementation of {@link MagneticNotificationRowManager} based on its flag.
-     */
+    /** R2 uses the deterministic SwipeHelper clock; the magnetic spring path is never installed. */
     @Provides
     @SysUISingleton
-    static MagneticNotificationRowManager provideMagneticNotificationRowManager(
-            Provider<MagneticNotificationRowManagerImpl> implProvider
-    ) {
-        if (Flags.magneticNotificationSwipes()) {
-            return implProvider.get();
-        } else {
-            return MagneticNotificationRowManager.getEmpty();
-        }
+    static MagneticNotificationRowManager provideMagneticNotificationRowManager() {
+        return MagneticNotificationRowManager.getEmpty();
     }
 
     /** Provides an instance of {@link EntryAdapterFactory} */

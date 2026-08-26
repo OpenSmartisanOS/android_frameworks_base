@@ -18,16 +18,12 @@ package com.android.systemui.statusbar.notification.row.icon
 
 import android.annotation.WorkerThread
 import android.app.ActivityManager
-import android.app.Flags
-import android.app.Flags.notificationsRedesignThemedAppIcons
 import android.content.Context
 import android.content.pm.PackageManager.MATCH_UNINSTALLED_PACKAGES
 import android.content.pm.PackageManager.NameNotFoundException
 import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
-import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.android.internal.R
 import com.android.launcher3.icons.BaseIconFactory
@@ -47,7 +43,6 @@ import dagger.Module
 import dagger.Provides
 import java.io.PrintWriter
 import javax.inject.Inject
-import javax.inject.Provider
 
 /** A provider used to cache and fetch app icons used by notifications. */
 interface AppIconProvider {
@@ -117,25 +112,9 @@ constructor(
                 context = sysuiContext,
                 fullResIconDpi = densityDpi,
                 iconBitmapSize = iconSize,
-                // Initialize the controller so that we can support themed icons.
-                themeController =
-                    if (notificationsRedesignThemedAppIcons())
-                        MonoIconThemeController(
-                            shouldForceThemeIcon = true,
-                            colorProvider = { ctx ->
-                                val res = ctx.resources
-                                intArrayOf(
-                                    /* background */ res.getColor(R.color.materialColorPrimary),
-                                    /* icon */ res.getColor(
-                                        R.color.materialColorSurfaceContainerHigh
-                                    ),
-                                    /* adaptive background */ res.getColor(
-                                        R.color.materialColorPrimary
-                                    ),
-                                )
-                            },
-                        )
-                    else null,
+                // R2 preserves the application's original icon colors; Monet theming is never
+                // applied to notification app icons.
+                themeController = null,
             )
 
     private val skeletonIconFactory: BaseIconFactory
@@ -174,7 +153,7 @@ constructor(
             userHandle = userHandle,
             drawableInstanceKey = instanceKey,
             createDrawable = {
-                it.createIconDrawable(themed = notificationsRedesignThemedAppIcons())
+                it.createIconDrawable(themed = false)
             },
         ) {
             fetchAppIconBitmapInfo(
@@ -275,38 +254,9 @@ constructor(
     }
 }
 
-class NoOpIconProvider : AppIconProvider {
-    companion object {
-        const val TAG = "NoOpIconProvider"
-    }
-
-    override fun getOrFetchAppIcon(
-        packageName: String,
-        userHandle: UserHandle,
-        instanceKey: String,
-    ): Drawable {
-        Log.wtf(TAG, "NoOpIconProvider should not be used anywhere.")
-        return ColorDrawable(Color.WHITE)
-    }
-
-    override fun getOrFetchSkeletonAppIcon(packageName: String, userHandle: UserHandle): Drawable {
-        Log.wtf(TAG, "NoOpIconProvider should not be used anywhere.")
-        return ColorDrawable(Color.BLACK)
-    }
-
-    override fun purgeCache(wantedPackages: Collection<String>) {
-        Log.wtf(TAG, "NoOpIconProvider should not be used anywhere.")
-    }
-}
-
 @Module
 class AppIconProviderModule {
     @Provides
     @SysUISingleton
-    fun provideImpl(realImpl: Provider<AppIconProviderImpl>): AppIconProvider =
-        if (Flags.notificationsRedesignAppIcons()) {
-            realImpl.get()
-        } else {
-            NoOpIconProvider()
-        }
+    fun provideImpl(realImpl: AppIconProviderImpl): AppIconProvider = realImpl
 }

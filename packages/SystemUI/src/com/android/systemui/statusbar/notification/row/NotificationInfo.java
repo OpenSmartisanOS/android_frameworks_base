@@ -16,11 +16,12 @@
 
 package com.android.systemui.statusbar.notification.row;
 
-import static android.app.Flags.notificationsRedesignTemplates;
 import static android.app.Notification.EXTRA_BUILDER_APPLICATION_INFO;
 import static android.app.NotificationChannel.SYSTEM_RESERVED_IDS;
 import static android.app.NotificationManager.IMPORTANCE_DEFAULT;
 import static android.app.NotificationManager.IMPORTANCE_LOW;
+import static android.app.NotificationManager.IMPORTANCE_MAX;
+import static android.app.NotificationManager.IMPORTANCE_NONE;
 import static android.app.NotificationManager.IMPORTANCE_UNSPECIFIED;
 import static android.service.notification.Adjustment.KEY_CONTEXTUAL_ACTIONS;
 import static android.service.notification.Adjustment.KEY_SUMMARIZATION;
@@ -50,7 +51,7 @@ import android.graphics.drawable.Drawable;
 import android.metrics.LogMaker;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.os.UserHandle;
+import android.provider.Settings;
 import android.service.notification.NotificationAssistantService;
 import android.service.notification.NotificationListenerService;
 import android.service.notification.StatusBarNotification;
@@ -69,6 +70,8 @@ import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RadioButton;
+import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.android.internal.annotations.VisibleForTesting;
@@ -100,6 +103,12 @@ public class NotificationInfo extends LinearLayout implements NotificationGuts.G
     private TextView mSilentDescriptionView;
     private TextView mAutomaticDescriptionView;
 
+    private RadioButton mSilent;
+    private RadioButton mBlock;
+    private RadioButton mReset;
+    private SeekBar mImportanceSeekBar;
+    private TextView mImportanceTitle;
+    private TextView mImportanceSummary;
     protected INotificationManager mINotificationManager;
     private AppIconProvider mAppIconProvider;
     private NotificationIconStyleProvider mIconStyleProvider;
@@ -263,69 +272,121 @@ public class NotificationInfo extends LinearLayout implements NotificationGuts.G
         mIsAutomaticChosen = getAlertingBehavior() == BEHAVIOR_AUTOMATIC;
 
         bindHeader();
-        bindChannelDetails();
-
         bindInlineControls();
 
         logUiEvent(NotificationControlsEvent.NOTIFICATION_CONTROLS_OPEN);
         mMetricsLogger.write(notificationControlsLogMaker());
     }
 
+    /** Binds the Android 11 Smartisan controls while retaining the channel-level A16 backend. */
     protected void bindInlineControls() {
-        if (mIsSystemRegisteredCall) {
-            findViewById(R.id.non_configurable_call_text).setVisibility(VISIBLE);
-            findViewById(R.id.non_configurable_text).setVisibility(GONE);
-            findViewById(R.id.non_configurable_multichannel_text).setVisibility(GONE);
-            findViewById(R.id.interruptiveness_settings).setVisibility(GONE);
-            ((TextView) findViewById(R.id.done)).setText(R.string.inline_done_button);
-            findViewById(R.id.turn_off_notifications).setVisibility(GONE);
-        } else if (mIsNonblockable) {
-            findViewById(R.id.non_configurable_text).setVisibility(VISIBLE);
-            findViewById(R.id.non_configurable_call_text).setVisibility(GONE);
-            findViewById(R.id.non_configurable_multichannel_text).setVisibility(GONE);
-            findViewById(R.id.interruptiveness_settings).setVisibility(GONE);
-            ((TextView) findViewById(R.id.done)).setText(R.string.inline_done_button);
-            findViewById(R.id.turn_off_notifications).setVisibility(GONE);
-        } else {
-            findViewById(R.id.non_configurable_call_text).setVisibility(GONE);
-            findViewById(R.id.non_configurable_text).setVisibility(GONE);
-            findViewById(R.id.non_configurable_multichannel_text).setVisibility(GONE);
-            findViewById(R.id.interruptiveness_settings).setVisibility(VISIBLE);
-        }
+        mSilent = findViewById(R.id.sos_silent_importance);
+        mBlock = findViewById(R.id.sos_block_importance);
+        mReset = findViewById(R.id.sos_reset_importance);
+        mImportanceSeekBar = findViewById(R.id.sos_importance_seekbar);
+        mImportanceTitle = findViewById(R.id.sos_importance_title);
+        mImportanceSummary = findViewById(R.id.sos_importance_summary);
 
-        View turnOffButton = findViewById(R.id.turn_off_notifications);
-        turnOffButton.setOnClickListener(
-                getTurnOffNotificationsClickListener(mSingleNotificationChannel));
-        turnOffButton.setVisibility(turnOffButton.hasOnClickListeners() && !mIsNonblockable
-                ? VISIBLE : GONE);
+        final View cantChange = findViewById(R.id.sos_cant_change_importance);
+        final View importanceControls = findViewById(R.id.sos_importance_controls);
+        final View importanceButtons = findViewById(R.id.sos_importance_buttons);
+        final View importanceSlider = findViewById(R.id.sos_importance_slider);
+        final boolean canChange = !mIsNonblockable && !mIsSystemRegisteredCall;
+        cantChange.setVisibility(canChange ? GONE : VISIBLE);
+        importanceControls.setVisibility(canChange ? VISIBLE : GONE);
+        // R2 exposed the full 0..5 control behind the same tuner key and otherwise showed the
+        // compact silent/block/automatic radios. Both presentations commit through the modern
+        // channel API below.
+        final boolean showSlider = Settings.Secure.getInt(getContext().getContentResolver(),
+                "show_importance_slider", 0) == 1;
+        importanceButtons.setVisibility(showSlider ? GONE : VISIBLE);
+        importanceSlider.setVisibility(showSlider ? VISIBLE : GONE);
 
-        View dismissButton = findViewById(R.id.inline_dismiss);
-        dismissButton.setOnClickListener(mOnCloseClickListener);
-        dismissButton.setVisibility(dismissButton.hasOnClickListeners() && mIsDismissable
-                ? VISIBLE : GONE);
+        mSilent.setOnClickListener(v -> selectImportance(IMPORTANCE_LOW, false));
+        mBlock.setOnClickListener(v -> selectImportance(IMPORTANCE_NONE, false));
+        mReset.setOnClickListener(v -> selectImportance(
+                mStartingChannelImportance, true));
+        mImportanceSeekBar.setMax(IMPORTANCE_MAX);
+        mImportanceSeekBar.setMin(IMPORTANCE_NONE);
+        mImportanceSeekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                updateImportanceDescription(progress, false);
+                if (fromUser) {
+                    mChosenImportance = progress;
+                    mIsAutomaticChosen = false;
+                    mReset.setChecked(false);
+                    mSilent.setChecked(progress == IMPORTANCE_LOW);
+                    mBlock.setChecked(progress == IMPORTANCE_NONE);
+                    mGutsContainer.resetFalsingCheck();
+                }
+            }
 
-        View done = findViewById(R.id.done);
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                mGutsContainer.resetFalsingCheck();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+
+        final boolean automatic = !mSingleNotificationChannel.hasUserSetImportance();
+        selectImportance(mStartingChannelImportance, automatic);
+        findViewById(R.id.sos_auto_importance).setOnClickListener(v ->
+                selectImportance(mStartingChannelImportance, !mIsAutomaticChosen));
+
+        final View done = findViewById(R.id.done);
         done.setOnClickListener(mOnDismissSettings);
         done.setAccessibilityDelegate(mGutsContainer.getAccessibilityDelegate());
+    }
 
-        View silent = findViewById(R.id.silence);
-        View alert = findViewById(R.id.alert);
-        silent.setOnClickListener(mOnSilent);
-        alert.setOnClickListener(mOnAlert);
+    private void selectImportance(int importance, boolean automatic) {
+        final int bounded = Math.max(IMPORTANCE_NONE, Math.min(IMPORTANCE_MAX, importance));
+        mIsAutomaticChosen = automatic;
+        mChosenImportance = bounded;
+        mImportanceSeekBar.setEnabled(!automatic);
+        mImportanceSeekBar.setAlpha(automatic ? 0.5f : 1f);
+        mImportanceSeekBar.setProgress(bounded);
+        mReset.setChecked(automatic || (bounded != IMPORTANCE_LOW
+                && bounded != IMPORTANCE_NONE));
+        mSilent.setChecked(!automatic && bounded == IMPORTANCE_LOW);
+        mBlock.setChecked(!automatic && bounded == IMPORTANCE_NONE);
+        updateImportanceDescription(bounded, automatic);
+        mGutsContainer.resetFalsingCheck();
+    }
 
-        View automatic = findViewById(R.id.automatic);
-        if (mShowAutomaticSetting) {
-            mAutomaticDescriptionView.setText(Html.fromHtml(mContext.getText(
-                            mAssistantFeedbackController.getInlineDescriptionResource(mRanking))
-                    .toString()));
-            automatic.setVisibility(VISIBLE);
-            automatic.setOnClickListener(mOnAutomatic);
-        } else {
-            automatic.setVisibility(GONE);
+    private void updateImportanceDescription(int importance, boolean automatic) {
+        if (automatic) {
+            mImportanceTitle.setText(R.string.sos_notification_importance_automatic_title);
+            mImportanceSummary.setText(R.string.sos_notification_importance_automatic_summary);
+            return;
         }
-
-        int behavior = getAlertingBehavior();
-        applyAlertingBehavior(behavior, false /* userTriggered */);
+        switch (importance) {
+            case IMPORTANCE_NONE:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_0);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_0);
+                break;
+            case 1:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_1);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_1);
+                break;
+            case IMPORTANCE_LOW:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_2);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_2);
+                break;
+            case IMPORTANCE_DEFAULT:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_3);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_3);
+                break;
+            case 4:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_4);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_4);
+                break;
+            default:
+                mImportanceTitle.setText(R.string.sos_notification_importance_level_5);
+                mImportanceSummary.setText(R.string.sos_notification_importance_summary_5);
+        }
     }
 
     @SuppressLint("WrongThread")
@@ -336,28 +397,16 @@ public class NotificationInfo extends LinearLayout implements NotificationGuts.G
         ApplicationInfo info =
                 mSbn.getNotification().extras.getParcelable(EXTRA_BUILDER_APPLICATION_INFO,
                         ApplicationInfo.class);
-        if (notificationsRedesignTemplates()) {
-            if (info != null) {
-                try {
-                    mAppName = String.valueOf(mPm.getApplicationLabel(info));
-                    // The app icon is likely already in the cache, so let's use it
-                    mPkgIcon = mAppIconProvider.getOrFetchAppIcon(info.packageName,
-                            UserHandle.of(mSbn.getNormalizedUserId()), /* instanceKey= */ "LEGACY");
-                } catch (Exception ignored) {
-                }
+        if (info != null) {
+            try {
+                mAppName = String.valueOf(mPm.getApplicationLabel(info));
+                mPkgIcon = mPm.getApplicationIcon(info);
+            } catch (Exception ignored) {
             }
-        } else {
-            if (info != null) {
-                try {
-                    mAppName = String.valueOf(mPm.getApplicationLabel(info));
-                    mPkgIcon = mPm.getApplicationIcon(info);
-                } catch (Exception ignored) {
-                }
-            }
-            if (mPkgIcon == null) {
-                // app is gone, just show package name and generic icon
-                mPkgIcon = mPm.getDefaultActivityIcon();
-            }
+        }
+        if (mPkgIcon == null) {
+            // app is gone, just show package name and generic icon
+            mPkgIcon = mPm.getDefaultActivityIcon();
         }
         ((ImageView) findViewById(R.id.pkg_icon)).setImageDrawable(mPkgIcon);
         ((TextView) findViewById(R.id.pkg_name)).setText(mAppName);
@@ -366,24 +415,8 @@ public class NotificationInfo extends LinearLayout implements NotificationGuts.G
         bindDelegate();
 
 
-        if (Flags.notificationClassificationUi()) {
-            bindFeedback();
-        } else {
-            // Set up app settings link (i.e. Customize)
-            View settingsLinkView = findViewById(R.id.app_settings);
-            Intent settingsIntent = getAppSettingsIntent(mPm, mPackageName,
-                    mSingleNotificationChannel,
-                    mSbn.getId(), mSbn.getTag());
-            if (settingsIntent != null
-                    && !TextUtils.isEmpty(mSbn.getNotification().getSettingsText())) {
-                settingsLinkView.setVisibility(VISIBLE);
-                settingsLinkView.setOnClickListener((View view) -> {
-                    mAppSettingsClickListener.onClick(view, settingsIntent);
-                });
-            } else {
-                settingsLinkView.setVisibility(View.GONE);
-            }
-        }
+        findViewById(R.id.feedback).setVisibility(GONE);
+        findViewById(R.id.app_settings).setVisibility(GONE);
 
         // System Settings button.
         final View settingsButton = findViewById(R.id.info);
@@ -593,12 +626,6 @@ public class NotificationInfo extends LinearLayout implements NotificationGuts.G
             mMetricsLogger.write(importanceChangeLogMaker());
 
             int newImportance = mChosenImportance;
-            if (mStartingChannelImportance != IMPORTANCE_UNSPECIFIED) {
-                if ((mWasShownHighPriority && mChosenImportance >= IMPORTANCE_DEFAULT)
-                        || (!mWasShownHighPriority && mChosenImportance < IMPORTANCE_DEFAULT)) {
-                    newImportance = mStartingChannelImportance;
-                }
-            }
 
             Handler bgHandler = new Handler(Dependency.get(Dependency.BG_LOOPER));
             bgHandler.post(

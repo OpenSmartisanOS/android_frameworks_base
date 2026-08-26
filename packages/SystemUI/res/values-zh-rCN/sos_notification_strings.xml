@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sos_notification_show_silently">显示通知，但不发出提示音</string>
+    <string name="sos_notification_block">屏蔽所有通知</string>
+    <string name="sos_notification_block_message">将屏蔽此应用所有推送到这里的通知，你可以在“设置 - 通知中心”里恢复推送</string>
+    <string name="sos_notification_block_confirm">屏蔽</string>
+    <string name="sos_notification_block_failed">无法屏蔽通知</string>
+    <string name="sos_notification_reset">自动</string>
+    <string name="sos_notification_cant_change">无法将通知静音或屏蔽</string>
+    <string name="sos_notification_importance_automatic_title">重要程度：自动</string>
+    <string name="sos_notification_importance_automatic_summary">应用会自行确定每条通知的重要程度。</string>
+    <string name="sos_notification_importance_level_0">重要程度：0 级</string>
+    <string name="sos_notification_importance_level_1">重要程度：1 级</string>
+    <string name="sos_notification_importance_level_2">重要程度：2 级</string>
+    <string name="sos_notification_importance_level_3">重要程度：3 级</string>
+    <string name="sos_notification_importance_level_4">重要程度：4 级</string>
+    <string name="sos_notification_importance_level_5">重要程度：5 级</string>
+    <string name="sos_notification_importance_summary_0">一律不显示来自此应用的通知。</string>
+    <string name="sos_notification_importance_summary_1">不打扰，并且不在锁屏和状态栏中显示。</string>
+    <string name="sos_notification_importance_summary_2">禁止短暂显示通知、发出声音或振动。</string>
+    <string name="sos_notification_importance_summary_3">禁止全屏打扰或短暂显示通知。</string>
+    <string name="sos_notification_importance_summary_4">一律允许短暂显示通知，禁止全屏打扰。</string>
+    <string name="sos_notification_importance_summary_5">一律允许短暂显示通知，并允许全屏打扰。</string>
+    <string name="sos_notification_group_details">，点击前往应用查看详情</string>
+    <string name="sos_notification_group_fold">，点击收起</string>
+    <string name="sos_notification_group_unfold">，点击展开</string>
+    <plurals name="sos_notification_group_count">
+        <item quantity="one">%d 条通知</item>
+        <item quantity="other">%d 条通知</item>
+    </plurals>
+</resources>

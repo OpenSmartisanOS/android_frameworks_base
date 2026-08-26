@@ -207,7 +207,16 @@ public class NotificationGroupingUtil {
 
     private void sanitizeChild(View child, ExpandableNotificationRow row) {
         if (child != null) {
-            sanitizeTopLine(child.findViewById(R.id.notification_top_line), row);
+            ViewGroup topLine = child.findViewById(R.id.notification_top_line);
+            if (topLine == null
+                    || topLine.findViewById(com.android.internal.R.id.time) == null) {
+                // The R2 template keeps its visible title/header/time sequence in the original
+                // notification_header_line.  notification_top_line is retained only as a hidden,
+                // zero-sized Android 16 RemoteViews compatibility target and intentionally has no
+                // time child.  Group sanitation must operate on the visible sequence.
+                topLine = child.findViewById(R.id.notification_header_line);
+            }
+            sanitizeTopLine(topLine, row);
         }
     }
 
@@ -232,7 +241,9 @@ public class NotificationGroupingUtil {
         int timeVisibility = !hasVisibleText
                 || showsTime(row)
                 ? View.VISIBLE : View.GONE;
-        time.setVisibility(timeVisibility);
+        if (time != null) {
+            time.setVisibility(timeVisibility);
+        }
         View left = null;
         View right;
         for (int i = 0; i < childCount; i++) {

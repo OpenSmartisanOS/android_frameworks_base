@@ -24,9 +24,9 @@ import android.graphics.drawable.Icon;
 import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.view.View;
+import android.widget.ImageView;
 
 import com.android.internal.R;
-import com.android.internal.widget.BigPictureNotificationImageView;
 import com.android.systemui.statusbar.notification.ImageTransformState;
 import com.android.systemui.statusbar.notification.row.BigPictureIconManager;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
@@ -37,7 +37,9 @@ import com.android.systemui.statusbar.notification.shared.NotificationBundleUi;
  */
 public class NotificationBigPictureTemplateViewWrapper extends NotificationTemplateViewWrapper {
 
-    private BigPictureNotificationImageView mImageView;
+    // R2 uses a plain ImageView while AOSP uses BigPictureNotificationImageView. The wrapper only
+    // needs Drawable animation access, so accepting their common base preserves both paths.
+    private ImageView mImageView;
 
     protected NotificationBigPictureTemplateViewWrapper(Context ctx, View view,
             ExpandableNotificationRow row) {

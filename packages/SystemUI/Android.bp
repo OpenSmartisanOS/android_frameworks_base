@@ -19,6 +19,35 @@ package {
     default_applicable_licenses: ["frameworks_base_packages_SystemUI_license"],
 }
 
+// The R2 notification card edges and controls are binary artwork.  A seemingly harmless image
+// optimization changes their stretch chunks/alpha falloff, so make the SystemUI build fail before
+// packaging when any source byte differs from the audited factory APK.
+genrule {
+    name: "sos-notification-asset-integrity",
+    srcs: [
+        "res/drawable-xxhdpi/sos_notification_material_bg.9.png",
+        "res/drawable-xxhdpi/sos_notification_child_material_bg.9.png",
+        "res/drawable-xxhdpi/sos_notification_child_material_grey_bg.9.png",
+        "res/drawable-xxhdpi/sos_notification_header_material_bg.9.png",
+        "res/drawable-xxhdpi/sos_notification_child_tail_material_bg.9.png",
+        "res/drawable-xxhdpi/sos_notification_material_incall_headsup_bg.9.png",
+        "res/drawable-xxhdpi/sos_custom_notification_container_bg.png",
+        "res/drawable-xxhdpi/sos_noti_block_btn.png",
+        "res/drawable-xxhdpi/sos_noti_block_btn_pressed.png",
+    ],
+    out: ["sos-notification-assets.verified"],
+    cmd: "echo '4122d385e1648c1f6b08cd62a16d7d681d0bf44fbcd6f2095505accf3dd1653b  $(location res/drawable-xxhdpi/sos_notification_material_bg.9.png)' > $(out) && " +
+        "echo '008d4abb674d7dbfde96cb4d41d90c39a1ef68da232cc915daa5dcc4e2ca74c9  $(location res/drawable-xxhdpi/sos_notification_child_material_bg.9.png)' >> $(out) && " +
+        "echo 'd97842a155e23e7e27d025b921678bdc100210b42cd6c86109e86082b01baa33  $(location res/drawable-xxhdpi/sos_notification_child_material_grey_bg.9.png)' >> $(out) && " +
+        "echo 'aa2274e1b07a2ee8442ccd32be82cce30c6901892ca189b9d8e6d3f4c1efdd5a  $(location res/drawable-xxhdpi/sos_notification_header_material_bg.9.png)' >> $(out) && " +
+        "echo '1cf78f0a70aa611dc032054c6a1bc9cb068bafbbd31463ea4c571d41e519a017  $(location res/drawable-xxhdpi/sos_notification_child_tail_material_bg.9.png)' >> $(out) && " +
+        "echo 'e2742518d1c46880e96a70fed587fdce1881c6f718830d2d29f4e3bcc0b9e735  $(location res/drawable-xxhdpi/sos_notification_material_incall_headsup_bg.9.png)' >> $(out) && " +
+        "echo 'bfb0081e37f504a698b7226efe604261b220559d814b705152bb53c824f2b200  $(location res/drawable-xxhdpi/sos_custom_notification_container_bg.png)' >> $(out) && " +
+        "echo '1fcc1f2d83b4c22e255706a4f5c9fa43959ec95f895afc446209458d36418814  $(location res/drawable-xxhdpi/sos_noti_block_btn.png)' >> $(out) && " +
+        "echo '16c3e76f78ee70848f5446194f46b4e6c42210e83fdfd57926f27359f3d41990  $(location res/drawable-xxhdpi/sos_noti_block_btn_pressed.png)' >> $(out) && " +
+        "sha256sum --check --strict $(out) >/dev/null",
+}
+
 // Added automatically by a large-scale-change
 // See: http://go/android-license-faq
 license {
@@ -1119,6 +1148,14 @@ android_app {
     ],
     resource_dirs: [],
 
+    // Preserve every ID from the shipping APK.  The finished notification port is installed only
+    // through a same-source full OTA, but product/vendor RRO idmaps and prebuilt clients still
+    // consume these private integer IDs.
+    aaptflags: [
+        "--stable-ids",
+        "frameworks/base/packages/SystemUI/systemui-stable-ids.txt",
+    ],
+
     use_resource_processor: true,
     platform_apis: true,
     system_ext_specific: true,
@@ -1135,5 +1172,6 @@ android_app {
         "privapp_whitelist_com.android.systemui",
         "Sidebar",
         "SosFakeCall",
+        "sos-notification-asset-integrity",
     ],
 }

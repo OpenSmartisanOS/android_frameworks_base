@@ -257,16 +257,8 @@ public class NotificationRowBinderImpl implements NotificationRowBinder {
             params.markContentViewsFreeable(FLAG_CONTENT_VIEW_PUBLIC);
         }
 
-        if (inflaterParams.isChildInGroup()) {
-            params.requireContentViews(FLAG_CONTENT_VIEW_SINGLE_LINE);
-        } else {
-            params.markContentViewsFreeable(FLAG_CONTENT_VIEW_SINGLE_LINE);
-        }
-        if (inflaterParams.isChildInGroup() && redactionType != REDACTION_TYPE_NONE) {
-            params.requireContentViews(FLAG_CONTENT_VIEW_PUBLIC_SINGLE_LINE);
-        } else {
-            params.markContentViewsFreeable(FLAG_CONTENT_VIEW_PUBLIC_SINGLE_LINE);
-        }
+        params.markContentViewsFreeable(FLAG_CONTENT_VIEW_SINGLE_LINE);
+        params.markContentViewsFreeable(FLAG_CONTENT_VIEW_PUBLIC_SINGLE_LINE);
 
         if (AsyncGroupHeaderViewInflation.isEnabled()) {
             if (inflaterParams.isGroupSummary()) {

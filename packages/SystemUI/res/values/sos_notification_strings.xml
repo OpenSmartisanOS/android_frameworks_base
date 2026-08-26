@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="sos_notification_show_silently">Show notifications silently</string>
+    <string name="sos_notification_block">Block all notifications</string>
+    <string name="sos_notification_block_message">This will block all notifications from this app. You can restore them in Settings – Notification center.</string>
+    <string name="sos_notification_block_confirm">Block</string>
+    <string name="sos_notification_block_failed">Couldn’t block notifications</string>
+    <string name="sos_notification_reset">Automatic</string>
+    <string name="sos_notification_cant_change">Notifications can\'t be silenced or blocked</string>
+    <string name="sos_notification_importance_automatic_title">Importance: Automatic</string>
+    <string name="sos_notification_importance_automatic_summary">App determines importance for each notification.</string>
+    <string name="sos_notification_importance_level_0">Importance: Level 0</string>
+    <string name="sos_notification_importance_level_1">Importance: Level 1</string>
+    <string name="sos_notification_importance_level_2">Importance: Level 2</string>
+    <string name="sos_notification_importance_level_3">Importance: Level 3</string>
+    <string name="sos_notification_importance_level_4">Importance: Level 4</string>
+    <string name="sos_notification_importance_level_5">Importance: Level 5</string>
+    <string name="sos_notification_importance_summary_0">Never show notifications from this app.</string>
+    <string name="sos_notification_importance_summary_1">No interruption; hide from the lock screen and status bar.</string>
+    <string name="sos_notification_importance_summary_2">No peeking, sound, or vibration.</string>
+    <string name="sos_notification_importance_summary_3">No full screen interruption or peeking.</string>
+    <string name="sos_notification_importance_summary_4">Always peek. No full screen interruption.</string>
+    <string name="sos_notification_importance_summary_5">Always peek, and allow full screen interruption.</string>
+    <string name="sos_notification_group_details">, tap for details</string>
+    <string name="sos_notification_group_fold">, Tap to Fold</string>
+    <string name="sos_notification_group_unfold">, Tap to Unfold</string>
+    <plurals name="sos_notification_group_count">
+        <item quantity="one">%d Notification</item>
+        <item quantity="other">%d Notifications</item>
+    </plurals>
+</resources>

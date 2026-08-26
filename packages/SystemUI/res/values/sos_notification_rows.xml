@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="sos_notification_group_interval">9dp</dimen>
+    <dimen name="sos_notification_group_child_padding">4dp</dimen>
+    <dimen name="sos_notification_group_tail_height">9dp</dimen>
+    <dimen name="sos_notification_group_header_height">60dp</dimen>
+    <!-- 60dp is the standalone group header. A normal R2 notification row is 106dp. -->
+    <dimen name="sos_notification_min_height">106dp</dimen>
+    <dimen name="sos_notification_max_height">373dp</dimen>
+    <dimen name="sos_notification_heads_up_max_height">148dp</dimen>
+    <!-- R2's 24dp total horizontal inset: 12dp on each physical side. -->
+    <dimen name="sos_notification_side_padding">12dp</dimen>
+    <dimen name="sos_notification_top_level_interval">9dp</dimen>
+    <dimen name="sos_notification_menu_width">64dp</dimen>
+    <dimen name="sos_notification_menu_icon_padding">20dp</dimen>
+    <dimen name="sos_notification_round_radius">10dp</dimen>
+    <dimen name="sos_notification_incall_heads_up_radius">31dp</dimen>
+    <item name="sos_notification_outline_alpha" type="dimen" format="float">0.3</item>
+    <color name="sos_notification_guts_background">#eeeeee</color>
+    <color name="sos_notification_guts_secondary_slider_color">#858383</color>
+</resources>

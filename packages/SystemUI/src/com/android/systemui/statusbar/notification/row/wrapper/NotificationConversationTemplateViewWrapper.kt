@@ -16,19 +16,15 @@
 
 package com.android.systemui.statusbar.notification.row.wrapper
 
-import android.app.Flags
-import android.app.Flags.notificationsRedesignTemplates
 import android.content.Context
 import android.graphics.drawable.AnimatedImageDrawable
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import com.android.internal.widget.CachingIconView
 import com.android.internal.widget.ConversationLayout
 import com.android.internal.widget.MessagingGroup
 import com.android.internal.widget.MessagingImageMessage
 import com.android.internal.widget.MessagingLinearLayout
-import com.android.internal.widget.NotificationRowIconView
 import com.android.systemui.res.R
 import com.android.systemui.statusbar.notification.NotificationFadeAware
 import com.android.systemui.statusbar.notification.NotificationUtils
@@ -52,7 +48,6 @@ class NotificationConversationTemplateViewWrapper(
 
     private lateinit var conversationIconContainer: View
     private lateinit var conversationIconView: CachingIconView
-    private lateinit var badgeIconView: NotificationRowIconView
     private lateinit var conversationBadgeBg: View
     private lateinit var expandBtn: View
     private var expandBtnContainer: View? = null
@@ -74,20 +69,13 @@ class NotificationConversationTemplateViewWrapper(
             conversationIconContainer =
                 requireViewById(com.android.internal.R.id.conversation_icon_container)
             conversationIconView = requireViewById(com.android.internal.R.id.conversation_icon)
-            if (Flags.notificationsRedesignAppIcons()) {
-                badgeIconView = requireViewById(com.android.internal.R.id.icon)
-            }
             conversationBadgeBg =
                 requireViewById(com.android.internal.R.id.conversation_icon_badge_bg)
             expandBtn = requireViewById(com.android.internal.R.id.expand_button)
             expandBtnContainer = findViewById(com.android.internal.R.id.expand_button_container)
             importanceRing = requireViewById(com.android.internal.R.id.conversation_icon_badge_ring)
             appName = requireViewById(com.android.internal.R.id.app_name_text)
-            conversationTitleView =
-                requireViewById(
-                    if (notificationsRedesignTemplates()) com.android.internal.R.id.title
-                    else com.android.internal.R.id.conversation_text
-                )
+            conversationTitleView = requireViewById(com.android.internal.R.id.conversation_text)
             facePileTop = findViewById(com.android.internal.R.id.conversation_face_pile_top)
             facePileBottom = findViewById(com.android.internal.R.id.conversation_face_pile_bottom)
             facePileBottomBg =
@@ -140,20 +128,12 @@ class NotificationConversationTemplateViewWrapper(
         onClickListener: View.OnClickListener,
         requestLayout: Boolean,
     ) {
-        if (notificationsRedesignTemplates()) {
-            super.updateExpandability(expandable, onClickListener, requestLayout)
-        } else {
-            conversationLayout.updateExpandability(expandable, onClickListener)
-        }
+        conversationLayout.updateExpandability(expandable, onClickListener)
     }
 
     override fun disallowSingleClick(x: Float, y: Float): Boolean {
         val isOnExpandButton =
-            if (notificationsRedesignTemplates()) {
-                expandBtn.isVisible && isOnView(expandBtn, x, y)
-            } else {
-                expandBtnContainer?.visibility == View.VISIBLE && isOnView(expandBtnContainer, x, y)
-            }
+            expandBtnContainer?.visibility == View.VISIBLE && isOnView(expandBtnContainer, x, y)
         return isOnExpandButton || super.disallowSingleClick(x, y)
     }
 
@@ -174,9 +154,7 @@ class NotificationConversationTemplateViewWrapper(
         // and the top level image message container.
         val containers =
             messageContainers.asSequence().map { it.messageContainer } +
-                if (notificationsRedesignTemplates() && imageMessageContainer == null)
-                    emptySequence()
-                else sequenceOf(imageMessageContainer!!)
+                listOfNotNull(imageMessageContainer).asSequence()
         val drawables =
             containers
                 .flatMap { it.children }

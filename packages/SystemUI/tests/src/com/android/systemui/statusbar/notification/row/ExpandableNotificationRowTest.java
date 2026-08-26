@@ -1301,6 +1301,17 @@ public class ExpandableNotificationRowTest extends SysuiTestCase {
     }
 
     @Test
+    public void testCollapsedSosStandardGroup_firstChildExpanderExpandsParent() {
+        final ExpandableNotificationRow parent = mKosmos.createRowGroup();
+        final ExpandableNotificationRow firstChild = parent.getAttachedChildren().get(0);
+
+        firstChild.expandNotification();
+
+        assertThat(parent.areChildrenExpanded()).isTrue();
+        assertThat(firstChild.isExpanded()).isFalse();
+    }
+
+    @Test
     public void testToggleGroupNotificationExpansion_minimized() {
         final ExpandableNotificationRow row = mKosmos.createRowGroup();
         row.setIsMinimized(true);

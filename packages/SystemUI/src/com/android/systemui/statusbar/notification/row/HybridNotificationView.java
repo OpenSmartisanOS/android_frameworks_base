@@ -16,11 +16,9 @@
 
 package com.android.systemui.statusbar.notification.row;
 
-import static android.app.Flags.notificationsRedesignFonts;
 import static android.app.Notification.COLOR_INVALID;
 
 import android.annotation.Nullable;
-import android.app.Flags;
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.AttributeSet;
@@ -78,19 +76,9 @@ public class HybridNotificationView extends AlphaOptimizedLinearLayout
      * Get layout resource for this view based on {@param isConversation}.
      */
     public static int getLayoutResource(boolean isConversation) {
-        if (Flags.notificationsRedesignTemplates()) {
-            if (isConversation) {
-                return R.layout.notification_2025_hybrid_conversation;
-            } else {
-                return R.layout.notification_2025_hybrid;
-            }
-        } else {
-            if (isConversation) {
-                return R.layout.hybrid_conversation_notification;
-            } else {
-                return R.layout.hybrid_notification;
-            }
-        }
+        return isConversation
+                ? R.layout.hybrid_conversation_notification
+                : R.layout.hybrid_notification;
     }
 
     @Override
@@ -116,7 +104,7 @@ public class HybridNotificationView extends AlphaOptimizedLinearLayout
 
     private void resolveThemeTextColors() {
         mPrimaryTextColor = mContext.getColor(com.android.internal.R.color.materialColorOnSurface);
-        mSecondaryTextColor = notificationsRedesignFonts() ? mPrimaryTextColor : mContext.getColor(
+        mSecondaryTextColor = mContext.getColor(
                 com.android.internal.R.color.materialColorOnSurfaceVariant);
     }
 

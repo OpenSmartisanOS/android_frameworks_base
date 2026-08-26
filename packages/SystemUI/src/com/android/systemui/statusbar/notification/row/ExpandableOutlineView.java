@@ -31,6 +31,7 @@ import android.view.ViewOutlineProvider;
 import com.android.systemui.res.R;
 import com.android.systemui.statusbar.notification.RoundableState;
 import com.android.systemui.statusbar.notification.stack.NotificationChildrenContainer;
+import com.android.systemui.statusbar.notification.stack.NotificationRowGeometry;
 import com.android.systemui.util.DumpUtilsKt;
 
 import java.io.PrintWriter;
@@ -59,6 +60,35 @@ public abstract class ExpandableOutlineView extends ExpandableView {
     private final ViewOutlineProvider mProvider = new ViewOutlineProvider() {
         @Override
         public void getOutline(View view, Outline outline) {
+            if (!mHasCustomOutline) {
+                final View root = getRootView();
+                final int hostWidth = Math.max(getWidth(), root != null ? root.getWidth() : 0);
+                final int hostHeight = Math.max(getHeight(), root != null ? root.getHeight() : 0);
+                final float literalScale = NotificationRowGeometry.literalPixelScale(
+                        hostWidth, hostHeight, getResources().getDisplayMetrics().densityDpi);
+                final int horizontalInset = Math.max(1, Math.round(6f * literalScale));
+                final int verticalInset = Math.max(1, Math.round(18f * literalScale));
+                final int translation = !mDismissUsingRowTranslationX
+                        ? (int) getTranslation() : 0;
+                int left = Math.max(translation, 0) + horizontalInset;
+                int top = Math.max(mClipTopAmount, mTopOverlap) + verticalInset;
+                int right = getWidth() + Math.min(translation, 0)
+                        - horizontalInset;
+                final int expandedHeight = isSummaryWithChildren()
+                        && isGroupExpansionChanging() ? getIntrinsicHeight() : getActualHeight();
+                int bottom = Math.max(expandedHeight, Math.max(mClipTopAmount, mTopOverlap))
+                        - verticalInset;
+                right = Math.max(left, right);
+                bottom = Math.max(top, bottom);
+                final boolean inCallHeadsUp = ExpandableOutlineView.this
+                        instanceof ExpandableNotificationRow row && row.isInCallHeadsUp();
+                final float radius = inCallHeadsUp
+                        ? Math.max(1f, getActualHeight() / 2f)
+                        : isChildInGroup() ? 0f : getMaxRadius();
+                outline.setRoundRect(left, top, right, bottom, radius);
+                outline.setAlpha(mOutlineAlpha);
+                return;
+            }
             if (!mHasCustomOutline && !hasRoundedCorner() && !mAlwaysRoundBothCorners) {
                 // Only when translating just the contents, does the outline need to be shifted.
                 int translation = !mDismissUsingRowTranslationX ? (int) getTranslation() : 0;

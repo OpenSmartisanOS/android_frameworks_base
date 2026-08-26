@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.android.systemui.statusbar.notification.row.NotificationInfo
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification_guts"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/sos_notification_guts_background"
+    android:clickable="true"
+    android:clipChildren="false"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:paddingStart="16dp"
+    android:paddingEnd="8dp">
+
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="15dp"
+        android:paddingEnd="8dp">
+
+        <ImageView
+            android:id="@+id/pkg_icon"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_marginEnd="6dp"
+            android:scaleType="centerInside" />
+
+        <TextView
+            android:id="@+id/pkg_name"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:alpha="0.38"
+            android:ellipsize="end"
+            android:fontFamily="roboto-regular"
+            android:maxLines="1"
+            android:textColor="@android:color/black"
+            android:textSize="12dp" />
+
+        <TextView
+            android:id="@+id/delegate_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.38"
+            android:fontFamily="roboto-regular"
+            android:text="@string/notification_delegate_header"
+            android:textColor="@android:color/black"
+            android:textSize="12dp"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/app_settings"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:background="@android:color/transparent"
+            android:visibility="gone" />
+
+        <ImageButton
+            android:id="@+id/feedback"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:background="@android:color/transparent"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/channel_name"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/group_name"
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/sos_cant_change_importance"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:gravity="center_vertical"
+        android:fontFamily="roboto-regular"
+        android:text="@string/sos_notification_cant_change"
+        android:textColor="?android:attr/textColorPrimary"
+        android:textSize="14dp"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/sos_importance_controls"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioGroup
+            android:id="@+id/sos_importance_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="4dp"
+            android:paddingStart="3dp"
+            android:paddingEnd="8dp">
+
+            <RadioButton
+                android:id="@+id/sos_silent_importance"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:buttonTint="?android:attr/colorAccent"
+                android:fontFamily="roboto-regular"
+                android:paddingStart="22dp"
+                android:text="@string/sos_notification_show_silently"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="14dp" />
+
+            <RadioButton
+                android:id="@+id/sos_block_importance"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:buttonTint="?android:attr/colorAccent"
+                android:fontFamily="roboto-regular"
+                android:paddingStart="22dp"
+                android:text="@string/sos_notification_block"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="14dp" />
+
+            <RadioButton
+                android:id="@+id/sos_reset_importance"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:buttonTint="?android:attr/colorAccent"
+                android:fontFamily="roboto-regular"
+                android:paddingStart="22dp"
+                android:text="@string/sos_notification_reset"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="14dp" />
+        </RadioGroup>
+
+        <LinearLayout
+            android:id="@+id/sos_importance_slider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp">
+
+            <TextView
+                android:id="@+id/sos_importance_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:ellipsize="marquee"
+                android:fontFamily="roboto-regular"
+                android:paddingBottom="2dp"
+                android:singleLine="true"
+                android:textColor="?android:attr/textColorPrimary"
+                android:textSize="16dp" />
+
+            <TextView
+                android:id="@+id/sos_importance_summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="roboto-regular"
+                android:maxLines="3"
+                android:minLines="2"
+                android:paddingBottom="4dp"
+                android:textColor="?android:attr/textColorSecondary"
+                android:textSize="14dp" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="8dp">
+
+                <ImageView
+                    android:id="@+id/sos_auto_importance"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_gravity="start|center_vertical"
+                    android:background="?android:attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/sos_notification_reset"
+                    android:padding="12dp"
+                    android:src="@drawable/sos_notification_auto_importance" />
+
+                <SeekBar
+                    android:id="@+id/sos_importance_seekbar"
+                    style="@android:style/Widget.Material.SeekBar.Discrete"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="56dp"
+                    android:layout_marginEnd="32dp"
+                    android:background="@android:color/transparent"
+                    android:progressBackgroundTint="@color/sos_notification_guts_secondary_slider_color" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal"
+        android:paddingTop="16dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/info"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/notification_more_settings"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/colorAccent"
+            android:textSize="14dp" />
+
+        <TextView
+            android:id="@+id/done"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:focusable="true"
+            android:fontFamily="sans-serif-medium"
+            android:gravity="center"
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:text="@string/inline_done_button"
+            android:textAllCaps="true"
+            android:textColor="?android:attr/colorAccent"
+            android:textSize="14dp" />
+    </LinearLayout>
+
+    <!-- Compatibility IDs read only by the AOSP branch. -->
+    <LinearLayout
+        android:layout_width="1dp"
+        android:layout_height="1dp"
+        android:visibility="gone">
+        <TextView android:id="@+id/alert_summary" android:layout_width="1dp" android:layout_height="1dp" />
+        <TextView android:id="@+id/silence_summary" android:layout_width="1dp" android:layout_height="1dp" />
+        <TextView android:id="@+id/automatic_summary" android:layout_width="1dp" android:layout_height="1dp" />
+    </LinearLayout>
+</com.android.systemui.statusbar.notification.row.NotificationInfo>

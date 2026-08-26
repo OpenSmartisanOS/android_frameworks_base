@@ -17,18 +17,16 @@
 package com.android.systemui.statusbar.notification.collection.render
 
 import android.content.Context
+import android.view.LayoutInflater
+import android.view.NotificationHeaderView
 import android.view.ViewGroup
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.ui.platform.ComposeView
+import android.widget.TextView
+import androidx.compose.runtime.snapshotFlow
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.android.compose.theme.PlatformTheme
 import com.android.systemui.dagger.SysUISingleton
-import com.android.systemui.initOnBackPressedDispatcherOwner
-import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.lifecycle.repeatWhenAttached
-import com.android.systemui.notifications.ui.composable.row.BundleHeader
+import com.android.systemui.res.R
 import com.android.systemui.settings.UserTracker
 import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.statusbar.NotificationPresenter
@@ -41,14 +39,13 @@ import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow
 import com.android.systemui.statusbar.notification.row.ExpandableView
 import com.android.systemui.statusbar.notification.row.RowInflaterTask
 import com.android.systemui.statusbar.notification.row.RowInflaterTaskLogger
-import com.android.systemui.statusbar.notification.row.dagger.BundleRowComponent
 import com.android.systemui.statusbar.notification.row.dagger.ExpandableNotificationRowComponent
-import com.android.systemui.statusbar.notification.row.ui.viewmodel.BundleHeaderViewModel
 import com.android.systemui.statusbar.notification.stack.NotificationListContainer
 import com.android.systemui.util.time.SystemClock
 import dagger.Lazy
 import javax.inject.Inject
 import javax.inject.Provider
+import kotlinx.coroutines.flow.collectLatest
 
 /** Class that handles inflating BundleEntry view and controller, for use by NodeSpecBuilder. */
 @SysUISingleton
@@ -56,7 +53,6 @@ class BundleBarn
 @Inject
 constructor(
     private val rowComponent: ExpandableNotificationRowComponent.Builder,
-    private val bundleRowComponentFactory: BundleRowComponent.Factory,
     private val rowInflaterTaskProvider: Provider<RowInflaterTask>,
     private val listContainer: NotificationListContainer,
     @ShadeDisplayAware val context: Context,
@@ -114,20 +110,40 @@ constructor(
     }
 
     private fun initBundleHeaderView(bundleEntry: BundleEntry, row: ExpandableNotificationRow) {
-        val bundleRowComponent =
-            bundleRowComponentFactory.create(repository = bundleEntry.bundleRepository)
-        val headerComposeView = ComposeView(context)
-        row.setBundleHeaderView(headerComposeView)
-        val viewModelFactory = bundleRowComponent.bundleViewModelFactory()
-        headerComposeView.repeatWhenAttached {
-            repeatOnLifecycle(Lifecycle.State.CREATED) {
-                headerComposeView.initOnBackPressedDispatcherOwner(lifecycle)
-                headerComposeView.setContent {
-                    HeaderComposeViewContent(
-                        row = row,
-                        bundleHeaderViewModelFactory = viewModelFactory::create,
-                    )
+        val header =
+            LayoutInflater.from(context)
+                .inflate(R.layout.sos_smartisan_bundle_header, row, false)
+                as NotificationHeaderView
+        header.findViewById<com.android.internal.widget.CachingIconView>(android.R.id.icon)
+            .setImageResource(bundleEntry.bundleRepository.bundleIcon)
+        val titleView = header.findViewById<TextView>(android.R.id.title)
+        titleView.setText(bundleEntry.bundleRepository.titleText)
+        val countView = header.findViewById<TextView>(R.id.sos_notification_group_count_desc)
+        val otherView = header.findViewById<TextView>(R.id.sos_notification_group_other_desc)
+        fun updateCount() {
+            val count = bundleEntry.bundleRepository.numberOfChildren ?: 0
+            countView.text =
+                context.resources.getQuantityString(
+                    R.plurals.sos_notification_group_count,
+                    count,
+                    count,
+                )
+            otherView.setText(
+                if (row.isGroupExpanded) {
+                    R.string.sos_notification_group_fold
+                } else {
+                    R.string.sos_notification_group_unfold
                 }
+            )
+            header.contentDescription =
+                listOf(titleView.text, countView.text, otherView.text).joinToString("")
+        }
+        updateCount()
+        row.setGroupHeader(header)
+        row.repeatWhenAttached {
+            repeatOnLifecycle(Lifecycle.State.CREATED) {
+                snapshotFlow { bundleEntry.bundleRepository.numberOfChildren }
+                    .collectLatest { updateCount() }
             }
         }
     }
@@ -164,32 +180,6 @@ constructor(
                         "INFLATED (Controller: ${controller::class.simpleName})"
                     }
                 d.dump("Bundle key:$key", stateString)
-            }
-        }
-    }
-}
-
-@Composable
-private fun HeaderComposeViewContent(
-    row: ExpandableNotificationRow,
-    bundleHeaderViewModelFactory: () -> BundleHeaderViewModel,
-) {
-    PlatformTheme {
-        val viewModel =
-            rememberViewModel(
-                traceName = "BundleHeaderViewModel",
-                factory = bundleHeaderViewModelFactory,
-            )
-        BundleHeader(viewModel)
-        DisposableEffect(viewModel) {
-            row.setBundleHeaderViewModel(viewModel)
-            row.setOnClickListener {
-                viewModel.onHeaderClicked()
-                row.expandNotification()
-            }
-            onDispose {
-                row.setOnClickListener(null)
-                row.setBundleHeaderViewModel(null)
             }
         }
     }

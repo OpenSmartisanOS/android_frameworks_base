@@ -122,7 +122,18 @@ constructor(
             logger.logNotBindingRowWasRemoved(row.loggingKey)
             return
         }
-        logger.logBinding(row.loggingKey, contentToBind)
+        val privatePair = FLAG_CONTENT_VIEW_CONTRACTED or FLAG_CONTENT_VIEW_EXPANDED
+        val contentToBindEffective =
+            if (
+                contentToBind and privatePair != 0 &&
+                    (isCustomViewNotification(entry.sbn.notification) ||
+                        row.notificationContentType == NotificationContentType.CUSTOM)
+            ) {
+                contentToBind or privatePair
+            } else {
+                contentToBind
+            }
+        logger.logBinding(row.loggingKey, contentToBindEffective)
         val sbn: StatusBarNotification = entry.sbn
 
         // To check if the notification has inline image and preload inline image if necessary.
@@ -132,12 +143,12 @@ constructor(
         }
 
         // Cancel any pending frees on any view we're trying to bind since we should be bound after.
-        cancelContentViewFrees(row, contentToBind)
+        cancelContentViewFrees(row, contentToBindEffective)
         val task =
             AsyncInflationTask(
                 inflationExecutor,
                 inflateSynchronously,
-                /* reInflateFlags = */ contentToBind,
+                /* reInflateFlags = */ contentToBindEffective,
                 remoteViewCache,
                 entry,
                 conversationProcessor,
@@ -246,9 +257,19 @@ constructor(
         row: ExpandableNotificationRow,
         @InflationFlag contentToUnbind: Int,
     ) {
-        logger.logUnbinding(row.loggingKey, contentToUnbind)
+        val privatePair = FLAG_CONTENT_VIEW_CONTRACTED or FLAG_CONTENT_VIEW_EXPANDED
+        val contentToUnbindEffective =
+            if (
+                row.notificationContentType == NotificationContentType.CUSTOM &&
+                    contentToUnbind and privatePair != 0
+            ) {
+                contentToUnbind or privatePair
+            } else {
+                contentToUnbind
+            }
+        logger.logUnbinding(row.loggingKey, contentToUnbindEffective)
         var curFlag = 1
-        var contentLeftToUnbind = contentToUnbind
+        var contentLeftToUnbind = contentToUnbindEffective
         while (contentLeftToUnbind != 0) {
             if (contentLeftToUnbind and curFlag != 0) {
                 freeNotificationView(entry, row, curFlag)
@@ -586,6 +607,7 @@ constructor(
         var inflatedSmartReplyState: InflatedSmartReplyState? = null
         var expandedInflatedSmartReplies: InflatedSmartReplyViewHolder? = null
         var headsUpInflatedSmartReplies: InflatedSmartReplyViewHolder? = null
+        var presentation: NotificationRowPresentation = NotificationRowPresentation.standard()
 
         // Inflated SingleLineView that lacks the UI State
         var inflatedSingleLineView: HybridNotificationView? = null
@@ -602,6 +624,133 @@ constructor(
 
     companion object {
         const val TAG = "NotifContentInflater"
+
+        /**
+         * Classifies the notification before Builder recovery replaces missing standard views.
+         * The result is presentation-only; it deliberately does not add a Notification flag or
+         * weaken any RemoteViews validation performed later in this inflater.
+         */
+        private fun isCustomViewNotification(notification: Notification): Boolean {
+            val template = notification.extras?.getString(Notification.EXTRA_TEMPLATE)
+            if (
+                template == Notification.DecoratedCustomViewStyle::class.java.name ||
+                    template == Notification.DecoratedMediaCustomViewStyle::class.java.name
+            ) {
+                // These styles deliberately wrap application RemoteViews in a framework layout;
+                // R2 still classifies the resulting presentation as CUSTOM.
+                return true
+            }
+            // A declared platform template is not custom content, even if an app copied its layout
+            // id into Notification.contentView. Notification owns the complete standard-layout
+            // allow/deny list, so this also keeps the Android 16 anti-spoofing decision intact.
+            return sequenceOf(
+                    notification.contentView,
+                    notification.bigContentView,
+                )
+                .filterNotNull()
+                .any { !isStandardNotificationLayout(it.layoutId) }
+        }
+
+        /**
+         * Uses the Android 16 framework classifier when the matching framework is installed, while
+         * retaining a package-safe fallback for SystemUI-only module smoke tests on an older boot
+         * class path. Application resource IDs can never pass the fallback because framework
+         * layouts use package id {@code 0x01}.
+         */
+        private fun isStandardNotificationLayout(layoutId: Int): Boolean {
+            platformStandardLayoutMethod?.let { method ->
+                runCatching { method.invoke(null, layoutId) as Boolean }.getOrNull()?.let {
+                    return it
+                }
+            }
+            if (layoutId ushr 24 != 0x01) return false
+            val name =
+                try {
+                    val resources = Resources.getSystem()
+                    if (resources.getResourceTypeName(layoutId) != "layout") return false
+                    resources.getResourceEntryName(layoutId)
+                } catch (_: Resources.NotFoundException) {
+                    return false
+                }
+            return name in standardNotificationLayoutNames
+        }
+
+        /** Exact mirror of Notification.isStandardLayout(), used only with an older boot class. */
+        private val standardNotificationLayoutNames =
+            setOf(
+                "notification_template_material_base",
+                "notification_template_material_heads_up_base",
+                "notification_template_material_big_base",
+                "notification_template_material_big_picture",
+                "notification_template_material_big_text",
+                "notification_template_material_inbox",
+                "notification_template_material_messaging",
+                "notification_template_material_big_messaging",
+                "notification_template_material_conversation",
+                "notification_template_material_media",
+                "notification_template_material_big_media",
+                "notification_template_material_call",
+                "notification_template_material_big_call",
+                "notification_template_material_progress",
+                "notification_template_header",
+                "notification_2025_template_collapsed_base",
+                "notification_2025_template_expanded_base",
+                "notification_2025_template_heads_up_base",
+                "notification_2025_template_header",
+                "notification_2025_template_collapsed_conversation",
+                "notification_2025_template_expanded_conversation",
+                "notification_2025_template_collapsed_call",
+                "notification_2025_template_expanded_call",
+                "notification_2025_template_collapsed_messaging",
+                "notification_2025_template_expanded_messaging",
+                "notification_2025_template_collapsed_media",
+                "notification_2025_template_expanded_media",
+                "notification_2025_template_expanded_big_picture",
+                "notification_2025_template_expanded_big_text",
+                "notification_2025_template_expanded_inbox",
+                "notification_2025_template_expanded_progress",
+                "notification_2025_template_collapsed_metric",
+                "notification_2025_template_expanded_metric",
+                "smartisan_notification_template_header",
+                "smartisan_notification_template_material_base",
+                "smartisan_notification_template_material_big_base",
+                "smartisan_notification_template_material_big_text",
+                "smartisan_notification_template_material_big_picture",
+                "smartisan_notification_template_material_inbox",
+                "smartisan_notification_template_material_messaging",
+                "smartisan_notification_template_material_media",
+                "smartisan_notification_template_material_big_media",
+                "smartisan_notification_remote_base",
+                "smartisan_notification_template_dialog_alerts",
+                "smartisan_notification_action",
+                "smartisan_notification_action_devider",
+                "smartisan_notification_action_tombstone",
+                "smartisan_notification_dialog_action",
+                "smartisan_notification_expand_button",
+                "smartisan_notification_material_action_list",
+                "smartisan_notification_material_media_action",
+                "smartisan_notification_material_media_big_action",
+                "smartisan_notification_media_action",
+                "smartisan_notification_template_base",
+                "smartisan_notification_template_icon_group",
+                "smartisan_notification_template_part_chronometer",
+                "smartisan_notification_template_part_line1",
+                "smartisan_notification_template_part_line2",
+                "smartisan_notification_template_part_line3",
+                "smartisan_notification_template_part_time",
+                "smartisan_notification_template_progressbar",
+            )
+
+        private val platformStandardLayoutMethod: java.lang.reflect.Method? by
+            lazy(LazyThreadSafetyMode.PUBLICATION) {
+                runCatching {
+                        Notification::class.java.getMethod(
+                            "isStandardLayout",
+                            java.lang.Integer.TYPE,
+                        )
+                    }
+                    .getOrNull()
+            }
 
         private fun inflateSmartReplyViews(
             result: InflationProgress,
@@ -773,7 +922,39 @@ constructor(
                 remoteViews = remoteViews,
                 contentModel = contentModel,
                 promotedContent = promotedContent,
-            )
+            ).also {
+                // Classify the RemoteViews actually applied in each state. A notification may
+                // provide only one custom state, so contracted/expanded ownership is atomic.
+                val contractedCustom =
+                    remoteViews.contracted?.let { remoteView ->
+                        !isStandardNotificationLayout(remoteView.layoutId)
+                    } == true
+                val expandedCustom =
+                    remoteViews.expanded?.let { remoteView ->
+                        !isStandardNotificationLayout(remoteView.layoutId)
+                    } == true
+                val bigCustom =
+                    entry.sbn.notification.bigContentView?.let { remoteView ->
+                        !isStandardNotificationLayout(remoteView.layoutId)
+                    } == true
+                val contentCustom =
+                    entry.sbn.notification.contentView?.let { remoteView ->
+                        !isStandardNotificationLayout(remoteView.layoutId)
+                    } == true
+                val expandedSource =
+                    when {
+                        bigCustom -> NotificationRowPresentation.ExpandedSource.BIG
+                        contentCustom -> NotificationRowPresentation.ExpandedSource.CONTENT
+                        else -> NotificationRowPresentation.ExpandedSource.NONE
+                    }
+                it.presentation =
+                    NotificationRowPresentation.create(
+                        contractedCustom,
+                        expandedCustom,
+                        expandedSource,
+                        entry.targetSdk,
+                    )
+            }
         }
 
         private fun createSensitiveContentMessageNotification(
@@ -835,7 +1016,7 @@ constructor(
                         )
                         createContentView(builder, bindParams.isMinimized)
                     } else null
-                val expanded =
+                var expanded =
                     if (reInflateFlags and FLAG_CONTENT_VIEW_EXPANDED != 0) {
                         logger.logAsyncTaskProgress(row.loggingKey, "creating expanded remote view")
                         createExpandedView(builder, bindParams.isMinimized)
@@ -850,6 +1031,22 @@ constructor(
                             @Suppress("DEPRECATION") builder.createHeadsUpContentView()
                         }
                     } else null
+                if (isCustomViewNotification(entry.sbn.notification)) {
+                    // Original R2 treats contracted and expanded as one custom pair.  Expanded
+                    // uses bigContentView when it is custom, otherwise contentView.  HUN remains
+                    // the independently generated/supplied safe RemoteViews and is never cloned
+                    // from private content.
+                    val notification = entry.sbn.notification
+                    if (reInflateFlags and FLAG_CONTENT_VIEW_EXPANDED != 0) {
+                        val expandedSource =
+                            sequenceOf(notification.bigContentView, notification.contentView)
+                                .filterNotNull()
+                                .firstOrNull { !isStandardNotificationLayout(it.layoutId) }
+                        if (expandedSource != null) {
+                            expanded = RemoteViews(expandedSource)
+                        }
+                    }
+                }
                 val public =
                     if (reInflateFlags and FLAG_CONTENT_VIEW_PUBLIC != 0) {
                         logger.logAsyncTaskProgress(row.loggingKey, "creating public remote view")
@@ -914,12 +1111,6 @@ constructor(
             headsUp.setLayoutInflaterFactoryRecursively(FLAG_CONTENT_VIEW_HEADS_UP)
             public.setLayoutInflaterFactoryRecursively(FLAG_CONTENT_VIEW_PUBLIC)
 
-            if (android.app.Flags.notificationsRedesignAppIcons()) {
-                normalGroupHeader.setLayoutInflaterFactoryRecursively(FLAG_GROUP_SUMMARY_HEADER)
-                minimizedGroupHeader.setLayoutInflaterFactoryRecursively(
-                    FLAG_LOW_PRIORITY_GROUP_SUMMARY_HEADER
-                )
-            }
             return this
         }
 
@@ -943,6 +1134,7 @@ constructor(
             var flag = FLAG_CONTENT_VIEW_CONTRACTED
             if (reInflateFlags and flag != 0 && result.remoteViews.contracted != null) {
                 val isNewView =
+                    result.presentation.isPrivateCustom ||
                     !canReapplyRemoteView(
                         newView = result.remoteViews.contracted,
                         oldView = remoteViewCache.getCachedView(entry, FLAG_CONTENT_VIEW_CONTRACTED),
@@ -951,7 +1143,19 @@ constructor(
                     object : ApplyCallback() {
                         override fun setResultView(v: View) {
                             logger.logAsyncTaskProgress(entry.logKey, "contracted view applied")
-                            result.inflatedContentView = v
+                            result.presentation.safeContractedView = v
+                            result.inflatedContentView =
+                                if (result.presentation.isPrivateCustom) {
+                                    NotificationCustomViewContainer.wrap(
+                                        row.context,
+                                        entry,
+                                        null,
+                                        false,
+                                        false,
+                                    )
+                                } else {
+                                    v
+                                }
                         }
 
                         override val remoteView: RemoteViews
@@ -982,6 +1186,7 @@ constructor(
             flag = FLAG_CONTENT_VIEW_EXPANDED
             if (reInflateFlags and flag != 0 && result.remoteViews.expanded != null) {
                 val isNewView =
+                    result.presentation.isPrivateCustom ||
                     !canReapplyRemoteView(
                         newView = result.remoteViews.expanded,
                         oldView = remoteViewCache.getCachedView(entry, FLAG_CONTENT_VIEW_EXPANDED),
@@ -990,7 +1195,20 @@ constructor(
                     object : ApplyCallback() {
                         override fun setResultView(v: View) {
                             logger.logAsyncTaskProgress(entry.logKey, "expanded view applied")
-                            result.inflatedExpandedView = v
+                            result.presentation.safeExpandedView = v
+                            result.inflatedExpandedView =
+                                if (result.presentation.isPrivateCustom) {
+                                    NotificationCustomViewContainer.wrap(
+                                        row.context,
+                                        entry,
+                                        v,
+                                        true,
+                                        result.presentation.expandedSource ==
+                                            NotificationRowPresentation.ExpandedSource.BIG,
+                                    )
+                                } else {
+                                    v
+                                }
                         }
 
                         override val remoteView: RemoteViews
@@ -1029,6 +1247,7 @@ constructor(
                     object : ApplyCallback() {
                         override fun setResultView(v: View) {
                             logger.logAsyncTaskProgress(entry.logKey, "heads up view applied")
+                            result.presentation.safeHeadsUpView = v
                             result.inflatedHeadsUpView = v
                         }
 
@@ -1068,6 +1287,7 @@ constructor(
                     object : ApplyCallback() {
                         override fun setResultView(v: View) {
                             logger.logAsyncTaskProgress(entry.logKey, "public view applied")
+                            result.presentation.safePublicView = v
                             result.inflatedPublicView = v
                         }
 
@@ -1465,16 +1685,20 @@ constructor(
          * visual issues.
          */
         private fun requiresHeightCheck(entry: NotificationEntry): Boolean {
-            // Undecorated custom views are disallowed from S onwards
-            if (entry.targetSdk >= Build.VERSION_CODES.S) {
-                return false
-            }
-            // No need to check if the app isn't using any custom views
-            val notification: Notification = entry.sbn.notification
-            @Suppress("DEPRECATION")
-            return !(notification.contentView == null &&
-                notification.bigContentView == null &&
-                notification.headsUpContentView == null)
+            // The canonical shell replaces platform decoration after inflation, so raw custom
+            // content keeps the minimum-height safety check on every target SDK.
+            val notification = entry.sbn.notification
+            val publicNotification = notification.publicVersion
+            return sequenceOf(
+                    notification.contentView,
+                    notification.bigContentView,
+                    notification.headsUpContentView,
+                    publicNotification?.contentView,
+                    publicNotification?.bigContentView,
+                    publicNotification?.headsUpContentView,
+                )
+                .filterNotNull()
+                .any { !isStandardNotificationLayout(it.layoutId) }
         }
 
         @Throws(InflationException::class)
@@ -1528,8 +1752,20 @@ constructor(
             }
             logger.logAsyncTaskProgress(row.loggingKey, "finishing")
 
+            if (result.presentation.generationId < row.notificationRowPresentationGeneration) {
+                // A newer complete private pair already won. Never let a cancelled/slow older
+                // generation overwrite any of its four views or presentation ownership.
+                Trace.endAsyncSection(APPLY_TRACE_METHOD, System.identityHashCode(row))
+                endListener?.onAsyncInflationFinished(entry)
+                return true
+            }
+
             // Put the new image index on the row
             row.mImageModelIndex = result.rowImageInflater.getNewImageIndex()
+            row.setNotificationRowPresentation(
+                result.presentation.generationId,
+                result.presentation.contentType,
+            )
 
             entry.setContentModel(result.contentModel)
             if (PromotedNotificationContentModel.featureFlagEnabled()) {

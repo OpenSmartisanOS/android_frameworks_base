@@ -16,10 +16,7 @@
 
 package com.android.systemui.statusbar.notification.row;
 
-import static android.app.Flags.notificationsRedesignTemplates;
 import static android.view.HapticFeedbackConstants.CLOCK_TICK;
-
-import static com.android.systemui.SwipeHelper.SWIPED_FAR_ENOUGH_SIZE_FRACTION;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
@@ -266,64 +263,21 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
 
     private void createMenuViews(boolean resetState) {
         final Resources res = mContext.getResources();
-        mHorizSpaceForIcon = res.getDimensionPixelSize(R.dimen.notification_menu_icon_size);
-        mVertSpaceForIcons = res.getDimensionPixelSize(R.dimen.notification_min_height);
+        mHorizSpaceForIcon = res.getDimensionPixelSize(R.dimen.sos_notification_menu_width);
+        mVertSpaceForIcons = res.getDimensionPixelSize(R.dimen.sos_notification_min_height);
+        mIconPadding = res.getDimensionPixelSize(R.dimen.sos_notification_menu_icon_padding);
         mLeftMenuItems.clear();
         mRightMenuItems.clear();
 
-        final boolean showSnooze = mParent.getShowSnooze();
-        // Construct the menu items based on the notification
-        if (showSnooze) {
-            // Only show snooze for non-foreground notifications, and if the setting is on
-            mSnoozeItem = createSnoozeItem(mContext);
+        mSnoozeItem = null;
+        mFeedbackItem = null;
+        // Classification bundles have no package/channel. Controls stay on real children.
+        mInfoItem = NotificationBlockDialogController.canShow(mParent)
+                ? createBlockInfoItem(mContext) : null;
+        if (mInfoItem != null) {
+            // R2 exposes the block button only on a physical left swipe.
+            mRightMenuItems.add(mInfoItem);
         }
-        mFeedbackItem = createFeedbackItem(mContext);
-        int personNotifType = NotificationBundleUi.isEnabled()
-                ? mParent.getEntryAdapter().getPeopleNotificationType()
-                : mPeopleNotificationIdentifier.getPeopleNotificationType(mParent.getEntryLegacy());
-        StatusBarNotification sbn = NotificationBundleUi.isEnabled()
-                ? mParent.getEntryAdapter().getSbn()
-                : mParent.getEntryLegacy().getSbn();
-        NotificationListenerService.Ranking ranking = NotificationBundleUi.isEnabled()
-                ? mParent.getEntryAdapter().getRanking()
-                : mParent.getEntryLegacy().getRanking();
-        boolean isBundled = NotificationBundleUi.isEnabled()
-                ? mParent.getEntryAdapter().isBundled()
-                : mParent.getEntryLegacy().isBundled();
-        if (personNotifType == PeopleNotificationIdentifier.TYPE_PERSON) {
-            mInfoItem = createPartialConversationItem(mContext);
-        } else if (personNotifType >= PeopleNotificationIdentifier.TYPE_FULL_PERSON) {
-            mInfoItem = createConversationItem(mContext);
-        } else if (android.app.Flags.uiRichOngoing()
-                && android.app.Flags.apiRichOngoing()
-                && Flags.permissionHelperUiRichOngoing()
-                && (sbn != null && sbn.getNotification().isPromotedOngoing())) {
-            mInfoItem = createPromotedItem(mContext);
-        } else if ((NotificationClassificationUiFlag.isEnabled()
-                || NotificationBundleUi.isEnabled()) && isBundled) {
-            mInfoItem = createBundledInfoItem(mContext);
-        } else if (mParent.isBundle()) {
-            mInfoItem = createBundleHeaderInfoItem();
-        } else {
-            mInfoItem = createInfoItem(mContext);
-        }
-
-        if (showSnooze) {
-            mRightMenuItems.add(mSnoozeItem);
-        }
-        mRightMenuItems.add(mInfoItem);
-        mRightMenuItems.add(mFeedbackItem);
-        boolean isPromotedOngoing = NotificationBundleUi.isEnabled()
-                ? mParent.getEntryAdapter().isPromotedOngoing()
-                : mParent.getEntryLegacy().isPromotedOngoing();
-        if (android.app.Flags.uiRichOngoing() && Flags.permissionHelperInlineUiRichOngoing()
-                && isPromotedOngoing) {
-            mRightMenuItems.add(createDemoteItem(mContext));
-        }
-
-
-        mLeftMenuItems.addAll(mRightMenuItems);
-
         populateMenuViews();
         if (resetState) {
             resetState(false /* notify */);
@@ -346,11 +300,9 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
 
         // Populate menu items if we are using the new permission helper (U+) or if we are using
         // the very old dismiss setting (SC-).
-        if (Flags.permissionHelperInlineUiRichOngoing()) {
-            List<MenuItem> menuItems = mOnLeft ? mLeftMenuItems : mRightMenuItems;
-            for (int i = 0; i < menuItems.size(); i++) {
-                addMenuView(menuItems.get(i), mMenuContainer);
-            }
+        List<MenuItem> menuItems = mOnLeft ? mLeftMenuItems : mRightMenuItems;
+        for (int i = 0; i < menuItems.size(); i++) {
+            addMenuView(menuItems.get(i), mMenuContainer);
         }
     }
 
@@ -399,9 +351,7 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
             final float dismissThreshold = getDismissThreshold();
             final boolean snappingToDismiss = delta < -dismissThreshold || delta > dismissThreshold;
             if (mSnappingToDismiss != snappingToDismiss) {
-                if (!Flags.magneticNotificationSwipes()) {
-                    getMenuView().performHapticFeedback(CLOCK_TICK);
-                }
+                getMenuView().performHapticFeedback(CLOCK_TICK);
             }
             mSnappingToDismiss = snappingToDismiss;
         }
@@ -460,15 +410,13 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
 
     @VisibleForTesting
     protected float getMinimumSwipeDistance() {
-        final float multiplier = getParent().canViewBeDismissed()
-                ? SWIPED_FAR_ENOUGH_MENU_FRACTION
-                : SWIPED_FAR_ENOUGH_MENU_UNCLEARABLE_FRACTION;
+        final float multiplier = getParent().canViewBeDismissed() ? 0.4f : 0.2f;
         return mHorizSpaceForIcon * multiplier;
     }
 
     @VisibleForTesting
     protected float getMaximumSwipeDistance() {
-        return mHorizSpaceForIcon * SWIPED_BACK_ENOUGH_TO_COVER_FRACTION;
+        return mHorizSpaceForIcon * 0.4f;
     }
 
     /**
@@ -476,9 +424,7 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
      */
     @Override
     public boolean isTowardsMenu(float movement) {
-        return isMenuVisible()
-                && ((isMenuOnLeft() && movement <= 0)
-                        || (!isMenuOnLeft() && movement >= 0));
+        return isMenuVisible() && movement >= 0f;
     }
 
     @Override
@@ -558,16 +504,11 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
     }
 
     private boolean isMenuLocationChange() {
-        boolean onLeft = mTranslation > mIconPadding;
-        boolean onRight = mTranslation < -mIconPadding;
-        if ((isMenuOnLeft() && onRight) || (!isMenuOnLeft() && onLeft)) {
-            return true;
-        }
         return false;
     }
 
     private void setMenuLocation() {
-        boolean showOnLeft = mTranslation > 0;
+        boolean showOnLeft = false;
         if ((mIconsPlaced && showOnLeft == isMenuOnLeft()) || isSnapping() || mMenuContainer == null
                 || !mMenuContainer.isAttachedToWindow()) {
             // Do nothing
@@ -602,7 +543,10 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
         }
         final int count = mMenuContainer.getChildCount();
         for (int i = 0; i < count; i++) {
-            mMenuContainer.getChildAt(i).setAlpha(mAlpha);
+            final View child = mMenuContainer.getChildAt(i);
+            child.setAlpha(mAlpha);
+            child.setScaleX(mAlpha);
+            child.setScaleY(mAlpha);
         }
     }
 
@@ -622,7 +566,8 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
             final float notiThreshold = mParent.getWidth() * 0.4f;
             if ((!isMenuVisible() || isMenuLocationChange())
                     && absTransX >= bounceBackToMenuWidth * 0.4
-                    && absTransX < notiThreshold) {
+                    && absTransX < notiThreshold
+                    && mTranslation < 0f) {
                 fadeInMenu(notiThreshold);
             }
         }
@@ -740,12 +685,9 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
     static NotificationMenuItem createConversationItem(Context context) {
         Resources res = context.getResources();
         String infoDescription = res.getString(R.string.notification_menu_gear_description);
-        int layoutId = notificationsRedesignTemplates()
-                ? R.layout.notification_2025_conversation_info
-                : R.layout.notification_conversation_info;
         NotificationConversationInfo infoContent =
                 (NotificationConversationInfo) LayoutInflater.from(context).inflate(
-                        layoutId, null, false);
+                        R.layout.notification_conversation_info, null, false);
         return new NotificationMenuItem(context, infoDescription, infoContent,
                 NotificationMenuItem.OMIT_FROM_SWIPE_MENU);
     }
@@ -763,12 +705,9 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
     static NotificationMenuItem createPartialConversationItem(Context context) {
         Resources res = context.getResources();
         String infoDescription = res.getString(R.string.notification_menu_gear_description);
-        int layoutId = notificationsRedesignTemplates()
-                ? R.layout.notification_2025_partial_conversation_info
-                : R.layout.partial_conversation_info;
         PartialConversationInfo infoContent =
                 (PartialConversationInfo) LayoutInflater.from(context).inflate(
-                        layoutId, null, false);
+                        R.layout.partial_conversation_info, null, false);
         return new NotificationMenuItem(context, infoDescription, infoContent,
                 NotificationMenuItem.OMIT_FROM_SWIPE_MENU);
     }
@@ -843,13 +782,20 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
     static NotificationMenuItem createInfoItem(Context context) {
         Resources res = context.getResources();
         String infoDescription = res.getString(R.string.notification_menu_gear_description);
-        int layoutId = notificationsRedesignTemplates()
-                ? R.layout.notification_2025_info
-                : R.layout.notification_info;
         NotificationInfo infoContent = (NotificationInfo) LayoutInflater.from(context).inflate(
-                layoutId, null, false);
+                R.layout.notification_info, null, false);
         return new NotificationMenuItem(context, infoDescription, infoContent,
                 NotificationMenuItem.OMIT_FROM_SWIPE_MENU);
+    }
+
+    static NotificationMenuItem createBlockInfoItem(Context context) {
+        Resources res = context.getResources();
+        String description = res.getString(R.string.sos_notification_block);
+        return new BlockMenuItem(context, description);
+    }
+
+    public static boolean isBlockItem(@Nullable MenuItem item) {
+        return item instanceof BlockMenuItem;
     }
 
     static MenuItem createFeedbackItem(Context context) {
@@ -866,7 +812,7 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
             menuView.setAlpha(mAlpha);
             parent.addView(menuView);
             menuView.setOnClickListener(this);
-            if (item instanceof ImageView) {
+            if (menuView instanceof ImageView) {
                 FrameLayout.LayoutParams lp = (LayoutParams) menuView.getLayoutParams();
                 lp.width = mHorizSpaceForIcon;
                 lp.height = mHorizSpaceForIcon;
@@ -890,7 +836,7 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
      */
     @VisibleForTesting
     protected float getDismissThreshold() {
-        return getParent().getWidth() * SWIPED_FAR_ENOUGH_SIZE_FRACTION;
+        return getParent().getWidth() * 0.4f;
     }
 
     @Override
@@ -911,27 +857,24 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
     public boolean isSwipedEnoughToShowMenu() {
         final float minimumSwipeDistance = getMinimumSwipeDistance();
         final float translation = getTranslation();
-        return isMenuVisible() && (isMenuOnLeft() ?
-                translation > minimumSwipeDistance
-                : translation < -minimumSwipeDistance);
+        return isMenuVisible() && translation < -minimumSwipeDistance;
     }
 
     @Override
     public int getMenuSnapTarget() {
-        return isMenuOnLeft() ? getSpaceForMenu() : -getSpaceForMenu();
+        return -getSpaceForMenu();
     }
 
     @Override
     public boolean shouldSnapBack() {
         float translation = getTranslation();
         float targetLeft = getSnapBackThreshold();
-        return isMenuOnLeft() ? translation < targetLeft : translation > -targetLeft;
+        return translation > -targetLeft;
     }
 
     @Override
     public boolean isSnappedAndOnSameSide() {
-        return isMenuSnapped() && isMenuVisible()
-                && isMenuSnappedOnLeft() == isMenuOnLeft();
+        return isMenuSnapped() && isMenuVisible() && !isMenuSnappedOnLeft();
     }
 
     @Override
@@ -956,14 +899,14 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
         public NotificationMenuItem(Context context, String contentDescription, GutsContent content,
                 int iconResId) {
             mResources = context.getResources();
-            int padding = mResources.getDimensionPixelSize(R.dimen.notification_menu_icon_padding);
+            int padding = mResources.getDimensionPixelSize(
+                    R.dimen.sos_notification_menu_icon_padding);
             int tint = mResources.getColor(R.color.notification_gear_color);
             if (iconResId >= 0) {
                 AlphaOptimizedImageView iv = new AlphaOptimizedImageView(context);
                 iv.setPadding(padding, padding, padding, padding);
                 Drawable icon = context.getResources().getDrawable(iconResId);
                 iv.setImageDrawable(icon);
-                iv.setColorFilter(tint);
                 iv.setAlpha(1f);
                 mMenuView = iv;
             }
@@ -1008,6 +951,27 @@ public class NotificationMenuRow implements NotificationMenuRowPlugin, View.OnCl
             if (menuView != null) {
                 menuView.setContentDescription(description);
             }
+        }
+    }
+
+    /** Typed item used to route R2's sole swipe affordance away from NotificationGuts. */
+    private static final class BlockMenuItem extends NotificationMenuItem {
+        BlockMenuItem(Context context, String description) {
+            super(context, description, null, OMIT_FROM_SWIPE_MENU);
+            final int width = context.getResources().getDimensionPixelSize(
+                    R.dimen.sos_notification_menu_width);
+            final int iconWidth = Math.round(36f * context.getResources()
+                    .getDisplayMetrics().density);
+            final int iconHeight = Math.round(48f * context.getResources()
+                    .getDisplayMetrics().density);
+            final AlphaOptimizedImageView icon = new AlphaOptimizedImageView(context);
+            icon.setImageResource(R.drawable.sos_ic_notification_block);
+            icon.setPadding(Math.max(0, (width - iconWidth) / 2),
+                    Math.max(0, (width - iconHeight) / 2),
+                    Math.max(0, width - iconWidth - (width - iconWidth) / 2),
+                    Math.max(0, width - iconHeight - (width - iconHeight) / 2));
+            icon.setAlpha(1f);
+            mMenuView = icon;
         }
     }
 }

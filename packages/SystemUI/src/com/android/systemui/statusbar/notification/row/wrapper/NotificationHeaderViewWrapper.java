@@ -21,8 +21,8 @@ import static android.view.View.VISIBLE;
 
 import static com.android.systemui.statusbar.notification.TransformState.TRANSFORM_Y;
 
-import android.app.Notification;
 import android.content.Context;
+import android.service.notification.StatusBarNotification;
 import android.util.ArraySet;
 import android.view.NotificationHeaderView;
 import android.view.NotificationTopLineView;
@@ -51,7 +51,6 @@ import com.android.systemui.statusbar.notification.Roundable;
 import com.android.systemui.statusbar.notification.RoundableState;
 import com.android.systemui.statusbar.notification.TransformState;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
-import com.android.systemui.statusbar.notification.shared.NotificationAddXOnHoverToDismiss;
 import com.android.systemui.statusbar.notification.shared.NotificationBundleUi;
 
 import java.util.Stack;
@@ -121,9 +120,6 @@ public class NotificationHeaderViewWrapper extends NotificationViewWrapper imple
         addFeedbackOnClickListener(row);
         addDismissButtonOnClickListener(row);
 
-        if (NotificationAddXOnHoverToDismiss.isEnabled()) {
-            mRow.addDismissButtonTargetStateListener(mHoverListener);
-        }
     }
 
     @Override
@@ -175,25 +171,9 @@ public class NotificationHeaderViewWrapper extends NotificationViewWrapper imple
         }
     }
 
-    private ExpandableNotificationRow.DismissButtonTargetVisibilityListener mHoverListener = new
-            ExpandableNotificationRow.DismissButtonTargetVisibilityListener() {
-                @Override
-                public void onTargetVisibilityChanged(boolean targetVisible) {
-                    NotificationAddXOnHoverToDismiss.isUnexpectedlyInLegacyMode();
-
-                    if (mCloseButton != null) {
-                        mCloseButton.setVisibility(targetVisible ? VISIBLE : GONE);
-                    }
-                }
-            };
-
     @Override
     public void setRemoved() {
         super.setRemoved();
-
-        if (NotificationAddXOnHoverToDismiss.isEnabled()) {
-            mRow.removeDismissButtonTargetStateListener(mHoverListener);
-        }
     }
 
     /**
@@ -234,10 +214,14 @@ public class NotificationHeaderViewWrapper extends NotificationViewWrapper imple
         updateTransformedTypes();
         addRemainingTransformTypes();
         updateCropToPaddingForImageViews();
-        Notification n = NotificationBundleUi.isEnabled()
-                ? row.getEntryAdapter().getSbn().getNotification()
-                : row.getEntryLegacy().getSbn().getNotification();
-        mIcon.setTag(ImageTransformState.ICON_TAG, n.getSmallIcon());
+        final StatusBarNotification sbn = NotificationBundleUi.isEnabled()
+                        ? row.getEntryAdapter().getSbn()
+                        : row.getEntryLegacy().getSbn();
+        // Classification bundles deliberately have no backing StatusBarNotification.  Their R2
+        // header still participates in the normal transform pipeline, but its icon is supplied by
+        // BundleRepository instead of Notification.smallIcon.
+        mIcon.setTag(ImageTransformState.ICON_TAG,
+                sbn != null ? sbn.getNotification().getSmallIcon() : null);
 
         // We need to reset all views that are no longer transforming in case a view was previously
         // transformed, but now we decided to transform its container instead.

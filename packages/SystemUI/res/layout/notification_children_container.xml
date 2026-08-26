@@ -18,4 +18,11 @@
 <com.android.systemui.statusbar.notification.stack.NotificationChildrenContainer
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content" />
+    android:layout_height="wrap_content">
+
+    <com.android.systemui.statusbar.notification.row.NotificationGroupTailView
+        android:id="@+id/sos_notification_tail"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/sos_notification_group_tail_height"
+        android:visibility="invisible" />
+</com.android.systemui.statusbar.notification.stack.NotificationChildrenContainer>

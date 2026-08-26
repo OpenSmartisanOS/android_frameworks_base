@@ -16,7 +16,6 @@
 
 package com.android.systemui.statusbar.notification.row.wrapper;
 
-import static android.app.Flags.notificationsRedesignTemplates;
 import static android.view.View.VISIBLE;
 
 import static com.android.systemui.statusbar.notification.row.ExpandableNotificationRow.DEFAULT_HEADER_VISIBLE_AMOUNT;
@@ -154,12 +153,8 @@ public class NotificationTemplateViewWrapper extends NotificationHeaderViewWrapp
                 }, TRANSFORMING_VIEW_TEXT);
         int contentMargin = ctx.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.notification_content_margin);
-        int contentMarginTop =
-                notificationsRedesignTemplates()
-                        ? Notification.Builder.getContentMarginTop(ctx,
-                            com.android.internal.R.dimen.notification_2025_content_margin_top)
-                        : ctx.getResources().getDimensionPixelSize(
-                            com.android.internal.R.dimen.notification_content_margin_top);
+        int contentMarginTop = ctx.getResources().getDimensionPixelSize(
+                com.android.internal.R.dimen.notification_content_margin_top);
         mFullHeaderTranslation = contentMargin - contentMarginTop;
     }
 
@@ -219,7 +214,12 @@ public class NotificationTemplateViewWrapper extends NotificationHeaderViewWrapp
             int numActions = mActions.getChildCount();
             final ArraySet<Integer> currentlyActivePendingIntents = new ArraySet<>(numActions);
             for (int i = 0; i < numActions; i++) {
-                Button action = (Button) mActions.getChildAt(i);
+                final View child = mActions.getChildAt(i);
+                // Smartisan's action strip owns its original 2 px divider views. They are not
+                // actions and therefore have no PendingIntent to track.
+                if (!(child instanceof Button action)) {
+                    continue;
+                }
                 PendingIntent pendingIntent = getPendingIntentForAction(action);
                 // Check if passed intent has already been cancelled in this class and immediately
                 // disable the action to avoid temporary race with enable/disable.
@@ -362,8 +362,7 @@ public class NotificationTemplateViewWrapper extends NotificationHeaderViewWrapp
     @Override
     public int getExtraMeasureHeight() {
         int extra = 0;
-        if (!notificationsRedesignTemplates() && mActions != null) {
-            // With the redesign, this should always be 0.
+        if (mActions != null) {
             extra = mActions.getExtraMeasureHeight();
         }
         if (mRemoteInputHistory != null && mRemoteInputHistory.getVisibility() != View.GONE) {
@@ -383,7 +382,10 @@ public class NotificationTemplateViewWrapper extends NotificationHeaderViewWrapp
         if (mActions != null) {
             int numActions = mActions.getChildCount();
             for (int i = 0; i < numActions; i++) {
-                Button action = (Button) mActions.getChildAt(i);
+                final View child = mActions.getChildAt(i);
+                if (!(child instanceof Button action)) {
+                    continue;
+                }
                 PendingIntent pendingIntent = getPendingIntentForAction(action);
                 if (intent.equals(pendingIntent)) {
                     disableActionView(action);
