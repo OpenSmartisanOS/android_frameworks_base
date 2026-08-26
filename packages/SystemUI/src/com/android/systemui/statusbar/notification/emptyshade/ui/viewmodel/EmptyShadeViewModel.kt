@@ -19,7 +19,6 @@ package com.android.systemui.statusbar.notification.emptyshade.ui.viewmodel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.icu.text.MessageFormat
-import com.android.systemui.common.shared.model.Icon
 import com.android.systemui.common.ui.domain.interactor.ConfigurationInteractor
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.dump.DumpManager
@@ -28,8 +27,6 @@ import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.shared.notifications.domain.interactor.NotificationSettingsInteractor
 import com.android.systemui.statusbar.notification.NotificationActivityStarter.SettingsIntent
 import com.android.systemui.statusbar.notification.domain.interactor.SeenNotificationsInteractor
-import com.android.systemui.statusbar.notification.emptyshade.ui.shared.flag.ShowIconInEmptyShade
-import com.android.systemui.statusbar.notification.emptyshade.ui.shared.model.IconMessageModel
 import com.android.systemui.statusbar.notification.footer.ui.viewmodel.FooterMessageViewModel
 import com.android.systemui.statusbar.policy.domain.interactor.ZenModeInteractor
 import com.android.systemui.statusbar.policy.domain.model.ActiveZenModes
@@ -42,7 +39,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
@@ -81,49 +77,7 @@ constructor(
             .distinctUntilChanged()
     }
 
-    /**
-     * A combination of icon + text that replaces the old approach with the text followed by a
-     * footer that shows an icon.
-     */
-    val message: Flow<IconMessageModel> by lazy {
-        if (ShowIconInEmptyShade.isUnexpectedlyInLegacyMode()) {
-            flowOf(
-                IconMessageModel(
-                    message = "Something went wrong",
-                    icon = Icon.Resource(R.drawable.ic_error_outline, null),
-                )
-            )
-        } else {
-            combine(
-                    zenModeInteractor.modesHidingNotifications,
-                    primaryLocale,
-                    hasFilteredOutSeenNotifications,
-                ) { modes, locale, hasFilteredOutSeenNotificationsValue ->
-                    when {
-                        hasFilteredOutSeenNotificationsValue ->
-                            IconMessageModel(
-                                message = context.getString(R.string.unlock_to_see_notif_text),
-                                icon = Icon.Resource(R.drawable.ic_friction_lock_closed, null),
-                            )
-                        modes.main == null ->
-                            IconMessageModel(
-                                message = context.getString(R.string.caught_up_shade_text),
-                                icon = Icon.Resource(R.drawable.ic_trophy, null),
-                            )
-                        else ->
-                            IconMessageModel(
-                                message = formatModesString(locale, modes),
-                                icon = modes.main.icon,
-                            )
-                    }
-                }
-                .distinctUntilChanged()
-                .flowOn(bgDispatcher)
-        }
-    }
-
     val text: Flow<String> by lazy {
-        ShowIconInEmptyShade.assertInLegacyMode()
         combine(zenModeInteractor.modesHidingNotifications, primaryLocale) { modes, locale ->
                 formatModesString(locale, modes)
             }
@@ -144,7 +98,6 @@ constructor(
     }
 
     val footer: FooterMessageViewModel by lazy {
-        ShowIconInEmptyShade.assertInLegacyMode()
         FooterMessageViewModel(
             messageId = R.string.unlock_to_see_notif_text,
             iconId = R.drawable.ic_friction_lock_closed,

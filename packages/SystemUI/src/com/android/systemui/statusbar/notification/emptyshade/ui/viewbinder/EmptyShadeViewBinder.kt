@@ -19,36 +19,16 @@ package com.android.systemui.statusbar.notification.emptyshade.ui.viewbinder
 import android.view.View
 import com.android.app.tracing.coroutines.launchTraced as launch
 import com.android.systemui.statusbar.notification.NotificationActivityStarter
-import com.android.systemui.statusbar.notification.emptyshade.ui.shared.flag.ShowIconInEmptyShade
-import com.android.systemui.statusbar.notification.emptyshade.ui.view.EmptyShadeIconView
 import com.android.systemui.statusbar.notification.emptyshade.ui.view.EmptyShadeView
 import com.android.systemui.statusbar.notification.emptyshade.ui.viewmodel.EmptyShadeViewModel
-import com.android.systemui.statusbar.notification.row.StackScrollerDecorView
 import kotlinx.coroutines.coroutineScope
 
 object EmptyShadeViewBinder {
     suspend fun bind(
-        view: StackScrollerDecorView,
+        view: EmptyShadeView,
         viewModel: EmptyShadeViewModel,
         notificationActivityStarter: NotificationActivityStarter,
     ) = coroutineScope {
-        if (ShowIconInEmptyShade.isEnabled) {
-            require(view is EmptyShadeIconView)
-
-            launch {
-                viewModel.message.collect {
-                    view.setText(it.message)
-                    view.setIcon(it.icon)
-                }
-            }
-        } else {
-            require(view is EmptyShadeView)
-
-            launch { viewModel.text.collect { view.setText(it) } }
-
-            launch { bindFooter(view, viewModel) }
-        }
-
         launch {
             viewModel.onClick.collect { settingsIntent ->
                 val onClickListener = { view: View ->
@@ -58,17 +38,4 @@ object EmptyShadeViewBinder {
             }
         }
     }
-
-    private suspend fun bindFooter(view: EmptyShadeView, viewModel: EmptyShadeViewModel) =
-        coroutineScope {
-            // Bind the resource IDs
-            view.setFooterText(viewModel.footer.messageId)
-            view.setFooterIcon(viewModel.footer.iconId)
-
-            launch {
-                viewModel.footer.isVisible.collect { visible ->
-                    view.setFooterVisibility(if (visible) View.VISIBLE else View.GONE)
-                }
-            }
-        }
 }
