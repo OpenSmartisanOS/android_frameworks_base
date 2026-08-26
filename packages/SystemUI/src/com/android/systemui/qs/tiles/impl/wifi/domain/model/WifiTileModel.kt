@@ -25,12 +25,12 @@ sealed interface WifiTileModel {
     val icon: WifiTileIconModel
 
     data class Active(
-        override val icon: WifiTileIconModel = WifiTileIconModel(WifiIcons.WIFI_NO_NETWORK),
+        override val icon: WifiTileIconModel = WifiTileIconModel(WifiIcons.QS_WIFI_NO_NETWORK),
         override val secondaryLabel: CharSequence? = null,
     ) : WifiTileModel
 
     data class Inactive(
-        override val icon: WifiTileIconModel = WifiTileIconModel(WifiIcons.WIFI_NO_NETWORK),
+        override val icon: WifiTileIconModel = WifiTileIconModel(WifiIcons.QS_WIFI_NO_NETWORK),
         override val secondaryLabel: CharSequence? = null,
     ) : WifiTileModel
 }

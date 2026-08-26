@@ -63,11 +63,7 @@ constructor(
         val activeRepo = mobileConnectionsRepository.activeMobileDataRepository.value ?: return
         // If mobile data is disabled, show a confirmation dialog to turn it on.
         if (!activeRepo.dataEnabled.value) {
-            if (context.resources.getBoolean(R.bool.config_sos_legacy_shade)) {
-                activeRepo.setDataEnabled(true)
-            } else {
-                withContext(mainDispatcher) { showEnableConfirmationDialog(expandable) }
-            }
+            activeRepo.setDataEnabled(true)
         } else {
             // Otherwise, just turn it off without a dialog.
             activeRepo.setDataEnabled(false)

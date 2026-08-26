@@ -24,6 +24,7 @@ import android.testing.TestableLooper
 import android.text.TextUtils
 import android.view.ContextThemeWrapper
 import android.view.View
+import android.view.ViewGroup
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.Button
 import android.widget.TextView
@@ -42,6 +43,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.MockitoAnnotations
+import kotlin.math.roundToInt
 
 @RunWith(AndroidJUnit4::class)
 @SmallTest
@@ -222,6 +224,39 @@ class QSTileViewImplTest : SysuiTestCase() {
 
         assertThat(customDrawableView.visibility).isEqualTo(View.GONE)
         assertThat(chevronView.visibility).isEqualTo(View.GONE)
+    }
+
+    @Test
+    fun smartisanLabelMargins_initiallyKeepContainerCentered() {
+        val label = tileView.requireViewById<TextView>(R.id.tile_label)
+        val container = label.parent as View
+        val containerMargins = container.layoutParams as ViewGroup.MarginLayoutParams
+        val labelMargins = label.layoutParams as ViewGroup.MarginLayoutParams
+        val expectedLabelMargin = (context.resources.displayMetrics.density * 8).roundToInt()
+
+        assertThat(containerMargins.marginStart).isEqualTo(0)
+        assertThat(containerMargins.marginEnd).isEqualTo(0)
+        assertThat(labelMargins.marginStart).isEqualTo(expectedLabelMargin)
+        assertThat(labelMargins.marginEnd).isEqualTo(expectedLabelMargin)
+    }
+
+    @Test
+    fun smartisanLabelMargins_updateResourcesClearsStaleAsymmetricContainerMargins() {
+        val label = tileView.requireViewById<TextView>(R.id.tile_label)
+        val container = label.parent as View
+        val margins = container.layoutParams as ViewGroup.MarginLayoutParams
+        val staleMargin = (context.resources.displayMetrics.density * 8).roundToInt()
+        margins.marginStart = 0
+        margins.marginEnd = staleMargin
+        margins.leftMargin = 0
+        margins.rightMargin = staleMargin
+
+        tileView.updateResources()
+
+        assertThat(margins.marginStart).isEqualTo(0)
+        assertThat(margins.marginEnd).isEqualTo(0)
+        assertThat(margins.leftMargin).isEqualTo(0)
+        assertThat(margins.rightMargin).isEqualTo(0)
     }
 
     @Test

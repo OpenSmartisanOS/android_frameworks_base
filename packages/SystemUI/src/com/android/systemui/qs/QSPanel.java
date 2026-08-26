@@ -199,8 +199,7 @@ public class QSPanel extends LinearLayout implements Tunable {
 
     /** Used to add the brightness slider after construction. */
     public void setBrightnessView(@NonNull View view) {
-        final boolean useSosOrder =
-                mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade);
+        final boolean useSosOrder = true;
         if (mBrightnessView != null) {
             removeView(mBrightnessView);
             mChildrenLayoutTop.remove(mBrightnessView);
@@ -226,9 +225,7 @@ public class QSPanel extends LinearLayout implements Tunable {
         if (mBrightnessView != null) {
             MarginLayoutParams lp = (MarginLayoutParams) mBrightnessView.getLayoutParams();
             // For Brightness Slider to extend its boundary to draw focus background
-            int offset = getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                    ? 0
-                    : getResources().getDimensionPixelSize(R.dimen.rounded_slider_boundary_offset);
+            int offset = 0;
             lp.topMargin = mContext.getResources()
                     .getDimensionPixelSize(R.dimen.qs_brightness_margin_top) - offset;
             lp.bottomMargin = mContext.getResources()

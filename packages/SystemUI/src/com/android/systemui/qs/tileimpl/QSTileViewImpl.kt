@@ -101,7 +101,7 @@ constructor(
     private var hasLongClickEffect: Boolean = true
 
     private val useSosTileAppearance: Boolean
-        get() = resources.getBoolean(R.bool.config_sos_legacy_shade)
+        get() = true
 
     override fun setPosition(position: Int) {
         this.position = position
@@ -288,7 +288,18 @@ constructor(
         } else {
             resources.getDimensionPixelSize(R.dimen.qs_label_container_margin)
         }
-        (labelContainer.layoutParams as MarginLayoutParams).apply { marginStart = labelMargin }
+        (labelContainer.layoutParams as MarginLayoutParams).apply {
+            if (useSosTileAppearance) {
+                // Smartisan centers the label group itself and keeps its symmetric 8dp spacing on
+                // the TextView. Clear both absolute and relative margins so a configuration change
+                // cannot leave an end-only margin that shifts the group to the start side.
+                setMargins(0, topMargin, 0, bottomMargin)
+                marginStart = 0
+                marginEnd = 0
+            } else {
+                marginStart = labelMargin
+            }
+        }
 
         (sideView.layoutParams as MarginLayoutParams).apply { marginStart = labelMargin }
         (chevronView.layoutParams as MarginLayoutParams).apply {

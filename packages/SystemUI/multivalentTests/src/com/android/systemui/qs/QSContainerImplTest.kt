@@ -74,7 +74,6 @@ class QSContainerImplTest : SysuiTestCase() {
 
     @Test
     fun sosLegacyShade_containerUsesFullHeight() {
-        overrideResource(R.bool.config_sos_legacy_shade, true)
 
         qsContainer.setHeightOverride(1000)
         qsContainer.setExpansion(0.25f)

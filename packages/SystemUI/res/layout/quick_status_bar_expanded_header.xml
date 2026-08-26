@@ -15,12 +15,11 @@
 ** limitations under the License.
 -->
 
-<!-- Extends RelativeLayout -->
-<com.android.systemui.qs.SosQuickStatusBarHeader
+<com.android.systemui.qs.QuickStatusBarHeader
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/header"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/sos_qs_header_outer_height"
+    android:layout_height="@dimen/shade_header_outer_height"
     android:layout_gravity="@integer/notification_panel_layout_gravity"
     android:background="@color/sos_qs_panel_background"
     android:importantForAccessibility="no"
@@ -32,79 +31,7 @@
     android:paddingTop="0dp"
     android:paddingEnd="0dp"
     android:paddingStart="0dp"
-    android:elevation="4dp" >
-
-    <RelativeLayout
-        android:id="@+id/sos_qs_header_content"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/sos_qs_header_height"
-        android:background="@drawable/notification_header_panel_bg">
-
-        <TextClock
-            android:id="@+id/sos_qs_header_time"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:gravity="center"
-            android:paddingStart="20dp"
-            android:format12Hour="h:mm"
-            android:format24Hour="HH:mm"
-            android:textColor="#ff222222"
-            android:textSize="@dimen/sos_qs_header_time_size" />
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_toEndOf="@id/sos_qs_header_time"
-            android:layout_toStartOf="@id/sos_qs_search_container"
-            android:gravity="center_vertical"
-            android:orientation="vertical"
-            android:paddingStart="11dp">
-
-            <TextClock
-                android:id="@+id/sos_qs_header_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:format12Hour="EEE  M月d日"
-                android:format24Hour="EEE  M月d日"
-                android:textColor="#99000000"
-                android:textSize="11sp" />
-
-            <TextView
-                android:id="@+id/sos_qs_header_weather"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="#99000000"
-                android:textSize="10sp"
-                android:visibility="gone" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/sos_qs_search_container"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentEnd="true"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <ImageView
-                android:layout_width="2dp"
-                android:layout_height="30dp"
-                android:background="@drawable/statusbar_expand_header_search_line" />
-
-            <ImageButton
-                android:id="@+id/sos_qs_search"
-                android:layout_width="48dp"
-                android:layout_height="30dp"
-                android:background="@drawable/statusbar_expand_header_search"
-                android:contentDescription="@string/accessibility_quick_settings_settings" />
-        </LinearLayout>
-    </RelativeLayout>
-
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/sos_qs_header_height"
-        android:background="@drawable/notification_header_panel_shadow" />
+    android:elevation="0dp" >
 
     <com.android.systemui.qs.QuickQSPanel
         android:id="@+id/quick_qs_panel"
@@ -118,4 +45,4 @@
         android:importantForAccessibility="no">
     </com.android.systemui.qs.QuickQSPanel>
 
-</com.android.systemui.qs.SosQuickStatusBarHeader>
+</com.android.systemui.qs.QuickStatusBarHeader>

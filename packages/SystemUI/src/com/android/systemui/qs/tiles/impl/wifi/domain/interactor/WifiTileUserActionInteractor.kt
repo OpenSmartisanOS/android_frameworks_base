@@ -65,18 +65,7 @@ constructor(
         }
 
     suspend fun handleClick(expandable: Expandable?) {
-        if (context.resources.getBoolean(R.bool.config_sos_legacy_shade)) {
-            handleSecondaryClick(expandable)
-            return
-        }
-        withContext(mainContext) {
-            internetDialogManager.create(
-                aboveStatusBar = true,
-                false, /* canConfigMobileData */
-                accessPointController.canConfigWifi(),
-                expandable,
-            )
-        }
+        handleSecondaryClick(expandable)
     }
 
     suspend fun handleLongClick(expandable: Expandable?) {

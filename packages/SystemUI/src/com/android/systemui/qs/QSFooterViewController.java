@@ -70,11 +70,9 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
 
     @Override
     protected void onViewAttached() {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            mView.setVisibility(View.GONE);
-            mEditButton.setVisibility(View.GONE);
-            mEditButton.setClickable(false);
-        }
+        mView.setVisibility(View.GONE);
+        mEditButton.setVisibility(View.GONE);
+        mEditButton.setClickable(false);
         mBuildText.setOnLongClickListener(view -> {
             CharSequence buildText = mBuildText.getText();
             if (!TextUtils.isEmpty(buildText)) {
@@ -105,16 +103,9 @@ public class QSFooterViewController extends ViewController<QSFooterView> impleme
 
     @Override
     public void setVisibility(int visibility) {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            mView.setVisibility(View.GONE);
-            mEditButton.setVisibility(View.GONE);
-            mEditButton.setClickable(false);
-            return;
-        }
-        mView.setVisibility(visibility);
-        mEditButton
-                .setVisibility(mRetailModeInteractor.isInRetailMode() ? View.GONE : View.VISIBLE);
-        mEditButton.setClickable(visibility == View.VISIBLE);
+        mView.setVisibility(View.GONE);
+        mEditButton.setVisibility(View.GONE);
+        mEditButton.setClickable(false);
     }
 
     @Override

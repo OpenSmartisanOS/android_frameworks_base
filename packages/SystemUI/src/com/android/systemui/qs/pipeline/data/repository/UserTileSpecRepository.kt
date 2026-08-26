@@ -174,10 +174,6 @@ constructor(
 
     private suspend fun loadTilesFromSettingsAndParse(userId: Int): List<TileSpec> {
         val loadedTiles = loadTilesFromSettings(userId)
-        if (!context.resources.getBoolean(R.bool.config_sos_legacy_shade)) {
-            return finishLoadingTiles(loadedTiles, userId)
-        }
-
         val layoutVersion =
             secureSettings.getIntForUser(SOS_LAYOUT_VERSION_SETTING, 0, userId)
         if (layoutVersion == 0) {

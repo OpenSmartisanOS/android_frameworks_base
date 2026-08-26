@@ -262,7 +262,7 @@ public class QSIconViewImpl extends QSIconView {
     }
 
     private boolean useSosTileArtwork() {
-        return getContext().getResources().getBoolean(R.bool.config_sos_legacy_shade);
+        return true;
     }
 
     protected int getIconMeasureMode() {

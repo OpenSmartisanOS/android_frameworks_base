@@ -528,10 +528,7 @@ public class QSImpl implements QS, CommandQueue.Callbacks, StatusBarStateControl
 
     public void setBrightnessMirrorController(
             @Nullable MirrorController brightnessMirrorController) {
-        mQSPanelController.setBrightnessMirror(
-                getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                        ? null
-                        : brightnessMirrorController);
+        mQSPanelController.setBrightnessMirror(null);
     }
 
     @Override
@@ -660,102 +657,10 @@ public class QSImpl implements QS, CommandQueue.Callbacks, StatusBarStateControl
     @Override
     public void setQsExpansion(float expansion, float panelExpansionFraction,
             float proposedTranslation, float squishinessFraction) {
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            setSosQsExpansion(expansion, panelExpansionFraction);
-            return;
-        }
-        float headerTranslation = mTransitioningToFullShade ? 0 : proposedTranslation;
-        float alphaProgress = calculateAlphaProgress(panelExpansionFraction);
-        setAlphaAnimationProgress(alphaProgress);
-        mContainer.setExpansion(expansion);
-        final float translationScaleY = (mInSplitShade
-                ? 1 : QSAnimator.SHORT_PARALLAX_AMOUNT) * (expansion - 1);
-        boolean onKeyguard = isKeyguardState();
-        boolean onKeyguardAndExpanded = onKeyguard && !mShowCollapsedOnKeyguard;
-        if (!mHeaderAnimating && !headerWillBeAnimating() && !mOverScrolling) {
-            getView().setTranslationY(
-                    onKeyguardAndExpanded
-                            ? translationScaleY * mHeader.getHeight()
-                            : headerTranslation);
-        }
-        int currentHeight = getView().getHeight();
-        if (expansion == mLastQSExpansion
-                && mLastKeyguardAndExpanded == onKeyguardAndExpanded
-                && mLastViewHeight == currentHeight
-                && mLastHeaderTranslation == headerTranslation
-                && mSquishinessFraction == squishinessFraction
-                && mLastPanelFraction == panelExpansionFraction) {
-            return;
-        }
-        mLastHeaderTranslation = headerTranslation;
-        mLastPanelFraction = panelExpansionFraction;
-        mSquishinessFraction = squishinessFraction;
-        mLastQSExpansion = expansion;
-        mLastKeyguardAndExpanded = onKeyguardAndExpanded;
-        mLastViewHeight = currentHeight;
-
-        boolean fullyExpanded = expansion == 1;
-        boolean fullyCollapsed = expansion == 0.0f;
-        int heightDiff = getHeightDiff();
-        float panelTranslationY = translationScaleY * heightDiff;
-
-        if (expansion < 1 && expansion > 0.99) {
-            if (mQuickQSPanelController.switchTileLayout(false)) {
-                mHeader.updateResources();
-            }
-        }
-        mQSPanelController.setIsOnKeyguard(onKeyguard);
-        mFooter.setExpansion(onKeyguardAndExpanded ? 1 : expansion);
-        float footerActionsExpansion =
-                onKeyguardAndExpanded ? 1 : mInSplitShade ? alphaProgress : expansion;
-        if (mQSFooterActionsViewModel != null) {
-            mQSFooterActionsViewModel.onQuickSettingsExpansionChanged(footerActionsExpansion,
-                    mInSplitShade);
-        }
-        mQSPanelController.setRevealExpansion(expansion);
-        mQSPanelController.getTileLayout().setExpansion(expansion, proposedTranslation);
-        mQuickQSPanelController.getTileLayout().setExpansion(expansion, proposedTranslation);
-
-        if (!SceneContainerFlag.isEnabled()) {
-            float qsScrollViewTranslation =
-                    onKeyguard && !mShowCollapsedOnKeyguard ? panelTranslationY : 0;
-            mQSPanelScrollView.setTranslationY(qsScrollViewTranslation);
-
-            if (fullyCollapsed) {
-                mQSPanelScrollView.setScrollY(0);
-            }
-
-            if (!fullyExpanded) {
-                // Set bounds on the QS panel so it doesn't run over the header when animating.
-                mQsBounds.top = (int) -mQSPanelScrollView.getTranslationY();
-                mQsBounds.right = mQSPanelScrollView.getWidth();
-                mQsBounds.bottom = mQSPanelScrollView.getHeight();
-            }
-        }
-        updateQsBounds();
-
-        if (mQSSquishinessController != null) {
-            mQSSquishinessController.setSquishiness(mSquishinessFraction);
-        }
-        if (mQSAnimator != null) {
-            mQSAnimator.setPosition(expansion);
-        }
-        if (!mShouldUpdateMediaSquishiness
-                && (!mInSplitShade
-                || mStatusBarStateController.getState() == KEYGUARD
-                || mStatusBarStateController.getState() == SHADE_LOCKED)
-        ) {
-            // At beginning, state is 0 and will apply wrong squishiness to MediaHost in lockscreen
-            // and media player expect no change by squishiness in lock screen shade. Don't bother
-            // squishing mQsMediaHost when not in split shade to prevent problems with stale state.
-            mQsMediaHost.setSquishFraction(1.0F);
-        } else {
-            mQsMediaHost.setSquishFraction(mSquishinessFraction);
-        }
-        updateMediaPositions();
+        setShadePageExpansion(expansion, panelExpansionFraction);
     }
 
-    private void setSosQsExpansion(float expansion, float panelExpansionFraction) {
+    private void setShadePageExpansion(float expansion, float panelExpansionFraction) {
         final float officialExpansion = expansion > 0f ? 1f : 0f;
         setAlphaAnimationProgress(officialExpansion);
         getView().setTranslationY(0f);

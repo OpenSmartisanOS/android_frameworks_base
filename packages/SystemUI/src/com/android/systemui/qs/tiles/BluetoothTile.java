@@ -160,14 +160,7 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
     }
 
     private void handleClickEvent(@Nullable Expandable expandable) {
-        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            toggleBluetooth();
-        } else if (mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG)) {
-            mDetailsContentViewModel.get().showDialog(expandable);
-        } else {
-            // Secondary clicks are header clicks, just toggle.
-            toggleBluetooth();
-        }
+        toggleBluetooth();
     }
 
     @Override
@@ -258,13 +251,10 @@ public class BluetoothTile extends QSTileImpl<BooleanState> {
             state.icon = maybeLoadResourceIcon(R.drawable.qs_bluetooth_icon_off);
             state.state = Tile.STATE_INACTIVE;
         }
-        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            state.icon = ResourceIcon.get(getSosIconRes(enabled, connected, state.isTransient));
-        }
+        state.icon = ResourceIcon.get(getSosIconRes(enabled, connected, state.isTransient));
 
         state.expandedAccessibilityClassName = Button.class.getName();
-        state.forceExpandIcon = !mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                && mFeatureFlags.isEnabled(Flags.BLUETOOTH_QS_TILE_DIALOG);
+        state.forceExpandIcon = false;
     }
 
     private void toggleBluetooth() {

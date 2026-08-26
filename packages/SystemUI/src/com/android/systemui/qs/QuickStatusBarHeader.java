@@ -15,20 +15,14 @@
 package com.android.systemui.qs;
 
 import static android.app.StatusBarManager.DISABLE2_QUICK_SETTINGS;
-import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
-
 import android.content.Context;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.util.AttributeSet;
 import android.view.MotionEvent;
-import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 
 import com.android.systemui.res.R;
-import com.android.systemui.shade.LargeScreenHeaderHelper;
-import com.android.systemui.util.LargeScreenUtils;
 
 /**
  * View that contains the top-most bits of the QS panel (primarily the status bar with date, time,
@@ -41,8 +35,6 @@ public class QuickStatusBarHeader extends FrameLayout {
 
     protected QuickQSPanel mHeaderQsPanel;
 
-    private boolean mSceneContainerEnabled;
-
     public QuickStatusBarHeader(Context context, AttributeSet attrs) {
         super(context, attrs);
     }
@@ -53,13 +45,6 @@ public class QuickStatusBarHeader extends FrameLayout {
         mHeaderQsPanel = findViewById(R.id.quick_qs_panel);
 
         updateResources();
-    }
-
-    void setSceneContainerEnabled(boolean enabled) {
-        mSceneContainerEnabled = enabled;
-        if (mSceneContainerEnabled) {
-            updateResources();
-        }
     }
 
     @Override
@@ -79,28 +64,27 @@ public class QuickStatusBarHeader extends FrameLayout {
     }
 
     void updateResources() {
-        Resources resources = mContext.getResources();
-        boolean largeScreenHeaderActive =
-                LargeScreenUtils.shouldUseLargeScreenShadeHeader(resources);
-
         ViewGroup.LayoutParams lp = getLayoutParams();
-        if (mQsDisabled) {
-            lp.height = 0;
-        } else {
-            lp.height = WRAP_CONTENT;
-        }
+        lp.height = mQsDisabled ? 0 : getResources().getDimensionPixelSize(
+                R.dimen.shade_header_outer_height);
         setLayoutParams(lp);
 
         MarginLayoutParams qqsLP = (MarginLayoutParams) mHeaderQsPanel.getLayoutParams();
-        if (mSceneContainerEnabled) {
-            qqsLP.topMargin = 0;
-        } else if (largeScreenHeaderActive) {
-            qqsLP.topMargin = mContext.getResources()
-                    .getDimensionPixelSize(R.dimen.qqs_layout_margin_top);
-        } else {
-            qqsLP.topMargin = LargeScreenHeaderHelper.getLargeScreenHeaderHeight(mContext);
-        }
+        qqsLP.width = 0;
+        qqsLP.height = 0;
+        qqsLP.topMargin = 0;
+        qqsLP.setMarginStart(0);
+        qqsLP.setMarginEnd(0);
         mHeaderQsPanel.setLayoutParams(qqsLP);
+        mHeaderQsPanel.setVisibility(GONE);
+        super.setVisibility(INVISIBLE);
+    }
+
+    @Override
+    public void setVisibility(int visibility) {
+        // The canonical shade header owns all visible header content. Keep this legacy QS
+        // contract node measured as a spacer without ever drawing a second header.
+        super.setVisibility(INVISIBLE);
     }
 
     public void setExpanded(boolean expanded, QuickQSPanelController quickQSPanelController) {
@@ -115,13 +99,6 @@ public class QuickStatusBarHeader extends FrameLayout {
         mQsDisabled = disabled;
         mHeaderQsPanel.setDisabledByPolicy(disabled);
         updateResources();
-    }
-
-    private void setContentMargins(View view, int marginStart, int marginEnd) {
-        MarginLayoutParams lp = (MarginLayoutParams) view.getLayoutParams();
-        lp.setMarginStart(marginStart);
-        lp.setMarginEnd(marginEnd);
-        view.setLayoutParams(lp);
     }
 
     /**
