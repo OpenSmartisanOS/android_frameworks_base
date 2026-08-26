@@ -1169,7 +1169,6 @@
     <bool name="config_useBrightnessMirrorInOverlay">true</bool>
 
     <!-- Use the SmartisanOS legacy View shade instead of the Android shade header/QQS chrome. -->
-    <bool name="config_sos_legacy_shade">true</bool>
 
     <!-- List of allowed tiles for headless system user's quick settings.
 

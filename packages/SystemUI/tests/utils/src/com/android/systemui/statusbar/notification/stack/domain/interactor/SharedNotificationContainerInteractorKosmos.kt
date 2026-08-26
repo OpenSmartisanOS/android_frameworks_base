@@ -22,14 +22,12 @@ import com.android.systemui.deviceentry.domain.interactor.deviceEntryUdfpsIntera
 import com.android.systemui.keyguard.domain.interactor.keyguardInteractor
 import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.shade.largeScreenHeaderHelper
-import com.android.systemui.statusbar.policy.splitShadeStateController
 import org.mockito.kotlin.mock
 
 val Kosmos.sharedNotificationContainerInteractor by
     Kosmos.Fixture {
         SharedNotificationContainerInteractor(
             context = applicationContext,
-            splitShadeStateController = { splitShadeStateController },
             configurationInteractor = configurationInteractor,
             keyguardInteractor = keyguardInteractor,
             deviceEntryUdfpsInteractor = deviceEntryUdfpsInteractor,

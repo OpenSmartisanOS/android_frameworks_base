@@ -62,7 +62,6 @@ import com.android.internal.statusbar.IStatusBarService;
 import com.android.internal.view.OneShotPreDrawListener;
 import com.android.systemui.Dumpable;
 import com.android.systemui.ExpandHelper;
-import com.android.systemui.Flags;
 import com.android.systemui.Gefingerpoken;
 import com.android.systemui.classifier.Classifier;
 import com.android.systemui.classifier.FalsingCollector;
@@ -93,6 +92,8 @@ import com.android.systemui.statusbar.NotificationShelf;
 import com.android.systemui.statusbar.RemoteInputController;
 import com.android.systemui.statusbar.StatusBarState;
 import com.android.systemui.statusbar.SysuiStatusBarStateController;
+import com.android.systemui.statusbar.notification.row.NotificationBlockDialogController;
+import com.android.systemui.statusbar.notification.row.NotificationBlockMenuRow;
 import com.android.systemui.statusbar.notification.ColorUpdateLogger;
 import com.android.systemui.statusbar.notification.DynamicPrivacyController;
 import com.android.systemui.statusbar.notification.LaunchAnimationParameters;
@@ -424,6 +425,11 @@ public class NotificationStackScrollLayoutController implements Dumpable {
             if (!mAllowLongPress) {
                 return;
             }
+            if (view instanceof ExpandableNotificationRow row
+                    && NotificationBlockMenuRow.isBlockItem(item)) {
+                NotificationBlockDialogController.show(row);
+                return;
+            }
             if (view instanceof ExpandableNotificationRow row) {
                 StatusBarNotification sbn = NotificationBundleUi.isEnabled()
                         ? row.getEntryAdapter().getSbn()
@@ -739,9 +745,7 @@ public class NotificationStackScrollLayoutController implements Dumpable {
 
                 @Override
                 public void onChildSnapBackOvershoots() {
-                    if (Flags.magneticNotificationSwipes()) {
-                        mMagneticNotificationRowManager.resetRoundness();
-                    }
+                    // R2 snap-back is a fixed 150ms ValueAnimator and never overshoots.
                 }
 
                 @Override
@@ -1332,6 +1336,18 @@ public class NotificationStackScrollLayoutController implements Dumpable {
         return mView.isBelowLastNotification(x, y);
     }
 
+    /** Returns whether the point is owned by a notification row's horizontal gesture surface. */
+    public boolean isTouchInNotificationRow(float x, float y) {
+        SceneContainerFlag.assertInLegacyMode();
+        return mView.getChildAtPosition(
+                        x,
+                        y,
+                        false /* requireMinHeight */,
+                        true /* ignoreDecors */,
+                        false /* ignoreWidth */)
+                instanceof ExpandableNotificationRow;
+    }
+
     public float getWidth() {
         SceneContainerFlag.assertInLegacyMode();
         return mView.getWidth();
@@ -1629,6 +1645,7 @@ public class NotificationStackScrollLayoutController implements Dumpable {
         mView.setExpandingVelocity(velocity);
     }
 
+    /** Uses the physical panel edge as the notification reveal clip. */
     public void setExpandedHeight(float expandedHeight) {
         SceneContainerFlag.assertInLegacyMode();
         mView.setExpandedHeight(expandedHeight);

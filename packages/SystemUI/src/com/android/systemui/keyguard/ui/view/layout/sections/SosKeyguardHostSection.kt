@@ -152,6 +152,11 @@ constructor(
 
     override fun bindData(constraintLayout: ConstraintLayout) {
         disposableHandle?.dispose()
+        // The R2 host owns the complete lockscreen indication surface. Keep Android's indication
+        // area suppressed for the whole lifetime of this Blueprint, including while the shade is
+        // expanded; tying it to notification visibility made charging/biometric text flash over
+        // the R2 panel.
+        setAospIndicationHidden(constraintLayout, true)
         disposableHandle =
             DisposableHandles().apply {
                 this +=
@@ -163,20 +168,21 @@ constructor(
                     sharedNotificationContainer.repeatWhenAttached {
                         repeatOnLifecycle(Lifecycle.State.CREATED) {
                             launch {
-                                // The Smartisan paged shade can report QS as expanded while the
-                                // physical lockscreen shade is still closed. Hide AOSP cards for
-                                // the whole lockscreen state instead of depending on that signal.
+                                // The shared container is now the sole R2 notification page. Hide
+                                // it only on the undisturbed lockscreen; once the physical shade is
+                                // expanded, its rows must remain visible. Credential curtain phases
+                                // still suppress it to prevent notification flashes during unlock.
                                 combine(
-                                        sharedNotificationContainerViewModel.isOnLockscreen,
+                                        sharedNotificationContainerViewModel
+                                            .isOnLockscreenWithoutShade,
                                         SosKeyguardRuntime.originalInteractiveTransitionPhase,
-                                    ) { isOnLockscreen, phase ->
-                                        isOnLockscreen ||
+                                    ) { isOnLockscreenWithoutShade, phase ->
+                                        isOnLockscreenWithoutShade ||
                                             phase != OriginalInteractiveTransitionPhase.IDLE
                                     }
                                     .distinctUntilChanged()
                                     .collect { hidden ->
                                         setNotificationContainerHidden(hidden)
-                                        setAospIndicationHidden(constraintLayout, hidden)
                                     }
                             }
                         }

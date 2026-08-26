@@ -10,13 +10,14 @@
     <dimen name="sos_qs_tile_icon_size">24dp</dimen>
     <dimen name="sos_qs_tile_text_size">10sp</dimen>
     <dimen name="sos_qs_tile_label_margin_top">6dp</dimen>
-    <dimen name="sos_qs_header_height">71dp</dimen>
-    <dimen name="sos_qs_header_outer_height">80dp</dimen>
-    <dimen name="sos_qs_header_time_size">40sp</dimen>
-    <dimen name="sos_shade_close_handle_height">87dp</dimen>
-    <dimen name="sos_shade_switch_height">30dp</dimen>
-    <dimen name="sos_shade_switch_text_size">14sp</dimen>
-    <dimen name="sos_shade_action_margin_bottom">83dp</dimen>
+    <dimen name="shade_header_height">71dp</dimen>
+    <dimen name="shade_header_outer_height">80dp</dimen>
+    <dimen name="shade_header_time_size">40sp</dimen>
+    <!-- Original CloseDragHandle: 87dp surface minus the 15dp shadow underlap. -->
+    <dimen name="shade_page_switch_container_height">72dp</dimen>
+    <dimen name="shade_switch_height">30dp</dimen>
+    <dimen name="shade_switch_text_size">14sp</dimen>
+    <dimen name="shade_action_margin_bottom">83dp</dimen>
     <dimen name="sos_qs_navbar_scrim_height">96dp</dimen>
     <dimen name="sos_status_bar_round_radius">8dp</dimen>
     <dimen name="sos_brightness_height">46dp</dimen>
@@ -41,10 +42,10 @@
     <string name="sos_qs_fake_call">模拟来电</string>
     <string name="sos_qs_fake_call_ringing">正在来电</string>
     <string name="sos_qs_fake_call_connected">通话中</string>
-    <string name="sos_shade_notifications">通知</string>
-    <string name="sos_shade_quick_settings">开关</string>
-    <string name="sos_shade_search">搜索</string>
-    <string name="sos_shade_settings">设置</string>
+    <string name="shade_notifications">通知</string>
+    <string name="shade_quick_settings">开关</string>
+    <string name="shade_search">搜索</string>
+    <string name="shade_settings">设置</string>
     <string name="sos_brightness_min">最低亮度</string>
     <string name="sos_brightness_max">最高亮度</string>
     <string name="sos_qs_label_airplane">飞行模式</string>

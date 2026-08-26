@@ -57,15 +57,6 @@
             systemui:layout_constraintBottom_toBottomOf="parent"
         />
 
-        <!-- This view should be after qs_frame so touches are dispatched first to it. That gives
-             it a chance to capture clicks before the NonInterceptingScrollView disallows all
-             intercepts -->
-        <ViewStub
-            android:id="@+id/qs_header_stub"
-            android:layout_height="wrap_content"
-            android:layout_width="match_parent"
-        />
-
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/qs_edge_guideline"
             android:layout_width="wrap_content"

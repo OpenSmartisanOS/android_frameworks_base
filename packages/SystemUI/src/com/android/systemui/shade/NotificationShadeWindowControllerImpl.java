@@ -531,8 +531,7 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
     }
 
     private void applyForceShowNavigationFlag(NotificationShadeWindowState state) {
-        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                && state.shadeOrQsExpanded
+        if (state.shadeOrQsExpanded
                 && !state.bouncerShowing
                 && !(ENABLE_REMOTE_INPUT && state.remoteInputActive)) {
             mLpChanged.forciblyShownTypes &= ~WindowInsets.Type.navigationBars();
@@ -593,8 +592,7 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
 
     private void applyFitsSystemWindows(NotificationShadeWindowState state) {
         boolean fitsSystemWindows = !state.isKeyguardShowingAndNotOccluded();
-        if (mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                && state.shadeOrQsExpanded
+        if (state.shadeOrQsExpanded
                 && !state.bouncerShowing
                 && !(ENABLE_REMOTE_INPUT && state.remoteInputActive)) {
             fitsSystemWindows = false;
@@ -645,10 +643,7 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
         }
     }
 
-    private void applySosNavigationBarBackground(NotificationShadeWindowState state) {
-        if (!mContext.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
+    private void applyShadeNavigationBarBackground(NotificationShadeWindowState state) {
         final boolean useTransparentNavigationBar = state.shadeOrQsExpanded
                 && !state.bouncerShowing
                 && !(ENABLE_REMOTE_INPUT && state.remoteInputActive);
@@ -697,7 +692,7 @@ public class NotificationShadeWindowControllerImpl implements NotificationShadeW
         applyHasTopUi(state);
         applyNotTouchable(state);
         applyStatusBarColorSpaceAgnosticFlag(state);
-        applySosNavigationBarBackground(state);
+        applyShadeNavigationBarBackground(state);
         applyWindowLayoutParams();
         notifyStateChangedCallbacks();
     }

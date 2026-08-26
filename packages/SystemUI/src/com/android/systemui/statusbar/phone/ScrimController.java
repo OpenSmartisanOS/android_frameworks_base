@@ -81,6 +81,7 @@ import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.scene.shared.model.Scenes;
 import com.android.systemui.scrim.ScrimView;
 import com.android.systemui.shade.NotificationPanelViewController;
+import com.android.systemui.shade.NotificationShadeBackgroundModel;
 import com.android.systemui.shade.transition.LargeScreenShadeInterpolator;
 import com.android.systemui.shade.transition.ScrimShadeTransitionController;
 import com.android.systemui.shade.ui.ShadeColors;
@@ -148,6 +149,8 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
     private boolean mClipsQsScrim;
     /** R2 owns ordinary keyguard darkening with keyguard_host_view_delta's alpha_layer. */
     private boolean mSosKeyguardEnabled;
+    /** True when the canonical notification shade hierarchy owns ordinary shade composition. */
+    private boolean mCanonicalShadeEnabled;
 
     /**
      * Whether an activity is launching over the lockscreen. During the launch animation, we want to
@@ -471,6 +474,8 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
 
         final ScrimState[] states = ScrimState.values();
         mSosKeyguardEnabled = SosKeyguardRuntime.isEnabled(notificationsScrim.getContext());
+        mCanonicalShadeEnabled =
+                notificationsScrim.getRootView().findViewById(R.id.shade_header) != null;
         for (ScrimState scrimState : states) {
             scrimState.init(mScrimInFront, mScrimBehind, mDozeParameters, mDockManager);
             scrimState.setSosKeyguardEnabled(mSosKeyguardEnabled);
@@ -1187,11 +1192,58 @@ public class ScrimController implements ViewTreeObserver.OnPreDrawListener, Dump
             mBehindTint = Color.TRANSPARENT;
             mNotificationsTint = Color.TRANSPARENT;
         }
+        applyShadeScrim();
         if (mState != ScrimState.UNLOCKED) {
             mAnimatingPanelExpansionOnUnlock = false;
         }
 
         assertAlphasValid();
+    }
+
+    /**
+     * Restores the R2 shade composition: platform blur underneath one neutral black curtain.
+     *
+     * <p>The original implementation never derived this layer from the wallpaper. It used a black
+     * scrim whose opacity followed the panel height and topped out at 0.62. Keep notification and
+     * front scrims out of this path so Android's Material surface colors cannot tint the result.
+     */
+    private void applyShadeScrim() {
+        mScrimBehind.setDrawAsSrc(false);
+        if (!mCanonicalShadeEnabled) {
+            return;
+        }
+
+        final float expansion;
+        if (mState == ScrimState.UNLOCKED) {
+            expansion = Math.max(mPanelExpansionFraction, mQsExpansion);
+        } else if (mState == ScrimState.SHADE_LOCKED) {
+            expansion = Math.max(
+                    mPanelExpansionFraction,
+                    Math.max(mTransitionToFullShadeProgress, mQsExpansion));
+        } else if (mState == ScrimState.KEYGUARD) {
+            // KEYGUARD's panel fraction is already 1 while idle. Only the explicit shade/QS
+            // progress values distinguish an actual pull-down from the stationary R2 lockscreen.
+            expansion = Math.max(mTransitionToFullShadeProgress, mQsExpansion);
+        } else {
+            return;
+        }
+
+        if (expansion <= 0f) {
+            return;
+        }
+
+        mScrimBehind.setDrawAsSrc(true);
+        mBehindTint = Color.BLACK;
+        mBehindAlpha = calculateShadeScrimAlpha(expansion);
+        mNotificationsTint = Color.BLACK;
+        mNotificationsAlpha = 0f;
+        mInFrontTint = Color.TRANSPARENT;
+        mInFrontAlpha = 0f;
+    }
+
+    @VisibleForTesting
+    static float calculateShadeScrimAlpha(float expansionFraction) {
+        return NotificationShadeBackgroundModel.calculateScrimAlpha(expansionFraction);
     }
 
     private void assertAlphasValid() {

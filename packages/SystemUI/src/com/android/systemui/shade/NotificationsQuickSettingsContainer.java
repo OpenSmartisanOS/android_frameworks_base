@@ -18,10 +18,12 @@ package com.android.systemui.shade;
 
 import static androidx.constraintlayout.core.widgets.Optimizer.OPTIMIZATION_GRAPH;
 
+import android.animation.Animator;
+import android.animation.AnimatorListenerAdapter;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
 import android.app.Fragment;
-import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.util.AttributeSet;
@@ -38,7 +40,6 @@ import androidx.constraintlayout.widget.ConstraintSet;
 
 import com.android.systemui.fragments.FragmentHostManager.FragmentListener;
 import com.android.systemui.plugins.qs.QS;
-import com.android.systemui.qs.flags.QSComposeFragment;
 import com.android.systemui.res.R;
 import com.android.systemui.statusbar.notification.AboveShelfObserver;
 
@@ -50,35 +51,52 @@ import java.util.function.Consumer;
 public class NotificationsQuickSettingsContainer extends ConstraintLayout
         implements FragmentListener, AboveShelfObserver.HasViewAboveShelfChangedListener {
 
+    /** Physical expansion feed used by the R2 HOME/PANEL status-bar mode coordinator. */
+    public interface PanelStatusBarExpansionListener {
+        void onExpansionChanged(
+                float expandedHeight, float maxPanelHeight, boolean shadeContentAllowed);
+    }
+
     private View mQsFrame;
     private View mStackScroller;
     private View mSharedNotificationContainer;
-    private View mSosQsNavbarScrim;
-    private View mSosHeader;
-    private View mSosHeaderContent;
-    private View mSosHeaderShadow;
-    private SosCloseDragHandle mSosPageSwitch;
-    private View mSosNotificationsButton;
-    private View mSosQuickSettingsButton;
-    private View mSosClearAllContainer;
-    private View mSosSettingsContainer;
-    private View mSosClearAllButton;
-    private View mSosSettingsButton;
-    private boolean mSosQuickSettingsPage;
-    private boolean mSosChromeVisible;
-    private int mSosTopInset;
-    private int mSosBottomInset;
-    private float mSosRawExpandedHeight;
-    private float mSosRawMaxPanelHeight;
-    private float mSosExpandedHeight;
-    private float mSosMaxPanelHeight;
-    private Consumer<Boolean> mSosPageChangedListener = quickSettings -> {};
-    private Consumer<Boolean> mSosPanelStatusBarVisibleListener = visible -> {};
-    private Consumer<Integer> mSosPanelStatusBarTopInsetListener = topInset -> {};
+    private View mQsNavbarScrim;
+    private View mHeader;
+    private View mHeaderContent;
+    private View mHeaderShadow;
+    private ShadePageSwitch mPageSwitch;
+    private View mNotificationsButton;
+    private View mQuickSettingsButton;
+    private View mClearAllContainer;
+    private View mSettingsContainer;
+    private View mClearAllButton;
+    private View mSettingsButton;
+    private NotificationShadeBackgroundView mShadeBackground;
+    private View mShadeGlass;
+    private final Rect mShadeGlassClip = new Rect();
+    private boolean mShadeGlassClipApplied;
+    private boolean mQuickSettingsPage;
+    private boolean mChromeVisible;
+    private int mTopInset;
+    private int mBottomInset;
+    private float mRawExpandedHeight;
+    private float mRawMaxPanelHeight;
+    private float mExpandedHeight;
+    private float mMaxPanelHeight;
+    private Consumer<Boolean> mPageChangedListener = quickSettings -> {};
+    private Runnable mPageAnimationFinishedListener = () -> {};
+    private Runnable mSearchAction = () -> {};
+    private Runnable mSettingsAction = () -> {};
+    private Consumer<Boolean> mPanelStatusBarVisibleListener = visible -> {};
+    private Consumer<Integer> mPanelStatusBarTopInsetListener = topInset -> {};
+    private PanelStatusBarExpansionListener mPanelStatusBarExpansionListener =
+            (expandedHeight, maxPanelHeight, shadeContentAllowed) -> {};
+    @Nullable private AnimatorSet mPageAnimator;
+    private int mPageAnimationGeneration;
 
-    private static final long SOS_PAGE_ANIMATION_DELAY = 50L;
-    private static final long SOS_PAGE_ANIMATION_DURATION = 300L;
-    private static final Interpolator SOS_PAGE_INTERPOLATOR = input -> {
+    private static final long PAGE_ANIMATION_DELAY = 50L;
+    private static final long PAGE_ANIMATION_DURATION = 300L;
+    private static final Interpolator PAGE_INTERPOLATOR = input -> {
         float shifted = input - 1f;
         return shifted * shifted * shifted + 1f;
     };
@@ -113,130 +131,145 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
     @Override
     protected void onAttachedToWindow() {
         super.onAttachedToWindow();
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
         View root = getRootView();
         mSharedNotificationContainer = root.findViewById(R.id.shared_notification_container);
-        mSosQsNavbarScrim = root.findViewById(R.id.sos_qs_navbar_scrim);
-        mSosHeader = root.findViewById(R.id.sos_shade_header);
-        mSosHeaderContent = root.findViewById(R.id.sos_shade_header_content);
-        mSosHeaderShadow = root.findViewById(R.id.sos_shade_header_shadow);
-        mSosPageSwitch = root.findViewById(R.id.sos_shade_page_switch);
-        mSosNotificationsButton = root.findViewById(R.id.sos_shade_notifications_button);
-        mSosQuickSettingsButton = root.findViewById(R.id.sos_shade_quick_settings_button);
-        mSosClearAllContainer = root.findViewById(R.id.sos_shade_clear_all_container);
-        mSosSettingsContainer = root.findViewById(R.id.sos_shade_settings_container);
-        mSosClearAllButton = root.findViewById(R.id.sos_shade_clear_all_button);
-        mSosSettingsButton = root.findViewById(R.id.sos_shade_settings_button);
+        if (mStackScroller == null) {
+            mStackScroller = root.findViewById(R.id.notification_stack_scroller);
+        }
+        mQsNavbarScrim = root.findViewById(R.id.qs_navbar_scrim);
+        mHeader = root.findViewById(R.id.shade_header);
+        mHeaderContent = root.findViewById(R.id.shade_header_content);
+        mHeaderShadow = root.findViewById(R.id.shade_header_shadow);
+        mPageSwitch = root.findViewById(R.id.shade_page_switch);
+        mNotificationsButton = root.findViewById(R.id.shade_notifications_button);
+        mQuickSettingsButton = root.findViewById(R.id.shade_quick_settings_button);
+        mClearAllContainer = root.findViewById(R.id.shade_clear_all_container);
+        mSettingsContainer = root.findViewById(R.id.shade_settings_container);
+        mClearAllButton = root.findViewById(R.id.shade_clear_all_button);
+        mSettingsButton = root.findViewById(R.id.shade_settings_button);
+        mShadeBackground = root.findViewById(R.id.shade_background);
+        mShadeGlass = root.findViewById(R.id.shade_glass);
 
-        View searchButton = root.findViewById(R.id.sos_shade_header_search);
-        searchButton.setOnClickListener(v -> {
-            Intent intent = new Intent(Intent.ACTION_WEB_SEARCH)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                getContext().startActivity(intent);
-            } catch (ActivityNotFoundException ignored) {
-                // Keep the visual affordance on builds without a search provider.
-            }
+        View searchButton = root.findViewById(R.id.shade_header_search);
+        searchButton.setOnClickListener(v -> mSearchAction.run());
+        mNotificationsButton.setOnClickListener(v -> {
+            setQuickSettingsPage(false, true);
+            mPageChangedListener.accept(false);
         });
-        mSosNotificationsButton.setOnClickListener(v -> {
-            setSosQuickSettingsPage(false, true);
-            mSosPageChangedListener.accept(false);
+        mQuickSettingsButton.setOnClickListener(v -> {
+            setQuickSettingsPage(true, true);
+            mPageChangedListener.accept(true);
         });
-        mSosQuickSettingsButton.setOnClickListener(v -> {
-            setSosQuickSettingsPage(true, true);
-            mSosPageChangedListener.accept(true);
-        });
-        mSosSettingsButton.setOnClickListener(v -> {
-            Intent intent = new Intent(android.provider.Settings.ACTION_SETTINGS)
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-            try {
-                getContext().startActivity(intent);
-            } catch (ActivityNotFoundException ignored) {
-                // Settings is expected on platform builds, but keep SystemUI alive if absent.
-            }
-        });
-        int currentTopInset = mSosTopInset;
-        mSosTopInset = -1;
-        setSosTopInset(currentTopInset);
-        setSosChromeVisible(mSosChromeVisible);
-        int currentBottomInset = mSosBottomInset;
-        mSosBottomInset = -1;
-        setSosBottomInset(currentBottomInset);
+        mSettingsButton.setOnClickListener(v -> mSettingsAction.run());
+        int currentTopInset = mTopInset;
+        mTopInset = -1;
+        setTopInset(currentTopInset);
+        applyChromeVisibility();
+        int currentBottomInset = mBottomInset;
+        mBottomInset = -1;
+        setBottomInset(currentBottomInset);
         post(() -> {
-            applySosPagePosition(false);
-            applySosExpansionTransforms();
+            applyPagePosition(false);
+            applyExpansionTransforms();
+            updateShadeGlass();
         });
     }
 
-    public void setSosPageChangedListener(Consumer<Boolean> listener) {
-        mSosPageChangedListener = listener != null ? listener : quickSettings -> {};
+    @Override
+    protected void onDetachedFromWindow() {
+        cancelPageAnimation();
+        super.onDetachedFromWindow();
     }
 
-    public void setSosPanelStatusBarVisibleListener(Consumer<Boolean> listener) {
-        mSosPanelStatusBarVisibleListener = listener != null ? listener : visible -> {};
-        mSosPanelStatusBarVisibleListener.accept(mSosChromeVisible);
+    public void setPageChangedListener(Consumer<Boolean> listener) {
+        mPageChangedListener = listener != null ? listener : quickSettings -> {};
     }
 
-    public void setSosPanelStatusBarTopInsetListener(Consumer<Integer> listener) {
-        mSosPanelStatusBarTopInsetListener = listener != null ? listener : topInset -> {};
-        mSosPanelStatusBarTopInsetListener.accept(mSosTopInset);
+    public void setPageAnimationFinishedListener(Runnable listener) {
+        mPageAnimationFinishedListener = listener != null ? listener : () -> {};
     }
 
-    public void setSosQuickSettingsPage(boolean quickSettings, boolean animate) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
+    public void setSearchAction(@Nullable Runnable action) {
+        mSearchAction = action != null ? action : () -> {};
+    }
+
+    public void setSettingsAction(@Nullable Runnable action) {
+        mSettingsAction = action != null ? action : () -> {};
+    }
+
+    public void setPanelStatusBarVisibleListener(Consumer<Boolean> listener) {
+        mPanelStatusBarVisibleListener = listener != null ? listener : visible -> {};
+        mPanelStatusBarVisibleListener.accept(mChromeVisible);
+    }
+
+    public void setPanelStatusBarExpansionListener(
+            PanelStatusBarExpansionListener listener) {
+        mPanelStatusBarExpansionListener = listener != null
+                ? listener
+                : (expandedHeight, maxPanelHeight, shadeContentAllowed) -> {};
+        mPanelStatusBarExpansionListener.onExpansionChanged(
+                mExpandedHeight, mMaxPanelHeight, mChromeVisible);
+    }
+
+    public void setPanelStatusBarTopInsetListener(Consumer<Integer> listener) {
+        mPanelStatusBarTopInsetListener = listener != null ? listener : topInset -> {};
+        mPanelStatusBarTopInsetListener.accept(mTopInset);
+    }
+
+    public void setQuickSettingsPage(boolean quickSettings, boolean animate) {
+        boolean changed = mQuickSettingsPage != quickSettings;
+        mQuickSettingsPage = quickSettings;
+        applyPagePosition(animate && changed);
+        applyExpansionTransforms();
+    }
+
+    public boolean isQuickSettingsPage() {
+        return mQuickSettingsPage;
+    }
+
+    public float getNotificationStackTopPosition() {
+        return mTopInset + getResources().getDimensionPixelSize(
+                R.dimen.shade_header_outer_height);
+    }
+
+    public int getPageSwitchHeight() {
+        return mPageSwitch != null ? mPageSwitch.getSwitchHeight() : 0;
+    }
+
+    public void resetPage(boolean hasVisibleNotifications, boolean animate) {
+        setQuickSettingsPage(!hasVisibleNotifications, animate);
+        mPageChangedListener.accept(mQuickSettingsPage);
+    }
+
+    public void setChromeVisible(boolean visible) {
+        if (mChromeVisible == visible) {
             return;
         }
-        boolean changed = mSosQuickSettingsPage != quickSettings;
-        mSosQuickSettingsPage = quickSettings;
-        applySosPagePosition(animate && changed);
-        applySosExpansionTransforms();
+        mChromeVisible = visible;
+        applyChromeVisibility();
     }
 
-    public boolean isSosQuickSettingsPage() {
-        return mSosQuickSettingsPage;
-    }
-
-    public float getSosNotificationStackTopPosition() {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return 0f;
-        }
-        return mSosTopInset + getResources().getDimensionPixelSize(
-                R.dimen.sos_qs_header_outer_height);
-    }
-
-    public void resetSosPage(boolean hasVisibleNotifications, boolean animate) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
-        setSosQuickSettingsPage(!hasVisibleNotifications, animate);
-        mSosPageChangedListener.accept(mSosQuickSettingsPage);
-    }
-
-    public void setSosChromeVisible(boolean visible) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
-        mSosChromeVisible = visible;
+    /** Applies stored state after inflation/reattach even when the logical value did not change. */
+    private void applyChromeVisibility() {
+        updateShadeGlass();
         if (mQsFrame != null) {
-            mQsFrame.setVisibility(visible ? VISIBLE : INVISIBLE);
+            mQsFrame.setVisibility(mChromeVisible ? VISIBLE : INVISIBLE);
         }
-        mSosPanelStatusBarVisibleListener.accept(visible);
-        if (!visible && mSosQsNavbarScrim != null) {
-            mSosQsNavbarScrim.setVisibility(INVISIBLE);
+        mPanelStatusBarVisibleListener.accept(mChromeVisible);
+        if (!mChromeVisible && mQsNavbarScrim != null) {
+            mQsNavbarScrim.setVisibility(INVISIBLE);
         }
-        if (mSosHeader != null) {
-            mSosHeader.setVisibility(visible ? VISIBLE : GONE);
+        if (mHeader != null) {
+            mHeader.setVisibility(mChromeVisible ? VISIBLE : GONE);
         }
-        if (mSosPageSwitch != null) {
-            mSosPageSwitch.setVisibility(visible ? VISIBLE : GONE);
+        if (mPageSwitch != null) {
+            mPageSwitch.setVisibility(mChromeVisible ? VISIBLE : GONE);
         }
-        if (mSosClearAllContainer != null) {
-            mSosClearAllContainer.setVisibility(visible ? VISIBLE : GONE);
+        if (mClearAllContainer != null) {
+            mClearAllContainer.setVisibility(mChromeVisible ? VISIBLE : GONE);
         }
-        if (mSosSettingsContainer != null) {
-            mSosSettingsContainer.setVisibility(visible ? VISIBLE : GONE);
+        if (mSettingsContainer != null) {
+            mSettingsContainer.setVisibility(mChromeVisible ? VISIBLE : GONE);
         }
     }
 
@@ -248,181 +281,192 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
      * keyguard eligibility gives them the same lifecycle as the original in-panel views without
      * breaking SharedNotificationContainer.
      */
-    public void setSosExpansion(
+    public void setPanelExpansion(
             float expandedHeight, float maxPanelHeight, boolean shadeContentAllowed) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
+        mRawExpandedHeight = Math.max(0f, expandedHeight);
+        mRawMaxPanelHeight = Math.max(0f, maxPanelHeight);
+        if (mShadeBackground != null) {
+            mShadeBackground.setExpansion(
+                    mRawExpandedHeight, mRawMaxPanelHeight, shadeContentAllowed);
         }
-        mSosRawExpandedHeight = Math.max(0f, expandedHeight);
-        mSosRawMaxPanelHeight = Math.max(0f, maxPanelHeight);
-        updateSosEdgeExpansionHeights();
-        setSosChromeVisible(
-                shadeContentAllowed && mSosMaxPanelHeight > 0f && mSosExpandedHeight > 0f);
-        applySosExpansionTransforms();
+        updateEdgeExpansionHeights();
+        mPanelStatusBarExpansionListener.onExpansionChanged(
+                mExpandedHeight, mMaxPanelHeight, shadeContentAllowed);
+        setChromeVisible(shadeContentAllowed && mMaxPanelHeight > 0f && mExpandedHeight > 0f);
+        updateShadeGlass();
+        applyExpansionTransforms();
     }
 
-    private void updateSosEdgeExpansionHeights() {
-        mSosExpandedHeight = mSosRawExpandedHeight;
-        mSosMaxPanelHeight = mSosRawMaxPanelHeight;
+    private void updateEdgeExpansionHeights() {
+        mExpandedHeight = mRawExpandedHeight;
+        mMaxPanelHeight = mRawMaxPanelHeight;
     }
 
-    private void applySosExpansionTransforms() {
-        if (mSosMaxPanelHeight <= 0f) {
+    private void applyExpansionTransforms() {
+        if (mMaxPanelHeight <= 0f) {
             return;
         }
         final float expansion =
-                Math.max(0f, Math.min(1f, mSosExpandedHeight / mSosMaxPanelHeight));
-        final float panelTranslation = Math.min(0f, mSosExpandedHeight - mSosMaxPanelHeight);
-        if (mSosQsNavbarScrim != null) {
-            mSosQsNavbarScrim.setVisibility(INVISIBLE);
-            mSosQsNavbarScrim.setAlpha(0f);
+                Math.max(0f, Math.min(1f, mExpandedHeight / mMaxPanelHeight));
+        final float panelTranslation = Math.min(0f, mExpandedHeight - mMaxPanelHeight);
+        if (mQsNavbarScrim != null) {
+            mQsNavbarScrim.setVisibility(INVISIBLE);
+            mQsNavbarScrim.setAlpha(0f);
         }
         if (mQsFrame != null) {
             mQsFrame.setTranslationY(panelTranslation);
         }
-        if (mSosHeader != null) {
-            mSosHeader.setTranslationY(panelTranslation);
-            mSosHeader.setAlpha(mSosQuickSettingsPage ? 1f : expansion);
+        if (mHeader != null) {
+            mHeader.setTranslationY(panelTranslation);
+            mHeader.setAlpha(mQuickSettingsPage ? 1f : expansion);
         }
-        if (mSosPageSwitch != null) {
-            mSosPageSwitch.setExpandedHeight(mSosExpandedHeight);
+        if (mPageSwitch != null) {
+            mPageSwitch.setExpandedHeight(mExpandedHeight);
         }
-        if (mSosSettingsContainer != null) {
-            mSosSettingsContainer.setTranslationY(panelTranslation);
+        if (mSettingsContainer != null) {
+            mSettingsContainer.setTranslationY(panelTranslation);
         }
-        if (mSosClearAllContainer != null) {
-            mSosClearAllContainer.setTranslationY(panelTranslation);
+        if (mClearAllContainer != null) {
+            mClearAllContainer.setTranslationY(panelTranslation);
         }
-        if (mSosClearAllContainer != null
-                && mSosPageSwitch != null
-                && mSosPageSwitch.getHandleHeight() > 0) {
+        if (mClearAllContainer != null && mPageSwitch != null && mPageSwitch.getSwitchHeight() > 0) {
             final float reveal = Math.max(
                     0f,
                     Math.min(
                             1f,
-                            1f - ((mSosMaxPanelHeight - mSosExpandedHeight) * 3f
-                                    / mSosPageSwitch.getHandleHeight())));
-            mSosClearAllContainer.setScaleX(reveal);
-            mSosClearAllContainer.setScaleY(reveal);
-            mSosClearAllContainer.setAlpha(reveal);
+                            1f - ((mMaxPanelHeight - mExpandedHeight) * 3f
+                                    / mPageSwitch.getSwitchHeight())));
+            mClearAllContainer.setScaleX(reveal);
+            mClearAllContainer.setScaleY(reveal);
+            mClearAllContainer.setAlpha(reveal);
         }
     }
 
-    public void setSosTopInset(int topInset) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                || mSosTopInset == topInset) {
+    public void setTopInset(int topInset) {
+        if (mTopInset == topInset) {
             return;
         }
-        mSosTopInset = topInset;
-        mSosPanelStatusBarTopInsetListener.accept(topInset);
-        if (mSosHeader != null && mSosHeaderContent != null) {
-            ViewGroup.LayoutParams headerParams = mSosHeader.getLayoutParams();
+        mTopInset = topInset;
+        updateShadeGlass();
+        mPanelStatusBarTopInsetListener.accept(topInset);
+        if (mHeader != null && mHeaderContent != null) {
+            ViewGroup.LayoutParams headerParams = mHeader.getLayoutParams();
             headerParams.height = topInset + getResources().getDimensionPixelSize(
-                    R.dimen.sos_qs_header_outer_height);
-            mSosHeader.setLayoutParams(headerParams);
+                    R.dimen.shade_header_outer_height);
+            mHeader.setLayoutParams(headerParams);
 
             ViewGroup.MarginLayoutParams contentParams =
-                    (ViewGroup.MarginLayoutParams) mSosHeaderContent.getLayoutParams();
+                    (ViewGroup.MarginLayoutParams) mHeaderContent.getLayoutParams();
             contentParams.topMargin = topInset;
-            mSosHeaderContent.setLayoutParams(contentParams);
+            mHeaderContent.setLayoutParams(contentParams);
         }
-        if (mSosHeaderShadow != null) {
+        if (mHeaderShadow != null) {
             ViewGroup.MarginLayoutParams shadowParams =
-                    (ViewGroup.MarginLayoutParams) mSosHeaderShadow.getLayoutParams();
+                    (ViewGroup.MarginLayoutParams) mHeaderShadow.getLayoutParams();
             shadowParams.topMargin = topInset + getResources().getDimensionPixelSize(
-                    R.dimen.sos_qs_header_height);
-            mSosHeaderShadow.setLayoutParams(shadowParams);
+                    R.dimen.shade_header_height);
+            mHeaderShadow.setLayoutParams(shadowParams);
         }
     }
 
-    public void setSosBottomInset(int bottomInset) {
-        if (!getResources().getBoolean(R.bool.config_sos_legacy_shade)
-                || mSosBottomInset == bottomInset) {
+    public void setBottomInset(int bottomInset) {
+        if (mBottomInset == bottomInset) {
             return;
         }
-        mSosBottomInset = bottomInset;
-        if (mSosClearAllContainer != null) {
+        mBottomInset = bottomInset;
+        if (mClearAllContainer != null) {
             ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) mSosClearAllContainer.getLayoutParams();
+                    (ViewGroup.MarginLayoutParams) mClearAllContainer.getLayoutParams();
             params.bottomMargin = getResources().getDimensionPixelSize(
-                    R.dimen.sos_shade_action_margin_bottom) + bottomInset;
-            mSosClearAllContainer.setLayoutParams(params);
+                    R.dimen.shade_action_margin_bottom) + bottomInset;
+            mClearAllContainer.setLayoutParams(params);
         }
-        if (mSosSettingsContainer != null) {
+        if (mSettingsContainer != null) {
             ViewGroup.MarginLayoutParams params =
-                    (ViewGroup.MarginLayoutParams) mSosSettingsContainer.getLayoutParams();
+                    (ViewGroup.MarginLayoutParams) mSettingsContainer.getLayoutParams();
             params.bottomMargin = getResources().getDimensionPixelSize(
-                    R.dimen.sos_shade_action_margin_bottom) + bottomInset;
-            mSosSettingsContainer.setLayoutParams(params);
+                    R.dimen.shade_action_margin_bottom) + bottomInset;
+            mSettingsContainer.setLayoutParams(params);
         }
-        updateSosEdgeExpansionHeights();
-        applySosExpansionTransforms();
+        updateEdgeExpansionHeights();
+        applyExpansionTransforms();
     }
 
-    private void applySosPagePosition(boolean animate) {
+    private void applyPagePosition(boolean animate) {
         if (mQsFrame == null || mSharedNotificationContainer == null
-                || mSosHeader == null || mSosPageSwitch == null
-                || mSosClearAllContainer == null || mSosSettingsContainer == null
-                || mSosClearAllButton == null || mSosSettingsButton == null
-                || mSosNotificationsButton == null || mSosQuickSettingsButton == null) {
+                || mHeader == null || mPageSwitch == null
+                || mClearAllContainer == null || mSettingsContainer == null
+                || mClearAllButton == null || mSettingsButton == null
+                || mNotificationsButton == null || mQuickSettingsButton == null) {
             return;
         }
         float width = getRootView() != null ? getRootView().getWidth() : getWidth();
         if (width == 0) {
             return;
         }
-        float notificationX = mSosQuickSettingsPage ? -width : 0f;
-        float qsX = mSosQuickSettingsPage ? 0f : width;
-        mQsFrame.animate().cancel();
-        mSharedNotificationContainer.animate().cancel();
-        mSosClearAllContainer.animate().cancel();
-        mSosSettingsContainer.animate().cancel();
+        float notificationX = mQuickSettingsPage ? -width : 0f;
+        float qsX = mQuickSettingsPage ? 0f : width;
+        final View notificationPage = mStackScroller != null
+                ? mStackScroller : mSharedNotificationContainer;
+        cancelPageAnimation();
+        // Older builds translated the whole Android 16 shared host. Keep that host fixed: only
+        // the original notification pile participates in R2's page switch.
+        mSharedNotificationContainer.setTranslationX(0f);
         if (animate) {
             mQsFrame.setLayerType(LAYER_TYPE_HARDWARE, null);
-            mSharedNotificationContainer.setLayerType(LAYER_TYPE_HARDWARE, null);
-            mSosClearAllContainer.setLayerType(LAYER_TYPE_HARDWARE, null);
-            mSosSettingsContainer.setLayerType(LAYER_TYPE_HARDWARE, null);
-            mQsFrame.animate().translationX(qsX)
-                    .setStartDelay(SOS_PAGE_ANIMATION_DELAY)
-                    .setDuration(SOS_PAGE_ANIMATION_DURATION)
-                    .setInterpolator(SOS_PAGE_INTERPOLATOR)
-                    .withEndAction(this::clearSosPageLayers)
-                    .start();
-            mSharedNotificationContainer.animate().translationX(notificationX)
-                    .setStartDelay(SOS_PAGE_ANIMATION_DELAY)
-                    .setDuration(SOS_PAGE_ANIMATION_DURATION)
-                    .setInterpolator(SOS_PAGE_INTERPOLATOR)
-                    .start();
-            mSosClearAllContainer.animate().translationX(notificationX)
-                    .setStartDelay(SOS_PAGE_ANIMATION_DELAY)
-                    .setDuration(SOS_PAGE_ANIMATION_DURATION)
-                    .setInterpolator(SOS_PAGE_INTERPOLATOR)
-                    .start();
-            mSosSettingsContainer.animate().translationX(qsX)
-                    .setStartDelay(SOS_PAGE_ANIMATION_DELAY)
-                    .setDuration(SOS_PAGE_ANIMATION_DURATION)
-                    .setInterpolator(SOS_PAGE_INTERPOLATOR)
-                    .start();
+            notificationPage.setLayerType(LAYER_TYPE_HARDWARE, null);
+            mClearAllContainer.setLayerType(LAYER_TYPE_HARDWARE, null);
+            mSettingsContainer.setLayerType(LAYER_TYPE_HARDWARE, null);
+            mQsFrame.buildLayer();
+            notificationPage.buildLayer();
+            mClearAllContainer.buildLayer();
+            mSettingsContainer.buildLayer();
+
+            final int generation = ++mPageAnimationGeneration;
+            AnimatorSet animator = new AnimatorSet();
+            animator.playTogether(
+                    ObjectAnimator.ofFloat(mQsFrame, View.TRANSLATION_X, qsX),
+                    ObjectAnimator.ofFloat(notificationPage, View.TRANSLATION_X, notificationX),
+                    ObjectAnimator.ofFloat(
+                            mClearAllContainer, View.TRANSLATION_X, notificationX),
+                    ObjectAnimator.ofFloat(mSettingsContainer, View.TRANSLATION_X, qsX));
+            animator.setStartDelay(PAGE_ANIMATION_DELAY);
+            animator.setDuration(PAGE_ANIMATION_DURATION);
+            animator.setInterpolator(PAGE_INTERPOLATOR);
+            animator.addListener(new AnimatorListenerAdapter() {
+                @Override
+                public void onAnimationEnd(Animator animation) {
+                    if (generation != mPageAnimationGeneration) {
+                        return;
+                    }
+                    mPageAnimator = null;
+                    clearPageLayers();
+                    mPageAnimationFinishedListener.run();
+                }
+            });
+            mPageAnimator = animator;
+            animator.start();
         } else {
             mQsFrame.setTranslationX(qsX);
-            mSharedNotificationContainer.setTranslationX(notificationX);
-            mSosClearAllContainer.setTranslationX(notificationX);
-            mSosSettingsContainer.setTranslationX(qsX);
-            clearSosPageLayers();
+            notificationPage.setTranslationX(notificationX);
+            mClearAllContainer.setTranslationX(notificationX);
+            mSettingsContainer.setTranslationX(qsX);
+            clearPageLayers();
+            mPageAnimationFinishedListener.run();
         }
-        setSosPageButtonChecked(mSosNotificationsButton, !mSosQuickSettingsPage);
-        setSosPageButtonChecked(mSosQuickSettingsButton, mSosQuickSettingsPage);
-        mQsFrame.setImportantForAccessibility(mSosQuickSettingsPage
+        setPageButtonChecked(mNotificationsButton, !mQuickSettingsPage);
+        setPageButtonChecked(mQuickSettingsButton, mQuickSettingsPage);
+        mQsFrame.setImportantForAccessibility(mQuickSettingsPage
                 ? IMPORTANT_FOR_ACCESSIBILITY_AUTO : IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
-        mSharedNotificationContainer.setImportantForAccessibility(mSosQuickSettingsPage
+        mSharedNotificationContainer.setImportantForAccessibility(mQuickSettingsPage
                 ? IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS : IMPORTANT_FOR_ACCESSIBILITY_AUTO);
-        mSosClearAllContainer.setImportantForAccessibility(mSosQuickSettingsPage
+        mClearAllContainer.setImportantForAccessibility(mQuickSettingsPage
                 ? IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS : IMPORTANT_FOR_ACCESSIBILITY_AUTO);
-        mSosSettingsContainer.setImportantForAccessibility(mSosQuickSettingsPage
+        mSettingsContainer.setImportantForAccessibility(mQuickSettingsPage
                 ? IMPORTANT_FOR_ACCESSIBILITY_AUTO : IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
     }
 
-    private static void setSosPageButtonChecked(View button, boolean checked) {
+    private static void setPageButtonChecked(View button, boolean checked) {
         button.setSelected(checked);
         button.setActivated(checked);
         if (button instanceof Checkable) {
@@ -430,22 +474,41 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
         }
     }
 
-    private void clearSosPageLayers() {
+    private void clearPageLayers() {
         if (mQsFrame == null || mSharedNotificationContainer == null
-                || mSosClearAllContainer == null || mSosSettingsContainer == null) {
+                || mClearAllContainer == null || mSettingsContainer == null) {
             return;
         }
         mQsFrame.setLayerType(LAYER_TYPE_NONE, null);
-        mSharedNotificationContainer.setLayerType(LAYER_TYPE_NONE, null);
-        mSosClearAllContainer.setLayerType(LAYER_TYPE_NONE, null);
-        mSosSettingsContainer.setLayerType(LAYER_TYPE_NONE, null);
+        final View notificationPage = mStackScroller != null
+                ? mStackScroller : mSharedNotificationContainer;
+        notificationPage.setLayerType(LAYER_TYPE_NONE, null);
+        mClearAllContainer.setLayerType(LAYER_TYPE_NONE, null);
+        mSettingsContainer.setLayerType(LAYER_TYPE_NONE, null);
+    }
+
+    private void cancelPageAnimation() {
+        final boolean hadRunningAnimation = mPageAnimator != null;
+        mPageAnimationGeneration++;
+        if (mPageAnimator != null) {
+            mPageAnimator.cancel();
+            mPageAnimator = null;
+        }
+        clearPageLayers();
+        if (hadRunningAnimation) {
+            mPageAnimationFinishedListener.run();
+        }
     }
 
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
-        if (w != oldw && getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            post(() -> applySosPagePosition(false));
+        if (w != oldw) {
+            cancelPageAnimation();
+            post(() -> {
+                applyPagePosition(false);
+                updateShadeGlass();
+            });
         }
     }
 
@@ -472,8 +535,47 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
     @Override
     protected void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
+        cancelPageAnimation();
+        post(this::updateShadeGlass);
         if (mConfigurationChangedListener != null) {
             mConfigurationChangedListener.accept(newConfig);
+        }
+    }
+
+    /** Crops the panel surface to the physical shade edge while leaving the status bar dark. */
+    private void updateShadeGlass() {
+        if (mShadeGlass == null) {
+            return;
+        }
+        final int width = mShadeGlass.getWidth();
+        final int height = mShadeGlass.getHeight();
+        final int top = Math.max(0, Math.min(mTopInset, height));
+        final int bottom = Math.max(top, Math.min(Math.round(mRawExpandedHeight), height));
+        final boolean visible = mChromeVisible && width > 0 && bottom > top;
+        if (visible) {
+            if (!mShadeGlassClipApplied
+                    || mShadeGlassClip.left != 0
+                    || mShadeGlassClip.top != top
+                    || mShadeGlassClip.right != width
+                    || mShadeGlassClip.bottom != bottom) {
+                mShadeGlassClip.set(0, top, width, bottom);
+                mShadeGlass.setClipBounds(mShadeGlassClip);
+                mShadeGlassClipApplied = true;
+            }
+            if (mShadeGlass.getVisibility() != VISIBLE) {
+                mShadeGlass.setVisibility(VISIBLE);
+            }
+        } else {
+            // Keep a zero-sized clip installed while collapsed. View then reuses its internal Rect
+            // on the first expanded frame instead of allocating one in the gesture hot path.
+            if (!mShadeGlassClipApplied || !mShadeGlassClip.isEmpty()) {
+                mShadeGlassClip.setEmpty();
+                mShadeGlass.setClipBounds(mShadeGlassClip);
+                mShadeGlassClipApplied = true;
+            }
+            if (mShadeGlass.getVisibility() != INVISIBLE) {
+                mShadeGlass.setVisibility(INVISIBLE);
+            }
         }
     }
 
@@ -483,40 +585,27 @@ public class NotificationsQuickSettingsContainer extends ConstraintLayout
 
     public void setNotificationsMarginBottom(int margin) {
         MarginLayoutParams params = (MarginLayoutParams) mStackScroller.getLayoutParams();
-        params.bottomMargin = margin;
-        if (getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            // The original NotificationPanelView subtracts CloseDragHandle from the stack's
-            // expanded viewport so the final row and footer never sit underneath the handle.
-            params.bottomMargin += getResources().getDimensionPixelSize(
-                    R.dimen.sos_shade_close_handle_height);
-        }
+        // The 15dp shadow hangs below the physical panel edge. Content reserves only the original
+        // 72dp visible handle, never an Android navigation-bar inset.
+        params.bottomMargin = margin + getResources().getDimensionPixelSize(
+                R.dimen.shade_page_switch_container_height);
         mStackScroller.setLayoutParams(params);
     }
 
     public void setQSContainerPaddingBottom(int paddingBottom) {
         mLastQSPaddingBottom = paddingBottom;
-        if (QSComposeFragment.isEnabled()) {
-            if (mQs != null) {
-                mQs.setQSContentPaddingBottom(paddingBottom);
-            }
-        } else {
-            if (mQSContainer != null) {
-                mQSContainer.setPadding(
-                        mQSContainer.getPaddingLeft(),
-                        mQSContainer.getPaddingTop(),
-                        mQSContainer.getPaddingRight(),
-                        paddingBottom
-                );
-            }
+        if (mQSContainer != null) {
+            mQSContainer.setPadding(
+                    mQSContainer.getPaddingLeft(),
+                    mQSContainer.getPaddingTop(),
+                    mQSContainer.getPaddingRight(),
+                    paddingBottom
+            );
         }
     }
 
     public void setQSNegativeMarginBottom(int margin) {
-        if (QSComposeFragment.isEnabled() && mQsFrame != null) {
-            MarginLayoutParams params = (MarginLayoutParams) mQsFrame.getLayoutParams();
-            params.bottomMargin = -margin;
-            mQsFrame.setLayoutParams(params);
-        }
+        // The canonical R2 QS is edge-to-edge and never uses the Compose QS negative margin.
     }
 
     public void setInsetsChangedListener(Consumer<WindowInsets> onInsetsChangedListener) {

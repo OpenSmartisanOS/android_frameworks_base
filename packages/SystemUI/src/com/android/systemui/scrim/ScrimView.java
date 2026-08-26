@@ -26,6 +26,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffColorFilter;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.RenderEffect;
 import android.graphics.Shader;
@@ -70,6 +71,7 @@ public class ScrimView extends View {
     private String mScrimName;
     private int mTintColor;
     private boolean mBlendWithMainColor = true;
+    private boolean mDrawAsSrc;
     private Executor mExecutor;
     private Looper mExecutorLooper;
     @Nullable
@@ -278,6 +280,21 @@ public class ScrimView extends View {
 
     public int getTint() {
         return mTintColor;
+    }
+
+    /** Uses the source-composition behavior of the original Smartisan shade scrim. */
+    public void setDrawAsSrc(boolean drawAsSrc) {
+        executeOnExecutor(() -> {
+            if (mDrawAsSrc == drawAsSrc) {
+                return;
+            }
+            mDrawAsSrc = drawAsSrc;
+            if (mDrawable instanceof ScrimDrawable) {
+                ((ScrimDrawable) mDrawable).setXfermode(
+                        drawAsSrc ? new PorterDuffXfermode(Mode.SRC) : null);
+            }
+            invalidate();
+        });
     }
 
     @Override

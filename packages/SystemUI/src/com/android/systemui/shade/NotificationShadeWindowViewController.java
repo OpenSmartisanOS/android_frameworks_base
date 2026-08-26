@@ -613,11 +613,18 @@ public class NotificationShadeWindowViewController implements Dumpable {
                     }
                 }
 
-                // R2 owns an unlocking swipe before NotificationPanelViewController. DOWN is
-                // observation-only; this returns true only after a single-finger upward gesture
-                // is unambiguous, leaving TPage/camera horizontal swipes and QS drag-down intact.
-                if (mSosUnlockGestureRouter.shouldIntercept(ev)) {
-                    return true;
+                // R2 owns an unlocking swipe only while the notification shade is fully
+                // collapsed. Once the shade has opened (including SHADE_LOCKED), every upward
+                // gesture belongs to the shade motion controller so it can close the panel.
+                // Keeping the unlock router armed here used to consume that gesture before
+                // NotificationPanelViewController could see it, leaving the lockscreen shade
+                // stuck fully expanded.
+                if (mPanelExpansionInteractor.isFullyCollapsed()) {
+                    if (mSosUnlockGestureRouter.shouldIntercept(ev)) {
+                        return true;
+                    }
+                } else {
+                    mSosUnlockGestureRouter.cancel();
                 }
 
                 boolean bouncerShowing = mPrimaryBouncerInteractor.isBouncerShowing()

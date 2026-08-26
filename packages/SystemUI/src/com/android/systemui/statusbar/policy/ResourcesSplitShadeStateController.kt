@@ -36,9 +36,6 @@ class ResourcesSplitShadeStateController @Inject constructor() : SplitShadeState
             ),
     )
     override fun shouldUseSplitNotificationShade(resources: Resources): Boolean {
-        if (resources.getBoolean(R.bool.config_sos_legacy_shade)) {
-            return false
-        }
-        return resources.getBoolean(R.bool.config_use_split_notification_shade)
+        return false
     }
 }

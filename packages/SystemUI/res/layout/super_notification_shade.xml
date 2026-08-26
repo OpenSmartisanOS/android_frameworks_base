@@ -33,6 +33,12 @@
         android:layout_height="match_parent"
         android:visibility="gone" />
 
+    <!-- R2 applies a fixed-strength blur only inside the physically revealed shade bounds. -->
+    <com.android.systemui.shade.NotificationShadeBackgroundView
+        android:id="@+id/shade_background"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <com.android.systemui.scrim.ScrimView
         android:id="@+id/scrim_behind"
         android:layout_width="match_parent"
@@ -46,6 +52,19 @@
         android:layout_height="match_parent"
         sysui:ignoreRightInset="true"
     />
+
+    <!--
+         R2's translucent panel surface sits above the black shade scrim and below all panel
+         content. Android 16 moved the notification stack out of NotificationPanelView, so this
+         cannot live only on EmptyShadeView.
+    -->
+    <View
+        android:id="@+id/shade_glass"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#CCFAFAFA"
+        android:importantForAccessibility="no"
+        android:visibility="invisible" />
 
     <include layout="@layout/status_bar_expanded"
              android:layout_width="match_parent"
@@ -76,22 +95,22 @@
         android:clipToPadding="false"
         />
 
-    <include layout="@layout/sos_shade_header" />
+    <include layout="@layout/shade_header" />
 
-    <include layout="@layout/sos_shade_page_switch" />
+    <include layout="@layout/shade_page_switch" />
 
     <FrameLayout
-        android:id="@+id/sos_shade_clear_all_container"
+        android:id="@+id/shade_clear_all_container"
         android:layout_width="match_parent"
         android:layout_height="65dp"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="@dimen/sos_shade_action_margin_bottom"
+        android:layout_marginBottom="@dimen/shade_action_margin_bottom"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:visibility="gone">
 
         <ImageView
-            android:id="@+id/sos_shade_clear_all_button"
+            android:id="@+id/shade_clear_all_button"
             android:layout_width="65dp"
             android:layout_height="65dp"
             android:layout_gravity="center"
@@ -107,23 +126,23 @@
     </FrameLayout>
 
     <FrameLayout
-        android:id="@+id/sos_shade_settings_container"
+        android:id="@+id/shade_settings_container"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_gravity="bottom"
-        android:layout_marginBottom="@dimen/sos_shade_action_margin_bottom"
+        android:layout_marginBottom="@dimen/shade_action_margin_bottom"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:visibility="gone">
 
         <ImageView
-            android:id="@+id/sos_shade_settings_button"
+            android:id="@+id/shade_settings_button"
             android:layout_width="60dp"
             android:layout_height="60dp"
             android:layout_gravity="center"
             android:background="@null"
             android:clickable="true"
-            android:contentDescription="@string/sos_shade_settings"
+            android:contentDescription="@string/shade_settings"
             android:focusable="true"
             android:padding="0dp"
             android:scaleType="fitCenter"
@@ -132,7 +151,7 @@
     </FrameLayout>
 
     <View
-        android:id="@+id/sos_qs_navbar_scrim"
+        android:id="@+id/qs_navbar_scrim"
         android:layout_width="match_parent"
         android:layout_height="@dimen/sos_qs_navbar_scrim_height"
         android:layout_gravity="bottom"

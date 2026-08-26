@@ -17,55 +17,21 @@
 package com.android.systemui.shade
 
 import android.annotation.SuppressLint
-import android.content.ContentResolver
-import android.os.Handler
-import android.view.Choreographer
 import android.view.LayoutInflater
-import android.view.ViewStub
-import androidx.constraintlayout.motion.widget.MotionLayout
-import com.android.compose.animation.scene.SceneKey
 import com.android.keyguard.logging.ScrimLogger
-import com.android.systemui.battery.BatteryMeterView
-import com.android.systemui.battery.BatteryMeterViewController
 import com.android.systemui.biometrics.AuthRippleView
 import com.android.systemui.dagger.SysUISingleton
-import com.android.systemui.dagger.qualifiers.Main
-import com.android.systemui.flags.FeatureFlags
 import com.android.systemui.keyguard.ui.view.KeyguardRootView
-import com.android.systemui.privacy.OngoingPrivacyChip
 import com.android.systemui.res.R
-import com.android.systemui.scene.shared.flag.SceneContainerFlag
-import com.android.systemui.scene.shared.model.SceneContainerConfig
-import com.android.systemui.scene.shared.model.SceneDataSourceDelegator
-import com.android.systemui.scene.ui.composable.Overlay
-import com.android.systemui.scene.ui.composable.Scene
-import com.android.systemui.scene.ui.view.SceneJankMonitor
-import com.android.systemui.scene.ui.view.SceneWindowRootView
 import com.android.systemui.scene.ui.view.WindowRootView
-import com.android.systemui.scene.ui.view.WindowRootViewKeyEventHandler
-import com.android.systemui.scene.ui.viewmodel.SceneContainerViewModel
-import com.android.systemui.settings.UserTracker
-import com.android.systemui.statusbar.BlurUtils
 import com.android.systemui.statusbar.LightRevealScrim
-import com.android.systemui.statusbar.NotificationInsetsController
 import com.android.systemui.statusbar.notification.stack.NotificationStackScrollLayout
 import com.android.systemui.statusbar.notification.stack.ui.view.NotificationScrollView
 import com.android.systemui.statusbar.notification.stack.ui.view.SharedNotificationContainer
-import com.android.systemui.statusbar.phone.StatusBarLocation
-import com.android.systemui.statusbar.phone.StatusIconContainer
 import com.android.systemui.statusbar.phone.TapAgainView
-import com.android.systemui.statusbar.phone.ui.TintedIconManager
-import com.android.systemui.statusbar.policy.BatteryController
-import com.android.systemui.statusbar.policy.ConfigurationController
-import com.android.systemui.tuner.TunerService
-import com.android.systemui.window.ui.WindowRootViewBinder
-import com.android.systemui.window.ui.viewmodel.WindowRootViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
-import javax.inject.Named
-import javax.inject.Provider
-import kotlinx.coroutines.CoroutineDispatcher
 
 /** Module for providing views related to the shade. */
 @Module
@@ -79,55 +45,13 @@ abstract class ShadeViewProviderModule {
     ): NotificationScrollView
 
     companion object {
-        const val SHADE_HEADER = "large_screen_shade_header"
-
         @SuppressLint("InflateParams") // Root views don't have parents.
         @Provides
         @SysUISingleton
         fun providesWindowRootView(
             @ShadeDisplayAware layoutInflater: LayoutInflater,
-            viewModelFactory: SceneContainerViewModel.Factory,
-            containerConfigProvider: Provider<SceneContainerConfig>,
-            scenesProvider: Provider<Set<@JvmSuppressWildcards Scene>>,
-            overlaysProvider: Provider<Set<@JvmSuppressWildcards Overlay>>,
-            layoutInsetController: NotificationInsetsController,
-            sceneDataSourceDelegator: Provider<SceneDataSourceDelegator>,
-            sceneJankMonitorFactory: SceneJankMonitor.Factory,
-            windowRootViewKeyEventHandler: WindowRootViewKeyEventHandler,
-            windowRootViewModelFactory: WindowRootViewModel.Factory,
-            blurUtils: BlurUtils,
-            choreographer: Choreographer?,
-            @Main mainDispatcher: CoroutineDispatcher,
-            tintedIconManagerFactory: TintedIconManager.Factory,
         ): WindowRootView {
-            return if (SceneContainerFlag.isEnabled) {
-                checkNoSceneDuplicates(scenesProvider.get())
-                val sceneWindowRootView =
-                    layoutInflater.inflate(R.layout.scene_window_root, null) as SceneWindowRootView
-                WindowRootViewBinder.bind(
-                    view = sceneWindowRootView,
-                    viewModelFactory = windowRootViewModelFactory,
-                    blurUtils = blurUtils,
-                    choreographer = choreographer,
-                    mainDispatcher = mainDispatcher,
-                )
-                sceneWindowRootView.init(
-                    viewModelFactory = viewModelFactory,
-                    containerConfig = containerConfigProvider.get(),
-                    sharedNotificationContainer =
-                        sceneWindowRootView.requireViewById(R.id.shared_notification_container),
-                    scenes = scenesProvider.get(),
-                    overlays = overlaysProvider.get(),
-                    layoutInsetController = layoutInsetController,
-                    sceneDataSourceDelegator = sceneDataSourceDelegator.get(),
-                    sceneJankMonitorFactory = sceneJankMonitorFactory,
-                    windowRootViewKeyEventHandler = windowRootViewKeyEventHandler,
-                    tintedIconManagerFactory = tintedIconManagerFactory,
-                )
-                sceneWindowRootView
-            } else {
-                layoutInflater.inflate(R.layout.super_notification_shade, null)
-            }
+            return layoutInflater.inflate(R.layout.super_notification_shade, null)
                 as WindowRootView?
                 ?: throw IllegalStateException("Window root view could not be properly inflated")
         }
@@ -138,9 +62,6 @@ abstract class ShadeViewProviderModule {
         @Provides
         @SysUISingleton
         fun providesNotificationShadeWindowView(root: WindowRootView): NotificationShadeWindowView {
-            if (SceneContainerFlag.isEnabled) {
-                return root.requireViewById(R.id.legacy_window_root)
-            }
             return root as NotificationShadeWindowView?
                 ?: throw IllegalStateException("root view not a NotificationShadeWindowView")
         }
@@ -218,91 +139,5 @@ abstract class ShadeViewProviderModule {
             return notificationShadeWindowView.requireViewById(R.id.notification_container_parent)
         }
 
-        // TODO(b/277762009): Only allow this view's controller to inject the view. See above.
-        @Provides
-        @SysUISingleton
-        @Named(SHADE_HEADER)
-        fun providesShadeHeaderView(
-            notificationShadeWindowView: NotificationShadeWindowView
-        ): MotionLayout {
-            val stub = notificationShadeWindowView.requireViewById<ViewStub>(R.id.qs_header_stub)
-            val layoutId = R.layout.combined_qs_header
-            stub.layoutResource = layoutId
-            return stub.inflate() as MotionLayout
-        }
-
-        @Provides
-        @SysUISingleton
-        fun providesCombinedShadeHeadersConstraintManager(): CombinedShadeHeadersConstraintManager {
-            return CombinedShadeHeadersConstraintManagerImpl
-        }
-
-        // TODO(b/277762009): Only allow this view's controller to inject the view. See above.
-        @Provides
-        @SysUISingleton
-        @Named(SHADE_HEADER)
-        fun providesBatteryMeterView(@Named(SHADE_HEADER) view: MotionLayout): BatteryMeterView {
-            return view.requireViewById(R.id.batteryRemainingIcon)
-        }
-
-        @Provides
-        @SysUISingleton
-        @Named(SHADE_HEADER)
-        fun providesBatteryMeterViewController(
-            @Named(SHADE_HEADER) batteryMeterView: BatteryMeterView,
-            userTracker: UserTracker,
-            @ShadeDisplayAware configurationController: ConfigurationController,
-            tunerService: TunerService,
-            @Main mainHandler: Handler,
-            contentResolver: ContentResolver,
-            featureFlags: FeatureFlags,
-            batteryController: BatteryController,
-        ): BatteryMeterViewController {
-            return BatteryMeterViewController(
-                batteryMeterView,
-                StatusBarLocation.QS,
-                userTracker,
-                configurationController,
-                tunerService,
-                mainHandler,
-                contentResolver,
-                featureFlags,
-                batteryController,
-            )
-        }
-
-        @Provides
-        @SysUISingleton
-        @Named(SHADE_HEADER)
-        fun providesOngoingPrivacyChip(
-            @Named(SHADE_HEADER) header: MotionLayout
-        ): OngoingPrivacyChip {
-            return header.requireViewById(R.id.privacy_chip)
-        }
-
-        @Provides
-        @SysUISingleton
-        @Named(SHADE_HEADER)
-        fun providesStatusIconContainer(
-            @Named(SHADE_HEADER) header: MotionLayout
-        ): StatusIconContainer {
-            return header.requireViewById(R.id.statusIcons)
-        }
-
-        private fun checkNoSceneDuplicates(scenes: Set<Scene>) {
-            val keys = mutableSetOf<SceneKey>()
-            val duplicates = mutableSetOf<SceneKey>()
-            scenes
-                .map { it.key }
-                .forEach { sceneKey ->
-                    if (keys.contains(sceneKey)) {
-                        duplicates.add(sceneKey)
-                    } else {
-                        keys.add(sceneKey)
-                    }
-                }
-
-            check(duplicates.isEmpty()) { "Duplicate scenes detected: $duplicates" }
-        }
     }
 }

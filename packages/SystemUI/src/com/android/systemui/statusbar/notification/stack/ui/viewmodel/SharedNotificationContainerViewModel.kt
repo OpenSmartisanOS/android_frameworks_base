@@ -240,26 +240,8 @@ constructor(
 
     @VisibleForTesting
     val paddingTopDimen: Flow<Int> =
-        if (SceneContainerFlag.isEnabled) {
-                configurationInteractor.onAnyConfigurationChange.map {
-                    with(context.resources) {
-                        val useLargeScreenHeader =
-                            getBoolean(R.bool.config_use_large_screen_shade_header)
-                        if (useLargeScreenHeader) {
-                            largeScreenHeaderHelperLazy.get().getLargeScreenHeaderHeight()
-                        } else {
-                            getDimensionPixelSize(R.dimen.notification_panel_margin_top)
-                        }
-                    }
-                }
-            } else {
-                interactor.configurationBasedDimensions.map {
-                    when {
-                        it.useLargeScreenHeader -> it.marginTopLargeScreen
-                        else -> it.marginTop
-                    }
-                }
-            }
+        configurationInteractor.onAnyConfigurationChange
+            .map { context.resources.getDimensionPixelSize(R.dimen.notification_panel_margin_top) }
             .distinctUntilChanged()
             .dumpWhileCollecting("paddingTopDimen")
 

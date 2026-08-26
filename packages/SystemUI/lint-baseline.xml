@@ -27133,17 +27133,6 @@
     <issue
         id="UselessParent"
         message="This `LinearLayout` layout or its `FrameLayout` parent is possibly unnecessary"
-        errorLine1="        &lt;LinearLayout"
-        errorLine2="         ~~~~~~~~~~~~">
-        <location
-            file="frameworks/base/packages/SystemUI/res/layout/combined_qs_header.xml"
-            line="128"
-            column="10"/>
-    </issue>
-
-    <issue
-        id="UselessParent"
-        message="This `LinearLayout` layout or its `FrameLayout` parent is possibly unnecessary"
         errorLine1="  &lt;LinearLayout"
         errorLine2="   ~~~~~~~~~~~~">
         <location

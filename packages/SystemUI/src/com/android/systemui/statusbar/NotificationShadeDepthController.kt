@@ -255,6 +255,9 @@ constructor(
                 true
             }
 
+    private val isCanonicalShadeHost: Boolean
+        get() = this::root.isInitialized
+
     /** Blur radius of the wake and unlock animation on this frame, and whether to zoom out. */
     private var wakeAndUnlockBlurRadius = 0f
         set(value) {
@@ -264,25 +267,48 @@ constructor(
         }
 
     private fun computeBlurAndZoomOut(): Pair<Int, Float> {
+        // R2 owns only the ordinary shade pull. Wake/unlock and other security transitions keep
+        // their platform depth behavior while the panel is fully collapsed.
+        val canonicalShadeOwnsDepth =
+            isCanonicalShadeHost &&
+                (shadeExpansion > 0f ||
+                    qsPanelExpansion > 0f ||
+                    transitionToFullShadeProgress > 0f ||
+                    shadeAnimation.radius > 0f)
         val animationRadius =
-            MathUtils.constrain(
-                shadeAnimation.radius,
-                blurUtils.minBlurRadius,
-                blurUtils.maxBlurRadius,
-            )
-        val expansionRadius =
-            blurUtils.blurRadiusOfRatio(
-                ShadeInterpolation.getNotificationScrimAlpha(
-                    if (shouldApplyShadeBlur()) shadeExpansion else 0f
+            if (canonicalShadeOwnsDepth) {
+                0f
+            } else {
+                MathUtils.constrain(
+                    shadeAnimation.radius,
+                    blurUtils.minBlurRadius,
+                    blurUtils.maxBlurRadius,
                 )
-            )
+            }
+        val expansionRadius =
+            if (canonicalShadeOwnsDepth) {
+                0f
+            } else {
+                blurUtils.blurRadiusOfRatio(
+                    ShadeInterpolation.getNotificationScrimAlpha(
+                        if (shouldApplyShadeBlur()) shadeExpansion else 0f
+                    )
+                )
+            }
         var combinedBlur =
             (expansionRadius * INTERACTION_BLUR_FRACTION +
                 animationRadius * ANIMATION_BLUR_FRACTION)
         val qsExpandedRatio =
-            ShadeInterpolation.getNotificationScrimAlpha(qsPanelExpansion) * shadeExpansion
-        combinedBlur = max(combinedBlur, blurUtils.blurRadiusOfRatio(qsExpandedRatio))
-        combinedBlur = max(combinedBlur, blurUtils.blurRadiusOfRatio(transitionToFullShadeProgress))
+            if (canonicalShadeOwnsDepth) {
+                0f
+            } else {
+                ShadeInterpolation.getNotificationScrimAlpha(qsPanelExpansion) * shadeExpansion
+            }
+        if (!canonicalShadeOwnsDepth) {
+            combinedBlur = max(combinedBlur, blurUtils.blurRadiusOfRatio(qsExpandedRatio))
+            combinedBlur =
+                max(combinedBlur, blurUtils.blurRadiusOfRatio(transitionToFullShadeProgress))
+        }
         var shadeRadius = max(combinedBlur, wakeAndUnlockBlurRadius)
 
         if (areBlursDisabledForAppLaunch || blursDisabledForUnlock) {
@@ -297,6 +323,7 @@ constructor(
         // If the blur comes from waking up, we don't want to zoom out the background
         val zoomOut =
             when {
+                canonicalShadeOwnsDepth -> 0f
                 // When the shade is in another display, we don't want to zoom out the background.
                 // Only the default display is supported right now.
                 !isShadeOnDefaultDisplay -> 0f

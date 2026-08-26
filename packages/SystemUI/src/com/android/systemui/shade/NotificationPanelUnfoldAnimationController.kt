@@ -80,29 +80,10 @@ constructor(
         )
     }
 
-    private val translateAnimatorStatusBar by lazy {
-        UnfoldConstantTranslateAnimator(
-            viewsIdToTranslate =
-                setOf(
-                    ViewIdToTranslate(R.id.shade_header_system_icons, END, filterShade),
-                    ViewIdToTranslate(R.id.privacy_container, END, filterShade),
-                    ViewIdToTranslate(R.id.carrier_group, END, filterShade),
-                    ViewIdToTranslate(R.id.clock, START, filterShade),
-                    ViewIdToTranslate(R.id.date, START, filterShade),
-                ),
-            progressProvider = progressProvider,
-        )
-    }
-
     fun setup(root: ViewGroup) {
         val translationMax =
             context.resources.getDimensionPixelSize(R.dimen.notification_side_paddings).toFloat()
         translateAnimator.init(root, translationMax)
-        val splitShadeStatusBarViewGroup: ViewGroup? =
-            root.findViewById(R.id.split_shade_status_bar)
-        if (splitShadeStatusBarViewGroup != null) {
-            translateAnimatorStatusBar.init(splitShadeStatusBarViewGroup, translationMax)
-        }
         if (ShadeWindowGoesAround.isEnabled) {
             listenForShadeDisplayChanges()
         }

@@ -44,6 +44,7 @@ import androidx.test.filters.SmallTest;
 import com.android.systemui.DejankUtils;
 import com.android.systemui.Flags;
 import com.android.systemui.flags.DisableSceneContainer;
+import com.android.systemui.statusbar.StatusBarState;
 
 import com.google.android.msdl.data.model.MSDLToken;
 
@@ -133,6 +134,30 @@ public class NotificationPanelViewControllerTest extends NotificationPanelViewCo
                 0 /* metaState */));
 
         verify(mCentralSurfaces, times(0)).userActivity();
+    }
+
+    @Test
+    public void canCollapseWithShadeMotion_preservesEmptyAreaAndAnimationEligibility() {
+        assertThat(NotificationPanelViewController.canCollapseWithShadeMotion(
+                false, false, false)).isFalse();
+        assertThat(NotificationPanelViewController.canCollapseWithShadeMotion(
+                true, false, false)).isTrue();
+        assertThat(NotificationPanelViewController.canCollapseWithShadeMotion(
+                false, true, false)).isTrue();
+        assertThat(NotificationPanelViewController.canCollapseWithShadeMotion(
+                false, false, true)).isTrue();
+    }
+
+    @Test
+    public void collapsedLockscreenShade_returnsToKeyguardOnlyFromShadeLocked() {
+        assertThat(NotificationPanelViewController.shouldReturnToKeyguardAfterShadeSettle(
+                /* expanded= */ false, StatusBarState.SHADE_LOCKED)).isTrue();
+        assertThat(NotificationPanelViewController.shouldReturnToKeyguardAfterShadeSettle(
+                /* expanded= */ true, StatusBarState.SHADE_LOCKED)).isFalse();
+        assertThat(NotificationPanelViewController.shouldReturnToKeyguardAfterShadeSettle(
+                /* expanded= */ false, StatusBarState.KEYGUARD)).isFalse();
+        assertThat(NotificationPanelViewController.shouldReturnToKeyguardAfterShadeSettle(
+                /* expanded= */ false, StatusBarState.SHADE)).isFalse();
     }
 
     @Test

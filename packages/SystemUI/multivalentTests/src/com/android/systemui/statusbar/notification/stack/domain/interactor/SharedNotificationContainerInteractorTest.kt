@@ -78,7 +78,7 @@ class SharedNotificationContainerInteractorTest(flags: FlagsParameterization) : 
 
             val lastDimens = dimens()!!
 
-            assertThat(lastDimens.useSplitShade).isTrue()
+            assertThat(lastDimens.useSplitShade).isFalse()
             assertThat(lastDimens.useLargeScreenHeader).isFalse()
             assertThat(lastDimens.marginHorizontal).isEqualTo(0)
             assertThat(lastDimens.marginBottom).isGreaterThan(0)

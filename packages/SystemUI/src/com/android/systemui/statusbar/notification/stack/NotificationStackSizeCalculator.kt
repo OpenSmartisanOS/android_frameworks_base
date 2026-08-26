@@ -205,8 +205,7 @@ constructor(
 
         // TODO: Avoid making this split shade assumption by simply checking the stack for media
         val isMediaShowing = mediaDataManager.hasActiveMedia()
-        val isMediaShowingInStack =
-            isMediaShowing && !splitShadeStateController.shouldUseSplitNotificationShade(resources)
+        val isMediaShowingInStack = isMediaShowing
 
         log { "\tGet maxNotifWithoutSavingSpace ---" }
         val maxNotifWithoutSavingSpace =
@@ -453,7 +452,12 @@ constructor(
         maxNotificationsExcludesMedia = NotificationMinimalism.isEnabled
 
         dividerHeight =
-            max(1f, resources.getDimensionPixelSize(R.dimen.notification_divider_height).toFloat())
+            max(
+                1f,
+                resources
+                    .getDimensionPixelSize(R.dimen.sos_notification_top_level_interval)
+                    .toFloat(),
+            )
     }
 
     private val NotificationStackScrollLayout.childrenSequence: Sequence<ExpandableView>

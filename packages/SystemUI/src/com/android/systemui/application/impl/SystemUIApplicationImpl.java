@@ -109,10 +109,10 @@ public class SystemUIApplicationImpl extends SystemUIApplication implements
     @Override
     public void attachBaseContext(Context base) {
         super.attachBaseContext(base);
-        if (base.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            SceneContainerFlag.isEnabledOnVariant = false;
-            QSComposeFragment.isEnabledOnVariant = false;
-        }
+        // R2 is the distribution's only shade host. Scene infrastructure remains available to
+        // Keyguard/media, but it must never select a second Shade or Compose-QS visual tree.
+        SceneContainerFlag.isEnabledOnVariant = false;
+        QSComposeFragment.isEnabledOnVariant = false;
     }
 
     protected GlobalRootComponent getRootComponent() {

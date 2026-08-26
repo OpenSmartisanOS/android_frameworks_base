@@ -27,7 +27,6 @@ import com.android.systemui.scene.shared.flag.SceneContainerFlag
 import com.android.systemui.shade.LargeScreenHeaderHelper
 import com.android.systemui.shade.ShadeDisplayAware
 import com.android.systemui.statusbar.notification.shared.NotificationMinimalism
-import com.android.systemui.statusbar.policy.SplitShadeStateController
 import dagger.Lazy
 import javax.inject.Inject
 import kotlinx.coroutines.FlowPreview
@@ -46,7 +45,6 @@ class SharedNotificationContainerInteractor
 @Inject
 constructor(
     @ShadeDisplayAware private val context: Context,
-    private val splitShadeStateController: Lazy<SplitShadeStateController>,
     @ShadeDisplayAware configurationInteractor: ConfigurationInteractor,
     keyguardInteractor: KeyguardInteractor,
     deviceEntryUdfpsInteractor: DeviceEntryUdfpsInteractor,
@@ -91,22 +89,21 @@ constructor(
     val configurationBasedDimensions: Flow<ConfigurationBasedDimensions> =
         configurationInteractor.onAnyConfigurationChange
             .map {
-                val shouldUseSplitShade =
-                    splitShadeStateController
-                        .get()
-                        .shouldUseSplitNotificationShade(context.resources)
                 with(context.resources) {
                     ConfigurationBasedDimensions(
-                        useSplitShade = shouldUseSplitShade,
-                        useLargeScreenHeader =
-                            getBoolean(R.bool.config_use_large_screen_shade_header),
+                        // The canonical R2 shade is a single physical curtain on every display.
+                        // Large-screen resources must not re-enable Android's split container.
+                        useSplitShade = false,
+                        // The canonical R2 shade owns its header geometry on every display.
+                        // Never reserve Android's removed large-screen header row.
+                        useLargeScreenHeader = false,
                         marginHorizontal =
                             getDimensionPixelSize(R.dimen.notification_panel_margin_horizontal),
                         marginBottom =
                             getDimensionPixelSize(R.dimen.notification_panel_margin_bottom),
                         marginTop = getDimensionPixelSize(R.dimen.notification_panel_margin_top),
                         marginTopLargeScreen =
-                            largeScreenHeaderHelperLazy.get().getLargeScreenHeaderHeight(),
+                            getDimensionPixelSize(R.dimen.notification_panel_margin_top),
                         keyguardSplitShadeTopMargin =
                             getDimensionPixelSize(R.dimen.keyguard_split_shade_top_margin),
                     )

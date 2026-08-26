@@ -1892,6 +1892,18 @@ public class ScrimControllerTest extends SysuiTestCase {
         assertAlphaAfterExpansion(mNotificationsScrim, 1f, 1f);
     }
 
+    @Test
+    public void sosShadeScrimAlpha_matchesOriginalCurve() {
+        assertEquals(0f, ScrimController.calculateShadeScrimAlpha(0f), 0.0001f);
+        assertEquals(0f, ScrimController.calculateShadeScrimAlpha(0.1f), 0.0001f);
+        assertEquals(0.05360538f,
+                ScrimController.calculateShadeScrimAlpha(0.25f), 0.0001f);
+        assertEquals(0.44199184f,
+                ScrimController.calculateShadeScrimAlpha(0.5f), 0.0001f);
+        assertEquals(0.62f, ScrimController.calculateShadeScrimAlpha(1f), 0.0001f);
+        assertEquals(0.62f, ScrimController.calculateShadeScrimAlpha(2f), 0.0001f);
+    }
+
     private void assertAlphaAfterExpansion(ScrimView scrim, float expectedAlpha, float expansion) {
         mScrimController.setRawPanelExpansionFraction(expansion);
         finishAnimationsImmediately();
