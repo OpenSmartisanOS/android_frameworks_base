@@ -54,6 +54,7 @@ import java.util.function.Consumer;
 public class StackStateAnimator {
 
     public static final int ANIMATION_DURATION_STANDARD = 360;
+    public static final int ANIMATION_DURATION_CONTENT_TRANSFORM = 210;
     public static final int ANIMATION_DURATION_CORNER_RADIUS = 200;
     public static final int ANIMATION_DURATION_WAKEUP = 500;
     public static final int ANIMATION_DURATION_WAKEUP_SCRIM = 667;
@@ -62,9 +63,30 @@ public class StackStateAnimator {
     public static final int ANIMATION_DURATION_SWIPE = 200;
     public static final int ANIMATION_DURATION_DIMMED_ACTIVATED = 220;
     public static final int ANIMATION_DURATION_CLOSE_REMOTE_INPUT = 150;
-    public static final int ANIMATION_DURATION_HEADS_UP_APPEAR = 400;
-    public static final int ANIMATION_DURATION_HEADS_UP_DISAPPEAR = 400;
-    public static final int ANIMATION_DURATION_HEADS_UP_CYCLING = 400;
+    public static final int ANIMATION_DURATION_HEADS_UP_APPEAR = 650;
+    public static final int ANIMATION_DURATION_HEADS_UP_DISAPPEAR = 230;
+    public static final int ANIMATION_DURATION_HEADS_UP_CYCLING = 650;
+
+    public static int getHeadsUpAppearDuration() {
+        return ANIMATION_DURATION_HEADS_UP_APPEAR;
+    }
+
+    public static int getHeadsUpDisappearDuration() {
+        return ANIMATION_DURATION_HEADS_UP_DISAPPEAR;
+    }
+
+    /** Compatibility helper; cycling in follows the R2 heads-up appear clock. */
+    public static int getHeadsUpCyclingDuration() {
+        return ANIMATION_DURATION_HEADS_UP_CYCLING;
+    }
+
+    public static int getHeadsUpCyclingInDuration() {
+        return ANIMATION_DURATION_HEADS_UP_APPEAR;
+    }
+
+    public static int getHeadsUpCyclingOutDuration() {
+        return ANIMATION_DURATION_HEADS_UP_DISAPPEAR;
+    }
     public static final int ANIMATION_DURATION_FOLD_TO_AOD =
             AnimatableClockView.ANIMATION_DURATION_FOLD_TO_AOD;
     public static final int ANIMATION_DURATION_PRIORITY_CHANGE = 500;
@@ -550,7 +572,7 @@ public class StackStateAnimator {
                         mLogger.appearAnimationEnded(finalKey);
                     };
                 }
-                changingView.performAddAnimation(0, ANIMATION_DURATION_HEADS_UP_CYCLING,
+                changingView.performAddAnimation(0, getHeadsUpCyclingInDuration(),
                         /* isHeadsUpAppear= */ true, /* isHeadsUpCycling= */ true, onAnimationEnd);
             } else if (event.animationType == ANIMATION_TYPE_HEADS_UP_APPEAR) {
                 mHeadsUpAppearChildren.add(changingView);
@@ -572,7 +594,7 @@ public class StackStateAnimator {
                     mLogger.logHUNViewAppearing(key);
                     onAnimationEnd = () -> mLogger.appearAnimationEnded(finalKey);
                 }
-                changingView.performAddAnimation(0, ANIMATION_DURATION_HEADS_UP_APPEAR,
+                changingView.performAddAnimation(0, getHeadsUpAppearDuration(),
                         /* isHeadsUpAppear= */ true, /* isHeadsUpCycling= */ false, onAnimationEnd);
             } else if (event.animationType == ANIMATION_TYPE_HEADS_UP_CYCLING_OUT) {
                 mHeadsUpDisappearChildren.add(changingView);
@@ -637,7 +659,7 @@ public class StackStateAnimator {
                         };
                     }
                     long removeAnimationDelay = changingView.performRemoveAnimation(
-                            ANIMATION_DURATION_HEADS_UP_CYCLING,
+                            getHeadsUpCyclingOutDuration(),
                             /* delay= */ 0,
                             // It's a shame that translationDirection isn't where we do the y
                             // translation, the actual translation is in StackScrollAlgorithm.
@@ -647,7 +669,7 @@ public class StackStateAnimator {
                             startAnimation, postAnimation,
                             getGlobalAnimationFinishedListener(), ExpandableView.ClipSide.TOP);
                     mAnimationProperties.delay += removeAnimationDelay;
-                    mAnimationProperties.duration = ANIMATION_DURATION_HEADS_UP_CYCLING;
+                    mAnimationProperties.duration = getHeadsUpCyclingOutDuration();
                     mAnimationProperties.setCustomInterpolator(View.TRANSLATION_Y,
                             Interpolators.LINEAR);
                     mAnimationProperties.getAnimationFilter().animateY = true;
@@ -730,13 +752,13 @@ public class StackStateAnimator {
                     };
 
                     long removeAnimationDelay = changingView.performRemoveAnimation(
-                            ANIMATION_DURATION_HEADS_UP_DISAPPEAR,
+                            getHeadsUpDisappearDuration(),
                             0, 0.0f, true /* isHeadsUpAppear */,
                             false /* isHeadsUpCycling */,
                             startAnimation, postAnimation,
                             getGlobalAnimationFinishedListener(), ExpandableView.ClipSide.BOTTOM);
                     mAnimationProperties.delay += removeAnimationDelay;
-                    mAnimationProperties.duration = ANIMATION_DURATION_HEADS_UP_DISAPPEAR;
+                    mAnimationProperties.duration = getHeadsUpDisappearDuration();
                     mAnimationProperties.setCustomInterpolator(View.TRANSLATION_Y,
                             Interpolators.FAST_OUT_SLOW_IN_REVERSE);
                     mAnimationProperties.getAnimationFilter().animateY = true;

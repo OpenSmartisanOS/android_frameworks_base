@@ -22,9 +22,14 @@ import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Insets;
+import android.graphics.Rect;
 import android.util.MathUtils;
+import android.view.Display;
+import android.view.DisplayCutout;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowInsets;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.policy.SystemBarUtils;
@@ -35,7 +40,6 @@ import com.android.systemui.scene.shared.flag.SceneContainerFlag;
 import com.android.systemui.shade.transition.LargeScreenShadeInterpolator;
 import com.android.systemui.statusbar.NotificationShelf;
 import com.android.systemui.statusbar.notification.SourceType;
-import com.android.systemui.statusbar.notification.emptyshade.ui.view.EmptyShadeIconView;
 import com.android.systemui.statusbar.notification.emptyshade.ui.view.EmptyShadeView;
 import com.android.systemui.statusbar.notification.footer.ui.view.FooterView;
 import com.android.systemui.statusbar.notification.headsup.HeadsUpAnimator;
@@ -102,8 +106,8 @@ public class StackScrollAlgorithm {
     private void updateResources(Context context) {
         Resources res = context.getResources();
         mPaddingBetweenElements = res.getDimensionPixelSize(
-                R.dimen.notification_divider_height);
-        mCollapsedSize = res.getDimensionPixelSize(R.dimen.notification_min_height);
+                R.dimen.sos_notification_top_level_interval);
+        mCollapsedSize = res.getDimensionPixelSize(R.dimen.sos_notification_min_height);
         mEnableNotificationClipping = res.getBoolean(R.bool.notification_enable_clipping);
         mClipNotificationScrollToTop = res.getBoolean(R.bool.config_clipNotificationScrollToTop);
         int statusBarHeight = SystemBarUtils.getStatusBarHeight(context);
@@ -122,7 +126,8 @@ public class StackScrollAlgorithm {
                 R.dimen.bundle_divider_height);
         mBundleExpandedGapHeight = res.getDimensionPixelSize(
                 R.dimen.bundle_expanded_divider_height);
-        mNotificationScrimPadding = res.getDimensionPixelSize(R.dimen.notification_side_paddings);
+        mNotificationScrimPadding = res.getDimensionPixelSize(
+                R.dimen.sos_notification_side_padding);
         mMarginBottom = res.getDimensionPixelSize(R.dimen.notification_panel_margin_bottom);
         mQuickQsOffsetHeight = SystemBarUtils.getQuickQsOffsetHeight(context);
         mSmallCornerRadius = res.getDimension(R.dimen.notification_corner_radius_small);
@@ -155,7 +160,7 @@ public class StackScrollAlgorithm {
     }
 
     private static boolean isEmptyShadeView(ExpandableView v) {
-        return v instanceof EmptyShadeView || v instanceof EmptyShadeIconView;
+        return v instanceof EmptyShadeView;
     }
 
     private void updateAlphaState(StackScrollAlgorithmState algorithmState,
@@ -929,10 +934,7 @@ public class StackScrollAlgorithm {
 
         // Move the tracked heads up into position during the appear animation, by interpolating
         // between the HUN inset (where it will appear as a HUN) and the end position in the shade
-        float headsUpTranslation =
-                SceneContainerFlag.isEnabled()
-                        ? ambientState.getHeadsUpTop()
-                        : mHeadsUpInset - ambientState.getStackTopMargin();
+        float headsUpTranslation = getHeadsUpTop();
         ExpandableNotificationRow trackedHeadsUpRow = ambientState.getTrackedHeadsUpRow();
         if (trackedHeadsUpRow != null) {
             ExpandableViewState childState = trackedHeadsUpRow.getViewState();
@@ -1126,6 +1128,33 @@ public class StackScrollAlgorithm {
                 childState.hidden = false;
             }
         }
+    }
+
+    private float getHeadsUpTop() {
+        final Resources resources = mHostView.getResources();
+        final int width = Math.max(0, mHostView.getWidth());
+        final int height = Math.max(0, mHostView.getHeight());
+        Insets cutoutInsets = Insets.NONE;
+        Insets waterfallInsets = Insets.NONE;
+        final WindowInsets rootInsets = mHostView.getRootWindowInsets();
+        final DisplayCutout cutout = rootInsets != null ? rootInsets.getDisplayCutout() : null;
+        if (cutout != null) {
+            cutoutInsets = Insets.of(cutout.getSafeInsetLeft(), cutout.getSafeInsetTop(),
+                    cutout.getSafeInsetRight(), cutout.getSafeInsetBottom());
+            waterfallInsets = cutout.getWaterfallInsets();
+        }
+        final Display display = mHostView.getDisplay();
+        final int rotation = display != null
+                ? display.getRotation() : android.view.Surface.ROTATION_0;
+        return NotificationRowGeometry.calculate(new Rect(0, 0, width, height),
+                resources.getDisplayMetrics().density,
+                resources.getDisplayMetrics().scaledDensity,
+                resources.getDisplayMetrics().densityDpi,
+                rotation, cutoutInsets, waterfallInsets,
+                mHostView.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL,
+                resources.getConfiguration().smallestScreenWidthDp >= 600
+                        || (display != null
+                                && display.getDisplayId() != Display.DEFAULT_DISPLAY)).headsUpTop;
     }
 
     @VisibleForTesting

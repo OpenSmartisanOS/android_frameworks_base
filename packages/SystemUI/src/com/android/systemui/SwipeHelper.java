@@ -16,10 +16,6 @@
 
 package com.android.systemui;
 
-import static androidx.dynamicanimation.animation.DynamicAnimation.TRANSLATION_X;
-import static androidx.dynamicanimation.animation.FloatPropertyCompat.createFloatPropertyCompat;
-
-import static com.android.systemui.Flags.magneticNotificationSwipes;
 import static com.android.systemui.classifier.Classifier.NOTIFICATION_DISMISS;
 import static com.android.systemui.statusbar.notification.NotificationUtils.logKey;
 
@@ -47,7 +43,6 @@ import android.view.accessibility.AccessibilityEvent;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.app.animation.Interpolators;
-import com.android.internal.dynamicanimation.animation.SpringForce;
 import com.android.systemui.flags.FeatureFlags;
 import com.android.systemui.flags.Flags;
 import com.android.systemui.plugins.FalsingManager;
@@ -55,9 +50,6 @@ import com.android.systemui.plugins.statusbar.NotificationMenuRowPlugin;
 import com.android.systemui.res.R;
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow;
 import com.android.systemui.statusbar.notification.shared.NotificationBundleUi;
-import com.android.wm.shell.animation.FlingAnimationUtils;
-import com.android.wm.shell.shared.animation.PhysicsAnimator;
-import com.android.wm.shell.shared.animation.PhysicsAnimator.SpringConfig;
 
 import java.io.PrintWriter;
 import java.util.function.Consumer;
@@ -65,22 +57,18 @@ import java.util.function.Consumer;
 public class SwipeHelper implements Gefingerpoken, Dumpable {
     static final String TAG = "com.android.systemui.SwipeHelper";
     private static final boolean DEBUG_INVALIDATE = false;
-    private static final float SWIPE_ESCAPE_VELOCITY = 500f; // dp/sec
+    private static final float SWIPE_ESCAPE_VELOCITY = 100f; // R2 dp/sec
     private static final int DEFAULT_ESCAPE_ANIMATION_DURATION = 200; // ms
     private static final int MAX_ESCAPE_ANIMATION_DURATION = 400; // ms
     private static final int MAX_DISMISS_VELOCITY = 4000; // dp/sec
-    private static final int MIN_DISMISS_VELOCITY = 2000; // dp/sec
 
-    public static final float SWIPE_PROGRESS_FADE_END = 0.6f; // fraction of thumbnail width
+    public static final float SWIPE_PROGRESS_FADE_END = 0.5f; // fraction of thumbnail width
                                               // beyond which swipe progress->0
-    public static final float SWIPED_FAR_ENOUGH_SIZE_FRACTION = 0.6f;
+    public static final float SWIPED_FAR_ENOUGH_SIZE_FRACTION = 0.4f;
     static final float MAX_SCROLL_SIZE_FRACTION = 0.3f;
 
     protected final Handler mHandler;
 
-    private final SpringConfig mSnapBackSpringConfig;
-
-    private final FlingAnimationUtils mFlingAnimationUtils;
     private float mPagingTouchSlop;
     private final float mSlopMultiplier;
     private int mTouchSlop;
@@ -133,8 +121,7 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
     private final boolean mFadeDependingOnAmountSwiped;
 
     private final ArrayMap<View, Animator> mDismissPendingMap = new ArrayMap<>();
-
-    private float mSnapBackDirection = 0;
+    private final ArrayMap<View, Animator> mSnapbackPendingMap = new ArrayMap<>();
 
     public SwipeHelper(
             Callback callback, Resources resources, ViewConfiguration viewConfiguration,
@@ -158,14 +145,6 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
                 R.bool.config_fadeDependingOnAmountSwiped);
         mFalsingManager = falsingManager;
         mFeatureFlags = featureFlags;
-        if (magneticNotificationSwipes()) {
-            mSnapBackSpringConfig = new SpringConfig(550f /*stiffness*/, 0.52f /*dampingRatio*/);
-        } else {
-            mSnapBackSpringConfig = new SpringConfig(
-                    SpringForce.STIFFNESS_LOW, SpringForce.DAMPING_RATIO_LOW_BOUNCY);
-        }
-        mFlingAnimationUtils = new FlingAnimationUtils(resources.getDisplayMetrics(),
-                getMaxEscapeAnimDuration() / 1000f);
     }
 
     /** Update ane properties that depend on Resources */
@@ -377,7 +356,6 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
                         }
                         if (mCallback.canChildBeDragged(mTouchedView)) {
                             mIsSwiping = true;
-                            mCallback.setMagneticAndRoundableTargets(mTouchedView);
                             mCallback.onBeginDrag(mTouchedView);
                             mInitialTouchPos = getPos(ev);
                             mTranslation = getTranslation(mTouchedView);
@@ -432,13 +410,6 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
     public void dismissChild(final View animView, float velocity, final Consumer<Boolean> endAction,
             long delay, boolean useAccelerateInterpolator, long fixedDuration,
             boolean isDismissAll) {
-        if (magneticNotificationSwipes()) {
-            int direction = mCallback.getMagneticDetachDirection(animView);
-            if (direction != 0) {
-                // If detached, modify the velocity to agree with the detaching direction
-                velocity = direction * Math.max(getMinDismissVelocity(), Math.abs(velocity));
-            }
-        }
         final boolean canBeDismissed = mCallback.canChildBeDismissed(animView);
         float newPos;
         boolean isLayoutRtl = animView.getLayoutDirection() == View.LAYOUT_DIRECTION_RTL;
@@ -477,18 +448,13 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
         };
 
         Animator anim = getViewTranslationAnimator(animView, newPos, updateListener);
-        mCallback.onMagneticInteractionEnd(animView, /* dismissing = */ true, velocity);
         if (anim == null) {
             onDismissChildWithAnimationFinished();
             return;
         }
-        if (useAccelerateInterpolator) {
-            anim.setInterpolator(Interpolators.FAST_OUT_LINEAR_IN);
-            anim.setDuration(duration);
-        } else {
-            mFlingAnimationUtils.applyDismissing(anim, getTranslation(animView),
-                    newPos, velocity, getSize(animView));
-        }
+        anim.setInterpolator(useAccelerateInterpolator
+                ? Interpolators.FAST_OUT_LINEAR_IN : Interpolators.FAST_OUT_SLOW_IN);
+        anim.setDuration(duration);
         if (delay > 0) {
             anim.setStartDelay(delay);
         }
@@ -563,49 +529,43 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
      */
     protected void snapChild(final View animView, final float targetLeft, float velocity) {
         final boolean canBeDismissed = mCallback.canChildBeDismissed(animView);
-        mSnapBackDirection = getTranslation(animView) - targetLeft;
-
         cancelTranslateAnimation(animView);
 
-        PhysicsAnimator<? extends View> anim =
-                createSnapBackAnimation(animView, targetLeft, velocity);
-        anim.addUpdateListener((target, values) -> {
-            float translation = getTranslation(target);
-            onTranslationUpdate(target, translation, canBeDismissed);
-            if ((mSnapBackDirection > 0 && translation < targetLeft)
-                    || (mSnapBackDirection < 0 && translation > targetLeft)) {
-                mCallback.onChildSnapBackOvershoots();
-                mSnapBackDirection = 0;
+        Animator anim = getViewTranslationAnimator(animView, targetLeft,
+                animation -> onTranslationUpdate(animView,
+                        (float) animation.getAnimatedValue(), canBeDismissed));
+        if (anim == null) {
+            return;
+        }
+        anim.setDuration(150L);
+        anim.setInterpolator(Interpolators.FAST_OUT_SLOW_IN);
+        anim.addListener(new AnimatorListenerAdapter() {
+            private boolean mCancelled;
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+                mCancelled = true;
             }
-        });
-        anim.addEndListener((t, p, wasFling, cancelled, finalValue, finalVelocity, allEnded) -> {
-            mSnappingChild = false;
-            mSnapBackDirection = 0;
-            if (!cancelled) {
-                updateSwipeProgressFromOffset(animView, canBeDismissed);
-                resetViewIfSwiping(animView);
-                // Clear the snapped view after success, assuming it's not being swiped now
-                if (animView == mTouchedView && !mIsSwiping) {
-                    mTouchedView = null;
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                if (mSnapbackPendingMap.get(animView) == animation) {
+                    mSnapbackPendingMap.remove(animView);
+                    mSnappingChild = false;
                 }
+                if (!mCancelled) {
+                    updateSwipeProgressFromOffset(animView, canBeDismissed);
+                    resetViewIfSwiping(animView);
+                    if (animView == mTouchedView && !mIsSwiping) {
+                        mTouchedView = null;
+                    }
+                }
+                onChildSnappedBack(animView, targetLeft);
             }
-            onChildSnappedBack(animView, targetLeft);
         });
+        mSnapbackPendingMap.put(animView, anim);
         mSnappingChild = true;
         anim.start();
-    }
-
-    private PhysicsAnimator<? extends View> createSnapBackAnimation(View target, float toPosition,
-            float startVelocity) {
-        if (target instanceof ExpandableNotificationRow) {
-            return PhysicsAnimator.getInstance((ExpandableNotificationRow) target).spring(
-                    createFloatPropertyCompat(ExpandableNotificationRow.TRANSLATE_CONTENT),
-                    toPosition,
-                    startVelocity,
-                    mSnapBackSpringConfig);
-        }
-        return PhysicsAnimator.getInstance(target).spring(TRANSLATION_X, toPosition, startVelocity,
-                mSnapBackSpringConfig);
     }
 
     private void cancelTranslateAnimation(View animView) {
@@ -616,7 +576,14 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
     }
 
     private void cancelSnapbackAnimation(View target) {
-        PhysicsAnimator.getInstance(target).cancel();
+        Animator animator = mSnapbackPendingMap.get(target);
+        if (animator != null) {
+            animator.cancel();
+            if (mSnapbackPendingMap.get(target) == animator) {
+                mSnapbackPendingMap.remove(target);
+                mSnappingChild = false;
+            }
+        }
     }
 
     /**
@@ -772,8 +739,6 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
                         dismissChild(mTouchedView, velocity,
                                 !swipedFastEnough() /* useAccelerateInterpolator */);
                     } else {
-                        mCallback.onMagneticInteractionEnd(mTouchedView, /* dismissing = */ false,
-                                velocity);
                         mCallback.onDragCancelled(mTouchedView);
                         snapChild(mTouchedView, 0 /* leftTarget */, velocity);
                     }
@@ -794,10 +759,6 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
         return MAX_DISMISS_VELOCITY * mDensityScale;
     }
 
-    private float getMinDismissVelocity() {
-        return MIN_DISMISS_VELOCITY * mDensityScale;
-    }
-
     protected float getEscapeVelocity() {
         return getUnscaledEscapeVelocity() * mDensityScale;
     }
@@ -812,7 +773,8 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
 
     protected boolean swipedFarEnough() {
         float translation = getTranslation(mTouchedView);
-        return Math.abs(translation) > SWIPED_FAR_ENOUGH_SIZE_FRACTION * getSize(mTouchedView);
+        return Math.abs(translation)
+                > SWIPED_FAR_ENOUGH_SIZE_FRACTION * getSize(mTouchedView);
     }
 
     public boolean isDismissGesture(MotionEvent ev) {
@@ -825,12 +787,7 @@ public class SwipeHelper implements Gefingerpoken, Dumpable {
 
     /** Can the swipe gesture on the touched view be considered as a dismiss intention */
     public boolean isSwipeDismissible() {
-        if (magneticNotificationSwipes()) {
-            float velocity = getVelocity(mVelocityTracker);
-            return mCallback.isMagneticViewDismissible(mTouchedView, velocity);
-        } else {
-            return swipedFastEnough() || swipedFarEnough();
-        }
+        return swipedFastEnough() || swipedFarEnough();
     }
 
     /** Returns true if the gesture should be rejected. */
