@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/actions_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom">
+
+    <!-- ImageView is RemoteViews-allowlisted; it renders the original solid 2 px divider exactly. -->
+    <ImageView
+        android:id="@+id/horizontal_divider"
+        android:layout_width="match_parent"
+        android:layout_height="2px"
+        android:background="#14000000"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/actions_container_inner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2px">
+
+        <com.android.internal.widget.SmartisanosNotificationActionListLayout
+            android:id="@+id/actions"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone" />
+
+        <!-- Android 16 Builder compatibility targets; the R2 presentation never exposes them. -->
+        <ImageView
+            android:id="@+id/snooze_button"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="gone" />
+        <ImageView
+            android:id="@+id/bubble_button"
+            android:layout_width="1dp"
+            android:layout_height="1dp"
+            android:visibility="gone" />
+    </FrameLayout>
+</FrameLayout>

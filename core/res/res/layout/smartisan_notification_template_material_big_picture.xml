@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_latest_event_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:tag="bigPicture">
+    <include layout="@layout/smartisan_notification_template_header" />
+    <LinearLayout
+        android:id="@+id/notification_action_list_margin_target"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/sos_notification_content_margin_top"
+        android:clipToPadding="false"
+        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/notification_main_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/sos_notification_content_margin_start"
+            android:layout_marginEnd="@dimen/sos_notification_content_margin_end"
+            android:orientation="vertical">
+            <include layout="@layout/smartisan_notification_template_part_line2" />
+            <include layout="@layout/smartisan_notification_template_part_line3" />
+        </LinearLayout>
+        <ImageView
+            android:id="@+id/big_picture"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginStart="@dimen/sos_notification_content_margin_start"
+            android:layout_marginTop="13dp"
+            android:layout_marginEnd="@dimen/sos_notification_content_margin_end"
+            android:layout_marginBottom="16dp"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop" />
+        <ViewStub
+            android:id="@+id/notification_material_reply_container"
+            android:layout="@layout/notification_material_reply_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <include layout="@layout/smartisan_notification_material_action_list" />
+</FrameLayout>

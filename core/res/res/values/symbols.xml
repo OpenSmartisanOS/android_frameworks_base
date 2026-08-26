@@ -3221,6 +3221,12 @@
   <java-symbol type="bool" name="config_mainBuiltInDisplayIsRound" />
 
   <java-symbol type="id" name="actions_container" />
+  <java-symbol type="id" name="horizontal_divider" />
+  <java-symbol type="id" name="line2" />
+  <java-symbol type="id" name="line3" />
+  <java-symbol type="id" name="info" />
+  <java-symbol type="id" name="profile_badge_line2" />
+  <java-symbol type="id" name="profile_badge_line3" />
   <java-symbol type="id" name="actions_container_layout" />
   <java-symbol type="id" name="smart_reply_container" />
   <java-symbol type="id" name="remote_input_tag" />
@@ -6339,6 +6345,50 @@
 
   <!-- For partial sleep wake locks. -->
   <java-symbol type="bool" name="config_allowPartialSleepWakeLocks" />
+  <java-symbol type="drawable" name="sos_ic_expand_notification" />
+  <java-symbol type="drawable" name="sos_ic_collapse_notification" />
+  <java-symbol type="id" name="sos_notification_group_count_desc" />
+  <java-symbol type="id" name="sos_notification_group_other_desc" />
+  <java-symbol type="id" name="notification_header_line" />
+  <java-symbol type="id" name="dialog_alerts_icon" />
+  <java-symbol type="id" name="dialog_alerts_title" />
+  <java-symbol type="id" name="dialog_alerts_text" />
+  <java-symbol type="id" name="text_action0" />
+  <java-symbol type="dimen" name="sos_notification_header_line_padding_top" />
+  <java-symbol type="dimen" name="smartisan_button_notification_content_margin_end" />
+  <java-symbol type="dimen" name="smartisan_meida_notification_content_margin_end" />
+  <java-symbol type="drawable" name="selector_smartisan_notification_dialog_alerts_button_left_bg" />
+  <java-symbol type="drawable" name="selector_smartisan_notification_dialog_alerts_button_medium_bg" />
+  <java-symbol type="drawable" name="selector_smartisan_notification_dialog_alerts_button_only_bg" />
+  <java-symbol type="drawable" name="selector_smartisan_notification_dialog_alerts_button_right_bg" />
+  <java-symbol type="layout" name="smartisan_notification_action" />
+  <java-symbol type="layout" name="smartisan_notification_action_devider" />
+  <java-symbol type="layout" name="smartisan_notification_action_tombstone" />
+  <java-symbol type="layout" name="smartisan_notification_dialog_action" />
+  <java-symbol type="layout" name="smartisan_notification_expand_button" />
+  <java-symbol type="layout" name="smartisan_notification_material_action_list" />
+  <java-symbol type="layout" name="smartisan_notification_material_media_action" />
+  <java-symbol type="layout" name="smartisan_notification_material_media_big_action" />
+  <java-symbol type="layout" name="smartisan_notification_media_action" />
+  <java-symbol type="layout" name="smartisan_notification_remote_base" />
+  <java-symbol type="layout" name="smartisan_notification_template_base" />
+  <java-symbol type="layout" name="smartisan_notification_template_header" />
+  <java-symbol type="layout" name="smartisan_notification_template_icon_group" />
+  <java-symbol type="layout" name="smartisan_notification_template_dialog_alerts" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_base" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_big_base" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_big_media" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_big_picture" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_big_text" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_inbox" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_media" />
+  <java-symbol type="layout" name="smartisan_notification_template_material_messaging" />
+  <java-symbol type="layout" name="smartisan_notification_template_part_chronometer" />
+  <java-symbol type="layout" name="smartisan_notification_template_part_line1" />
+  <java-symbol type="layout" name="smartisan_notification_template_part_line2" />
+  <java-symbol type="layout" name="smartisan_notification_template_part_line3" />
+  <java-symbol type="layout" name="smartisan_notification_template_part_time" />
+  <java-symbol type="layout" name="smartisan_notification_template_progressbar" />
   <java-symbol type="integer" name="config_maximumPartialSleepWakeLockDuration" />
 
   <!-- For App Functions -->

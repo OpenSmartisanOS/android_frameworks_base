@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/action0"
+    android:layout_width="wrap_content"
+    android:layout_height="@dimen/sos_notification_action_height"
+    android:minHeight="@dimen/sos_notification_action_height"
+    android:background="@null"
+    android:enabled="false"
+    android:ellipsize="end"
+    android:gravity="center"
+    android:singleLine="true"
+    android:textColor="@color/sos_notification_tertiary_text_color"
+    android:textSize="@dimen/sos_notification_action_text_size" />

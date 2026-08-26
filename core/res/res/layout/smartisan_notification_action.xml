@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Button xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/action0"
+    android:layout_width="36dp"
+    android:layout_height="@dimen/sos_notification_action_height"
+    android:minHeight="@dimen/sos_notification_action_height"
+    android:background="@drawable/smartisan_notification_template_base_button"
+    android:ellipsize="end"
+    android:gravity="center"
+    android:singleLine="true"
+    android:textColor="@color/sos_notification_action_color"
+    android:textSize="@dimen/sos_notification_action_text_size" />

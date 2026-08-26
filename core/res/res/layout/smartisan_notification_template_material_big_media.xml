@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_latest_event_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="#00000000"
+    android:tag="bigMediaNarrow">
+
+    <LinearLayout
+        android:id="@+id/notification_action_list_margin_target"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="40dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <include layout="@layout/smartisan_notification_template_header" />
+
+            <LinearLayout
+                android:id="@+id/notification_main_column"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/sos_notification_content_margin_start"
+                android:layout_marginTop="@dimen/sos_notification_content_margin_top"
+                android:layout_marginEnd="@dimen/sos_notification_content_margin_end"
+                android:layout_marginBottom="@dimen/sos_notification_content_margin_bottom"
+                android:orientation="vertical">
+                <!-- Hidden line2 is retained only as an Android 16 RemoteViews contract target. -->
+                <include layout="@layout/smartisan_notification_template_part_line3" />
+            </LinearLayout>
+        </FrameLayout>
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom">
+        <!-- Keep the R2 divider geometry while satisfying the A16 RemoteViews allowlist. -->
+        <ImageView
+            android:id="@+id/horizontal_divider"
+            android:layout_width="match_parent"
+            android:layout_height="2px"
+            android:background="#14000000" />
+        <LinearLayout
+            android:id="@+id/media_actions"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="36dp"
+            android:layout_marginEnd="36dp"
+            android:layoutDirection="ltr"
+            android:orientation="horizontal">
+            <include android:id="@+id/action0" layout="@layout/smartisan_notification_material_media_action" />
+            <include android:id="@+id/action1" layout="@layout/smartisan_notification_material_media_action" />
+            <include android:id="@+id/action2" layout="@layout/smartisan_notification_material_media_action" />
+            <include android:id="@+id/action3" layout="@layout/smartisan_notification_material_media_action" />
+            <include android:id="@+id/action4" layout="@layout/smartisan_notification_material_media_action" />
+            <include
+                android:id="@+id/media_seamless"
+                layout="@layout/smartisan_notification_material_media_action" />
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

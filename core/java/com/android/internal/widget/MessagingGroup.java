@@ -16,7 +16,7 @@
 
 package com.android.internal.widget;
 
-import static android.app.Flags.notificationsRedesignTemplates;
+import static com.android.internal.widget.NotificationStylePolicy.notificationsRedesignTemplates;
 
 import android.annotation.AttrRes;
 import android.annotation.IntDef;
@@ -165,6 +165,9 @@ public class MessagingGroup extends NotificationOptimizedLinearLayout implements
                 R.dimen.notification_icon_circle_size);
         mNotificationTextMarginTop = res.getDimensionPixelSize(
                 R.dimen.notification_text_margin_top);
+        // R2 treats notification typography as device geometry, not a user-scaled body text
+        // style. Use dp explicitly so fontScale cannot reintroduce platform row reflow.
+        mSenderView.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 13.5f);
     }
 
     public void updateClipRect() {

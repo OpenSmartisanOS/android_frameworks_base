@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_latest_event_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:tag="big">
+
+    <LinearLayout
+        android:id="@+id/notification_action_list_margin_target"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/notification_action_list_height"
+        android:orientation="vertical">
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <include layout="@layout/smartisan_notification_template_header" />
+            <LinearLayout
+                android:id="@+id/notification_main_column"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/sos_notification_content_margin_start"
+                android:layout_marginTop="@dimen/sos_notification_content_margin_top"
+                android:layout_marginEnd="@dimen/sos_notification_content_margin_end"
+                android:layout_marginBottom="@dimen/sos_notification_content_margin_bottom"
+                android:orientation="vertical">
+                <include layout="@layout/smartisan_notification_template_part_line2" />
+                <include layout="@layout/smartisan_notification_template_part_line3" />
+            </LinearLayout>
+        </FrameLayout>
+        <ViewStub
+            android:id="@+id/notification_material_reply_container"
+            android:layout="@layout/notification_material_reply_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <include layout="@layout/smartisan_notification_material_action_list" />
+</FrameLayout>

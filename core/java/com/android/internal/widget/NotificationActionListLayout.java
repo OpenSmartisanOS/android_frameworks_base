@@ -16,11 +16,10 @@
 
 package com.android.internal.widget;
 
-import static android.app.Flags.notificationsRedesignTemplates;
 import static android.app.Notification.CallStyle.DEBUG_NEW_ACTION_LAYOUT;
+import static com.android.internal.widget.NotificationStylePolicy.notificationsRedesignTemplates;
 
 import android.annotation.DimenRes;
-import android.app.Flags;
 import android.app.Notification;
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -74,7 +73,7 @@ public class NotificationActionListLayout extends LinearLayout {
     public NotificationActionListLayout(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr, defStyleRes);
 
-        mCollapsibleIndentDimen = Flags.notificationsRedesignTemplates()
+        mCollapsibleIndentDimen = notificationsRedesignTemplates()
                 ? R.dimen.notification_2025_actions_margin_start
                 : R.dimen.notification_actions_padding_start;
 

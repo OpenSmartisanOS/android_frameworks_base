@@ -27,6 +27,7 @@ import android.text.Layout;
 import android.text.PrecomputedText;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.widget.RemoteViews;
 
@@ -94,6 +95,7 @@ public class MessagingTextMessage extends ImageFloatingTextView implements Messa
                     false);
             createdMessage.addOnLayoutChangeListener(MessagingLayout.MESSAGING_PROPERTY_ANIMATOR);
         }
+        createdMessage.setTextSize(TypedValue.COMPLEX_UNIT_DIP, 12.5f);
         createdMessage.setMessage(m, usePrecomputedText);
         return createdMessage;
     }

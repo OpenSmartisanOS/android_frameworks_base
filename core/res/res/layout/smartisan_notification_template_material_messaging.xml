@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_latest_event_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:tag="messaging">
+
+    <include layout="@layout/smartisan_notification_template_header" />
+
+    <LinearLayout
+        android:id="@+id/notification_action_list_margin_target"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/sos_notification_content_margin_top"
+        android:clipToPadding="false"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/notification_main_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/sos_notification_min_content_height"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/sos_notification_content_margin_start"
+            android:paddingEnd="@dimen/sos_notification_content_margin_end">
+
+            <include layout="@layout/smartisan_notification_template_part_line2" />
+
+            <com.android.internal.widget.MessagingLinearLayout
+                android:id="@+id/notification_messaging"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:maxHeight="165dp"
+                android:paddingBottom="@dimen/sos_notification_content_margin_bottom"
+                android:spacing="@dimen/sos_notification_messaging_spacing">
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text0" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text1" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text2" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text3" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text4" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text5" style="@style/Widget.Material.Notification.MessagingText" />
+                <com.android.internal.widget.ImageFloatingTextView android:id="@+id/inbox_text6" style="@style/Widget.Material.Notification.MessagingText" />
+            </com.android.internal.widget.MessagingLinearLayout>
+        </LinearLayout>
+
+        <ViewStub
+            android:id="@+id/notification_material_reply_container"
+            android:layout="@layout/notification_material_reply_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <include layout="@layout/smartisan_notification_material_action_list" />
+</FrameLayout>

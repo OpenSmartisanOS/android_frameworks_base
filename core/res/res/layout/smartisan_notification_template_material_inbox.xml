@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_latest_event_content"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:tag="inbox">
+    <include layout="@layout/smartisan_notification_template_header" />
+    <LinearLayout
+        android:id="@+id/notification_action_list_margin_target"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/sos_notification_content_margin_top"
+        android:clipToPadding="false"
+        android:orientation="vertical">
+        <LinearLayout
+            android:id="@+id/notification_main_column"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="@dimen/sos_notification_min_content_height"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/sos_notification_content_margin_start"
+            android:paddingBottom="@dimen/sos_notification_content_margin_bottom">
+            <include layout="@layout/smartisan_notification_template_part_line2" />
+            <TextView android:id="@android:id/text" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text0" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text1" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text2" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text3" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text4" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text5" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+            <TextView android:id="@+id/inbox_text6" style="@style/TextAppearance.Sos.Notification.Text" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:ellipsize="end" android:singleLine="true" android:visibility="gone" />
+        </LinearLayout>
+        <ViewStub
+            android:id="@+id/notification_material_reply_container"
+            android:layout="@layout/notification_material_reply_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+    <include layout="@layout/smartisan_notification_material_action_list" />
+</FrameLayout>

@@ -16,7 +16,7 @@
 
 package com.android.internal.widget;
 
-import static android.app.Flags.notificationsRedesignTemplates;
+import static com.android.internal.widget.NotificationStylePolicy.notificationsRedesignTemplates;
 
 import android.annotation.ColorInt;
 import android.annotation.Nullable;
@@ -80,8 +80,14 @@ public class NotificationExpandButton extends FrameLayout {
         super.onFinishInflate();
 
         mPillView = findViewById(R.id.expand_button_pill);
-        final LayerDrawable layeredPill = (LayerDrawable) mPillView.getBackground();
-        mPillDrawable = layeredPill.findDrawableByLayerId(R.id.expand_button_pill_colorized_layer);
+        final Drawable background = mPillView != null ? mPillView.getBackground() : null;
+        if (background instanceof LayerDrawable layeredPill) {
+            mPillDrawable = layeredPill.findDrawableByLayerId(
+                    R.id.expand_button_pill_colorized_layer);
+        } else {
+            // R2's expander is a bare 14dp chevron, not the Android 16 colored pill.
+            mPillDrawable = null;
+        }
         mNumberView = findViewById(R.id.expand_button_number);
         mIconView = findViewById(R.id.expand_button_icon);
     }
@@ -146,14 +152,18 @@ public class NotificationExpandButton extends FrameLayout {
             if (notificationsRedesignTemplates()) {
                 drawableId = R.drawable.ic_notification_2025_collapse;
             } else {
-                drawableId = R.drawable.ic_collapse_notification;
+                drawableId = true
+                        ? R.drawable.sos_ic_collapse_notification
+                        : R.drawable.ic_collapse_notification;
             }
             contentDescriptionId = R.string.expand_button_content_description_expanded;
         } else {
             if (notificationsRedesignTemplates()) {
                 drawableId = R.drawable.ic_notification_2025_expand;
             } else {
-                drawableId = R.drawable.ic_expand_notification;
+                drawableId = true
+                        ? R.drawable.sos_ic_expand_notification
+                        : R.drawable.ic_expand_notification;
             }
             contentDescriptionId = R.string.expand_button_content_description_collapsed;
         }
@@ -204,7 +214,7 @@ public class NotificationExpandButton extends FrameLayout {
 
     private void updateColors() {
         if (shouldShowNumber()) {
-            if (mHighlightPillColor != 0) {
+            if (mPillDrawable != null && mHighlightPillColor != 0) {
                 mPillDrawable.setTintList(ColorStateList.valueOf(mHighlightPillColor));
             }
             mIconView.setColorFilter(mHighlightTextColor);
@@ -212,7 +222,7 @@ public class NotificationExpandButton extends FrameLayout {
                 mNumberView.setTextColor(mHighlightTextColor);
             }
         } else {
-            if (mDefaultPillColor != 0) {
+            if (mPillDrawable != null && mDefaultPillColor != 0) {
                 mPillDrawable.setTintList(ColorStateList.valueOf(mDefaultPillColor));
             }
             mIconView.setColorFilter(mDefaultTextColor);

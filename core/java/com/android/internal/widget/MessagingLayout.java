@@ -16,10 +16,9 @@
 
 package com.android.internal.widget;
 
-import static android.app.Flags.notificationsRedesignTemplates;
-
 import static com.android.internal.widget.MessagingGroup.IMAGE_DISPLAY_LOCATION_EXTERNAL;
 import static com.android.internal.widget.MessagingGroup.IMAGE_DISPLAY_LOCATION_INLINE;
+import static com.android.internal.widget.NotificationStylePolicy.notificationsRedesignTemplates;
 
 import android.annotation.AttrRes;
 import android.annotation.NonNull;

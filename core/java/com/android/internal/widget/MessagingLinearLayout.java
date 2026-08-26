@@ -16,7 +16,7 @@
 
 package com.android.internal.widget;
 
-import static android.app.Flags.notificationsRedesignTemplates;
+import static com.android.internal.widget.NotificationStylePolicy.notificationsRedesignTemplates;
 
 import android.annotation.Nullable;
 import android.annotation.Px;
@@ -247,7 +247,12 @@ public class MessagingLinearLayout extends ViewGroup {
                 continue;
             }
             final LayoutParams lp = (LayoutParams) child.getLayoutParams();
-            MessagingChild messagingChild = (MessagingChild) child;
+            // Smartisan's fixed seven-line MessagingStyle template contains
+            // ImageFloatingTextView children directly.  They participate in the
+            // bottom-up measuring/eviction performed by this layout, but unlike
+            // AOSP MessagingGroup children they do not implement MessagingChild.
+            final MessagingChild messagingChild = child instanceof MessagingChild
+                    ? (MessagingChild) child : null;
 
             final int childWidth = child.getMeasuredWidth();
             final int childHeight = child.getMeasuredHeight();
@@ -263,7 +268,9 @@ public class MessagingLinearLayout extends ViewGroup {
                     // We still want to lay out the child to have great animations
                     child.layout(childLeft, childTop, childLeft + childWidth,
                             childTop + lp.lastVisibleHeight);
-                    messagingChild.hideAnimated();
+                    if (messagingChild != null) {
+                        messagingChild.hideAnimated();
+                    }
                 }
                 lp.visibleBefore = false;
                 continue;
@@ -308,8 +315,8 @@ public class MessagingLinearLayout extends ViewGroup {
     protected boolean drawChild(Canvas canvas, View child, long drawingTime) {
         final LayoutParams lp = (LayoutParams) child.getLayoutParams();
         if (lp.hide) {
-            MessagingChild messagingChild = (MessagingChild) child;
-            if (!messagingChild.isHidingAnimated()) {
+            if (!(child instanceof MessagingChild)
+                    || !((MessagingChild) child).isHidingAnimated()) {
                 return true;
             }
         }

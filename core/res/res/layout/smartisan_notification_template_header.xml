@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<NotificationHeaderView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/notification_header"
+    android:layout_width="wrap_content"
+    android:layout_height="60dp"
+    android:clipChildren="false"
+    android:importantForAccessibility="no"
+    android:orientation="horizontal"
+    android:paddingStart="0dp"
+    android:paddingEnd="0dp"
+    android:theme="@style/Theme.DeviceDefault.Notification">
+
+    <com.android.internal.widget.CachingIconView
+        android:id="@+id/icon"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_alignParentStart="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="12dp"
+        android:gravity="center"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside" />
+
+    <LinearLayout
+        android:id="@+id/notification_header_line"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp"
+        android:layout_marginEnd="38dp"
+        android:layout_toStartOf="@id/expand_button"
+        android:layout_toEndOf="@id/icon"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="marquee"
+            android:fadingEdge="horizontal"
+            android:singleLine="true"
+            android:textColor="#99000000"
+            android:textSize="13.5dp"
+            android:textStyle="normal" />
+
+        <TextView
+            android:id="@+id/header_text_divider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:singleLine="true"
+            android:text="@string/notification_header_divider_symbol"
+            android:textAppearance="@style/TextAppearance.Material.Notification.Info"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/header_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="2dp"
+            android:layout_marginEnd="2dp"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.Material.Notification.Info"
+            android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/time_divider"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:layout_marginEnd="6dp"
+            android:singleLine="true"
+            android:text="@string/notification_header_divider_symbol"
+            android:textColor="#66000000"
+            android:textSize="7.5dp"
+            android:visibility="gone" />
+
+        <DateTimeView
+            android:id="@+id/time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:showRelative="true"
+            android:singleLine="true"
+            android:textColor="#66000000"
+            android:textSize="12dp"
+            android:visibility="gone" />
+
+        <ViewStub
+            android:id="@+id/chronometer"
+            android:layout="@layout/smartisan_notification_template_part_chronometer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <com.android.internal.widget.CachingIconView
+        android:id="@+id/right_icon"
+        android:layout_width="14dp"
+        android:layout_height="14dp"
+        android:layout_alignParentEnd="true"
+        android:layout_marginTop="11dp"
+        android:layout_marginEnd="12dp"
+        android:importantForAccessibility="no"
+        android:scaleType="centerInside"
+        android:visibility="gone" />
+
+    <include
+        layout="@layout/smartisan_notification_expand_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_marginStart="7.2dp"
+        android:layout_marginTop="5.2dp"
+        android:layout_marginEnd="7.2dp" />
+
+    <ImageView
+        android:id="@+id/profile_badge"
+        android:layout_width="@dimen/notification_badge_size"
+        android:layout_height="@dimen/notification_badge_size"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="4dp"
+        android:contentDescription="@string/notification_work_profile_content_description"
+        android:paddingTop="1dp"
+        android:scaleType="fitCenter"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/app_ops"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_marginStart="6dp"
+        android:orientation="horizontal"
+        android:visibility="gone" />
+
+    <!-- A16 still queues reset and compatibility actions for these ids. They are retained as
+         zero-sized targets only; none participates in the R2 visible hierarchy or measurement. -->
+    <NotificationTopLineView
+        android:id="@+id/notification_top_line"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone">
+        <TextView android:id="@+id/app_name_text" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <TextView android:id="@+id/app_name_text_divider" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <TextView android:id="@+id/header_text_secondary_divider" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <TextView android:id="@+id/header_text_secondary" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <ImageView android:id="@+id/feedback" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <ImageView android:id="@+id/phishing_alert" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+        <ImageView android:id="@+id/alerted_icon" android:layout_width="0dp"
+            android:layout_height="0dp" android:visibility="gone" />
+    </NotificationTopLineView>
+
+    <ImageView
+        android:id="@+id/left_icon"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:importantForAccessibility="no"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:id="@+id/alternate_expand_target"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:focusable="false"
+        android:importantForAccessibility="no" />
+
+    <TextView
+        android:id="@+id/sos_notification_group_count_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="60dp"
+        android:layout_marginTop="31dp"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:singleLine="true"
+        android:textColor="#66000000"
+        android:textSize="12.5dp"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/sos_notification_group_other_desc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@id/sos_notification_group_count_desc"
+        android:layout_marginStart="3dp"
+        android:layout_toEndOf="@id/sos_notification_group_count_desc"
+        android:ellipsize="marquee"
+        android:fadingEdge="horizontal"
+        android:singleLine="true"
+        android:textColor="#66000000"
+        android:textSize="12.5dp"
+        android:visibility="gone" />
+
+    <include
+        layout="@layout/notification_close_button"
+        android:id="@+id/close_button"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone" />
+</NotificationHeaderView>
