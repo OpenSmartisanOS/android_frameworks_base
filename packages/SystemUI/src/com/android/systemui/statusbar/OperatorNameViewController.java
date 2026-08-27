@@ -26,7 +26,6 @@ import com.android.keyguard.KeyguardUpdateMonitor;
 import com.android.keyguard.KeyguardUpdateMonitorCallback;
 import com.android.systemui.demomode.DemoModeCommandReceiver;
 import com.android.systemui.plugins.DarkIconDispatcher;
-import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment;
 import com.android.systemui.statusbar.pipeline.airplane.domain.interactor.AirplaneModeInteractor;
 import com.android.systemui.statusbar.pipeline.mobile.util.SubscriptionManagerProxy;
 import com.android.systemui.tuner.TunerService;
@@ -168,7 +167,7 @@ public class OperatorNameViewController extends ViewController<OperatorNameView>
     }
 
     /**
-     * Needed because of how {@link CollapsedStatusBarFragment} works.
+     * Kept as an explicit refresh hook for the canonical status-bar host.
      *
      * Ideally this can be done internally.
      **/

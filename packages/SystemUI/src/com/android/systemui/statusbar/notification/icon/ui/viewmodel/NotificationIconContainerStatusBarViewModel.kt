@@ -59,46 +59,28 @@ constructor(
     dumpManager: DumpManager,
     iconsInteractor: StatusBarNotificationIconsInteractor,
     activeNotificationsInteractor: ActiveNotificationsInteractor,
-    headsUpIconInteractor: HeadsUpNotificationIconInteractor,
+    roleRepository: NotificationRoleRepository,
+    private val headsUpIconInteractor: HeadsUpNotificationIconInteractor,
     keyguardInteractor: KeyguardInteractor,
     @Main resources: Resources,
-    shadeInteractor: ShadeInteractor,
+    private val shadeInteractor: ShadeInteractor,
 ) : FlowDumperImpl(dumpManager) {
 
-    private val maxIcons = resources.getInteger(R.integer.max_notif_static_icons)
-    private val useSosNotificationPresentation =
-        resources.getBoolean(R.bool.config_sos_legacy_shade)
-    private val callPackages = resources.getStringArray(R.array.sos_notification_call_packages).toSet()
-    private val messagingPackages =
-        resources.getStringArray(R.array.sos_notification_messaging_packages).toSet()
-    private val emailPackages =
-        resources.getStringArray(R.array.sos_notification_email_packages).toSet()
-    private val androidPackages =
-        resources.getStringArray(R.array.sos_notification_android_packages).toSet()
-    private val systemUiPackages =
-        resources.getStringArray(R.array.sos_notification_systemui_packages).toSet()
-    private val hiddenPackages =
-        resources.getStringArray(R.array.sos_notification_hidden_packages).toSet()
-    private val socialPackages =
-        resources.getStringArray(R.array.sos_notification_social_packages).toSet()
+    private val maxIcons = Int.MAX_VALUE
+    private val presentationClassifier = NotificationPresentationClassifier(resources)
     private val socialStatusBarIcon =
         Icon.createWithResource("com.android.systemui", R.drawable.smartisan_social_notification)
 
-    private val notificationPresentation: Flow<SosNotificationPresentation> =
-        if (useSosNotificationPresentation) {
-            combine(
-                    iconsInteractor.statusBarNotifs,
-                    activeNotificationsInteractor.allRepresentativeNotifications,
-                    ::buildSosNotificationPresentation,
-                )
-                .flowOn(bgContext)
-                .conflate()
-                .distinctUntilChanged()
-        } else {
-            iconsInteractor.statusBarNotifs.map {
-                SosNotificationPresentation(it.toList(), hiddenCount = 0)
-            }
-        }
+    private val notificationPresentation: Flow<NotificationRowPresentation> =
+        combine(
+                iconsInteractor.statusBarNotifs,
+                activeNotificationsInteractor.allRepresentativeNotifications,
+                roleRepository.roles,
+                ::buildNotificationRowPresentation,
+            )
+            .flowOn(bgContext)
+            .conflate()
+            .distinctUntilChanged()
 
     /** Are changes to the icon container animated? */
     val animationsEnabled: Flow<Boolean> =
@@ -123,18 +105,7 @@ constructor(
 
     /** [NotificationIconsViewData] indicating which icons to display in the view. */
     val icons: Flow<NotificationIconsViewData> =
-        notificationPresentation
-            .map { presentation ->
-                NotificationIconsViewData(
-                    visibleIcons =
-                        presentation.visibleIcons.mapNotNull { it.toIconInfo(it.statusBarIcon) },
-                    iconLimit = maxIcons,
-                )
-            }
-            .flowOn(bgContext)
-            .conflate()
-            .distinctUntilChanged()
-            .dumpWhileCollecting("icons")
+        notificationPresentation.toViewData(maxIcons).dumpWhileCollecting("icons")
 
     /** Number represented by the SOS count glyph next to the app notification icons. */
     val notificationCount: Flow<Int> =
@@ -143,14 +114,20 @@ constructor(
             .flowOn(bgContext)
             .conflate()
             .distinctUntilChanged()
+            .dumpWhileCollecting("notificationCount")
 
     /** An Icon to show "isolated" in the IconContainer. */
     val isolatedIcon: Flow<AnimatedValue<NotificationIconInfo?>> =
+        isolatedIconFor(icons)
+
+    private fun isolatedIconFor(
+        iconData: Flow<NotificationIconsViewData>
+    ): Flow<AnimatedValue<NotificationIconInfo?>> =
         if (StatusBarNoHunBehavior.isEnabled) {
             flowOf(AnimatedValue.NotAnimating(null))
         } else {
             headsUpIconInteractor.isolatedNotification
-                .combine(icons) { isolatedNotif, iconsViewData ->
+                .combine(iconData) { isolatedNotif, iconsViewData ->
                     isolatedNotif?.let {
                         iconsViewData.visibleIcons.firstOrNull { it.notifKey == isolatedNotif }
                     }
@@ -171,6 +148,20 @@ constructor(
                 }
                 .toAnimatedValueFlow()
         }
+
+    private fun Flow<NotificationRowPresentation>.toViewData(
+        iconLimit: Int
+    ): Flow<NotificationIconsViewData> =
+        map { presentation ->
+                NotificationIconsViewData(
+                    visibleIcons =
+                        presentation.visibleIcons.mapNotNull { it.toIconInfo(it.statusBarIcon) },
+                    iconLimit = iconLimit,
+                )
+            }
+            .flowOn(bgContext)
+            .conflate()
+            .distinctUntilChanged()
 
     /** Location to show an isolated icon, if there is one. */
     val isolatedIconLocation: Flow<Rect> =
@@ -194,16 +185,18 @@ constructor(
         }
     }
 
-    private fun buildSosNotificationPresentation(
+    private fun buildNotificationRowPresentation(
         eligibleIcons: Set<ActiveNotificationIconModel>,
         activeNotifications: Map<String, ActiveNotificationModel>,
-    ): SosNotificationPresentation {
+        roles: NotificationRoleSnapshot,
+    ): NotificationRowPresentation {
         val eligibleKeys = eligibleIcons.mapTo(mutableSetOf()) { it.notifKey }
         var hiddenCount =
             activeNotifications.values.count {
                 !it.isGroupSummary && !it.isRowDismissed && it.key !in eligibleKeys
             }
-        val representedSingleTypes = mutableSetOf<SosNotificationType>()
+        val representedSingleTypes =
+            mutableSetOf<NotificationPresentationClassifier.Type>()
         val candidates = mutableListOf<ActiveNotificationIconModel>()
 
         eligibleIcons.forEach { icon ->
@@ -216,64 +209,39 @@ constructor(
                 return@forEach
             }
 
-            when (val type = classify(notification.packageName)) {
-                SosNotificationType.CALL,
-                SosNotificationType.ANDROID,
-                SosNotificationType.SYSTEM_UI -> candidates += icon
-                SosNotificationType.MESSAGING,
-                SosNotificationType.EMAIL -> {
+            when (val type = presentationClassifier.classify(notification, roles)) {
+                NotificationPresentationClassifier.Type.CALL,
+                NotificationPresentationClassifier.Type.ANDROID,
+                NotificationPresentationClassifier.Type.SYSTEM_UI -> candidates += icon
+                NotificationPresentationClassifier.Type.MESSAGING,
+                NotificationPresentationClassifier.Type.EMAIL -> {
                     if (representedSingleTypes.add(type)) {
                         candidates += icon
                     } else {
                         hiddenCount++
                     }
                 }
-                SosNotificationType.SOCIAL -> {
+                NotificationPresentationClassifier.Type.SOCIAL -> {
                     if (representedSingleTypes.add(type)) {
                         candidates += icon.copy(statusBarIcon = socialStatusBarIcon)
                     } else {
                         hiddenCount++
                     }
                 }
-                SosNotificationType.HIDDEN,
-                SosNotificationType.OTHER -> hiddenCount++
+                NotificationPresentationClassifier.Type.HIDDEN,
+                NotificationPresentationClassifier.Type.OTHER -> hiddenCount++
             }
         }
 
-        if (candidates.size > maxIcons) {
-            hiddenCount += candidates.size - maxIcons
-        }
-        return SosNotificationPresentation(
+        return NotificationRowPresentation(
             visibleIcons = candidates.take(maxIcons),
             hiddenCount = hiddenCount,
         )
     }
 
-    private fun classify(packageName: String): SosNotificationType =
-        when (packageName) {
-            in callPackages -> SosNotificationType.CALL
-            in messagingPackages -> SosNotificationType.MESSAGING
-            in emailPackages -> SosNotificationType.EMAIL
-            in socialPackages -> SosNotificationType.SOCIAL
-            in androidPackages -> SosNotificationType.ANDROID
-            in systemUiPackages -> SosNotificationType.SYSTEM_UI
-            in hiddenPackages -> SosNotificationType.HIDDEN
-            else -> SosNotificationType.OTHER
-        }
-
-    private data class SosNotificationPresentation(
+    private data class NotificationRowPresentation(
         val visibleIcons: List<ActiveNotificationIconModel>,
         val hiddenCount: Int,
     )
 
-    private enum class SosNotificationType {
-        SOCIAL,
-        CALL,
-        MESSAGING,
-        EMAIL,
-        ANDROID,
-        SYSTEM_UI,
-        HIDDEN,
-        OTHER,
-    }
 }

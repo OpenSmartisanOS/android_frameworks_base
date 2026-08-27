@@ -16,15 +16,28 @@
 
 package com.android.systemui.statusbar.notification.icon.ui.viewmodel
 
+import android.app.role.roleManager
 import android.content.res.mainResources
+import com.android.systemui.concurrency.fakeExecutor
 import com.android.systemui.dump.dumpManager
 import com.android.systemui.keyguard.domain.interactor.keyguardInteractor
 import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.kosmos.testDispatcher
 import com.android.systemui.shade.domain.interactor.shadeInteractor
+import com.android.systemui.settings.userTracker
+import com.android.systemui.statusbar.notification.domain.interactor.activeNotificationsInteractor
 import com.android.systemui.statusbar.notification.domain.interactor.headsUpNotificationIconInteractor
 import com.android.systemui.statusbar.notification.icon.domain.interactor.statusBarNotificationIconsInteractor
 import com.android.systemui.statusbar.phone.domain.interactor.darkIconInteractor
+
+val Kosmos.notificationRoleRepository by
+    Kosmos.Fixture {
+        NotificationRoleRepository(
+            roleManager = roleManager,
+            userTracker = userTracker,
+            backgroundExecutor = fakeExecutor,
+        )
+    }
 
 val Kosmos.notificationIconContainerStatusBarViewModel by
     Kosmos.Fixture {
@@ -33,6 +46,8 @@ val Kosmos.notificationIconContainerStatusBarViewModel by
             darkIconInteractor = darkIconInteractor,
             dumpManager = dumpManager,
             iconsInteractor = statusBarNotificationIconsInteractor,
+            activeNotificationsInteractor = activeNotificationsInteractor,
+            roleRepository = notificationRoleRepository,
             headsUpIconInteractor = headsUpNotificationIconInteractor,
             keyguardInteractor = keyguardInteractor,
             resources = mainResources,

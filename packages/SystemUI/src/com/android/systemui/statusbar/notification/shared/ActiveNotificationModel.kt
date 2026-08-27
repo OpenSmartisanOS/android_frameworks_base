@@ -86,6 +86,8 @@ data class ActiveNotificationModel(
     val statusBarChipIconView: StatusBarIconView?,
     /** The notifying app's [packageName]'s uid. */
     val uid: Int,
+    /** User that owns the notification. */
+    val userId: Int,
     /** The notifying app's packageName. */
     val packageName: String,
     /** The notifying app's display name. */
@@ -109,6 +111,10 @@ data class ActiveNotificationModel(
     val requestedPromotion: Boolean,
     /** The visual style of the notification, containing additional data relevant to that style. */
     val style: NotifStyle?,
+    /** Semantic metadata used by distribution status-bar presentation. */
+    val category: String? = null,
+    val channelId: String? = null,
+    val isConversation: Boolean = false,
 ) : ActiveNotificationEntryModel() {
     init {
         if (!PromotedNotificationContentModel.featureFlagEnabled()) {

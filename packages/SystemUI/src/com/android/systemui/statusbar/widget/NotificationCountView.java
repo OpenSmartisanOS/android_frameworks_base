@@ -13,10 +13,13 @@ import android.graphics.Typeface;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+import androidx.annotation.DrawableRes;
+import androidx.annotation.VisibleForTesting;
+
 import com.android.systemui.res.R;
 
 /** SOS status-bar notification count with digits punched through the icon background. */
-public class SosNotificationCountView extends ImageView {
+public class NotificationCountView extends ImageView {
     private final Paint mNumberPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private int mCount;
     private int mTint;
@@ -26,29 +29,50 @@ public class SosNotificationCountView extends ImageView {
     private int mRenderedCount = -1;
     private int mRenderedTint = Integer.MIN_VALUE;
     private final boolean mUseColoredBackground;
-    private final int mMaxOffsetX;
-    private final int mTextOffsetY;
+    private final float mMaxOffsetX;
+    private final float mTextOffsetY;
+    private CountChangeListener mCountChangeListener;
 
-    public SosNotificationCountView(Context context, AttributeSet attrs) {
+    public NotificationCountView(Context context, AttributeSet attrs) {
         super(context, attrs);
         mNumberPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
         mNumberPaint.setTextAlign(Paint.Align.CENTER);
         mNumberPaint.setTypeface(Typeface.DEFAULT_BOLD);
         mNumberPaint.setFakeBoldText(true);
-        mNumberPaint.setTextSize(getResources().getDimensionPixelSize(
-                R.dimen.sos_notification_count_text_size));
-        mMaxOffsetX = getResources().getDimensionPixelSize(
-                R.dimen.sos_notification_count_max_offset_x);
-        mTextOffsetY = getResources().getDimensionPixelSize(
-                R.dimen.sos_notification_count_text_offset_y);
+        mNumberPaint.setTextSize(getResources().getDimension(
+                R.dimen.status_bar_notification_count_text_size));
+        mMaxOffsetX = getResources().getDimension(
+                R.dimen.status_bar_notification_count_max_offset_x);
+        mTextOffsetY = getResources().getDimension(
+                R.dimen.status_bar_notification_count_text_offset_y);
         mUseColoredBackground = getResources().getBoolean(
-                R.bool.config_sos_colored_notification_count);
+                R.bool.config_colored_notification_count);
+    }
+
+    public void setCountChangeListener(CountChangeListener listener) {
+        mCountChangeListener = listener;
     }
 
     public void setCount(int count) {
         mCount = Math.max(count, 0);
         setVisibility(mCount == 0 ? GONE : VISIBLE);
         updateBitmap();
+        requestLayout();
+        if (getParent() instanceof android.view.View) {
+            ((android.view.View) getParent()).requestLayout();
+        }
+        if (mCountChangeListener != null) {
+            mCountChangeListener.onCountChanged(mCount);
+        }
+    }
+
+    public int getCount() {
+        return mCount;
+    }
+
+    /** Notified when the status-bar hidden-notification glyph changes. */
+    public interface CountChangeListener {
+        void onCountChanged(int count);
     }
 
     public void setIconTint(int tint) {
@@ -58,20 +82,7 @@ public class SosNotificationCountView extends ImageView {
 
     private void updateBitmap() {
         if (mCount == 0) return;
-        final int background;
-        if (mCount < 10) {
-            background = mUseColoredBackground
-                    ? R.drawable.colored_smartisan_bg_notification_count_single
-                    : R.drawable.smartisan_bg_notification_count_single;
-        } else if (mCount <= 99) {
-            background = mUseColoredBackground
-                    ? R.drawable.colored_smartisan_bg_notification_count_double
-                    : R.drawable.smartisan_bg_notification_count_double;
-        } else {
-            background = mUseColoredBackground
-                    ? R.drawable.colored_smartisan_bg_notification_count_max
-                    : R.drawable.smartisan_bg_notification_count_max;
-        }
+        final int background = backgroundResourceForCount(mCount, mUseColoredBackground);
         if (mBackgroundRes != background || mSourceBitmap == null || mBitmap == null) {
             if (mSourceBitmap != null && !mSourceBitmap.isRecycled()) mSourceBitmap.recycle();
             if (mBitmap != null && !mBitmap.isRecycled()) mBitmap.recycle();
@@ -98,10 +109,33 @@ public class SosNotificationCountView extends ImageView {
                 - (metrics.ascent + metrics.descent) / 2f + mTextOffsetY;
         final float centerX = mBitmap.getWidth() / 2f
                 - (mCount > 99 ? mMaxOffsetX : 0) - 0.5f;
-        canvas.drawText(Integer.toString(Math.min(mCount, 99)), centerX,
+        canvas.drawText(displayTextForCount(mCount), centerX,
                 baseline, mNumberPaint);
         mRenderedCount = mCount;
         mRenderedTint = mTint;
         invalidate();
+    }
+
+    @VisibleForTesting
+    @DrawableRes
+    static int backgroundResourceForCount(int count, boolean useColoredBackground) {
+        if (count < 10) {
+            return useColoredBackground
+                    ? R.drawable.colored_smartisan_bg_notification_count_single
+                    : R.drawable.smartisan_bg_notification_count_single;
+        }
+        if (count <= 99) {
+            return useColoredBackground
+                    ? R.drawable.colored_smartisan_bg_notification_count_double
+                    : R.drawable.smartisan_bg_notification_count_double;
+        }
+        return useColoredBackground
+                ? R.drawable.colored_smartisan_bg_notification_count_max
+                : R.drawable.smartisan_bg_notification_count_max;
+    }
+
+    @VisibleForTesting
+    static String displayTextForCount(int count) {
+        return Integer.toString(Math.min(Math.max(count, 0), 99));
     }
 }

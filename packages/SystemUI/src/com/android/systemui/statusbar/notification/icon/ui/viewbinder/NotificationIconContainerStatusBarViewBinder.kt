@@ -18,11 +18,12 @@ package com.android.systemui.statusbar.notification.icon.ui.viewbinder
 
 import android.graphics.Rect
 import android.view.Display
+import android.view.View
+import android.view.ViewGroup
 import androidx.core.view.doOnNextLayout
 import androidx.lifecycle.lifecycleScope
 import com.android.app.displaylib.PerDisplayRepository
 import com.android.app.tracing.traceSection
-import com.android.systemui.common.ui.ConfigurationState
 import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent
 import com.android.systemui.lifecycle.repeatWhenAttached
 import com.android.systemui.statusbar.notification.collection.NotifPipeline
@@ -30,10 +31,9 @@ import com.android.systemui.statusbar.notification.icon.ui.viewbinder.Notificati
 import com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconContainerStatusBarViewModel
 import com.android.systemui.statusbar.phone.NotificationIconContainer
 import com.android.systemui.res.R
-import com.android.systemui.statusbar.widget.SosNotificationCountView
+import com.android.systemui.statusbar.widget.NotificationCountView
 import javax.inject.Inject
 import kotlinx.coroutines.DisposableHandle
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /** Binds a [NotificationIconContainer] to a [NotificationIconContainerStatusBarViewModel]. */
@@ -62,39 +62,33 @@ constructor(
                 val displaySubcomponent =
                     perDisplaySubcomponentRepository[displayId]
                         ?: perDisplaySubcomponentRepository[Display.DEFAULT_DISPLAY]!!
-                val configurationState: ConfigurationState = displaySubcomponent.configurationState
                 val systemBarUtilsState = displaySubcomponent.systemBarUtilsState
-                val notificationCount =
-                    view.rootView.findViewById<SosNotificationCountView>(
-                        R.id.sos_notification_count
-                    )
                 lifecycleScope.launch {
-                    viewModel.notificationCount
-                        .combine(viewModel.iconColors(displayId)) { count, colors -> count to colors }
-                        .collect { (count, colors) ->
-                            notificationCount ?: return@collect
-                            notificationCount.setCount(count)
-                            val updateTint = {
-                                val bounds = Rect()
-                                notificationCount.getGlobalVisibleRect(bounds)
-                                notificationCount.setIconTint(colors.staticDrawableColor(bounds))
-                            }
-                            if (
-                                notificationCount.isLaidOut &&
-                                    !notificationCount.isLayoutRequested
-                            ) {
-                                updateTint()
-                            } else {
-                                notificationCount.doOnNextLayout { updateTint() }
-                            }
+                    viewModel.notificationCount.collect { count ->
+                        val notificationCount = findNotificationCountView(view) ?: return@collect
+                        notificationCount.setCount(count)
+                    }
+                }
+                lifecycleScope.launch {
+                    viewModel.iconColors(displayId).collect { colors ->
+                        val notificationCount = findNotificationCountView(view) ?: return@collect
+                        val updateTint = {
+                            val bounds = Rect()
+                            notificationCount.getGlobalVisibleRect(bounds)
+                            notificationCount.setIconTint(colors.staticDrawableColor(bounds))
                         }
+                        if (notificationCount.isLaidOut && !notificationCount.isLayoutRequested) {
+                            updateTint()
+                        } else {
+                            notificationCount.doOnNextLayout { updateTint() }
+                        }
+                    }
                 }
                 lifecycleScope.launch {
                     NotificationIconContainerViewBinder.bind(
                         displayId = displayId,
                         view = view,
                         viewModel = viewModel,
-                        configuration = configurationState,
                         systemBarUtilsState = systemBarUtilsState,
                         failureTracker = failureTracker,
                         viewStore = viewStore,
@@ -102,6 +96,18 @@ constructor(
                 }
             }
         }
+    }
+
+    private fun findNotificationCountView(view: NotificationIconContainer): NotificationCountView? {
+        var current: View? = view
+        while (current != null) {
+            val parent = current.parent as? ViewGroup ?: break
+            parent.findViewById<NotificationCountView>(R.id.notification_count)?.let {
+                return it
+            }
+            current = parent
+        }
+        return view.rootView.findViewById(R.id.notification_count)
     }
 }
 

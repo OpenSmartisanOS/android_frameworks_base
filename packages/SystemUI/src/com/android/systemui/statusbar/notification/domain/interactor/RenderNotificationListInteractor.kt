@@ -214,6 +214,7 @@ private class ActiveNotificationsStoreBuilder(
             statusBarIcon = icons.statusBarIcon?.sourceIcon,
             statusBarChipIconView = icons.statusBarChipIcon,
             uid = sbn.uid,
+            userId = sbn.userId,
             packageName = sbn.packageName,
             appName = sbn.notification.loadHeaderAppName(context) ?: "",
             contentIntent = sbn.notification.contentIntent,
@@ -224,6 +225,9 @@ private class ActiveNotificationsStoreBuilder(
             promotedContent = promotedContent,
             requestedPromotion = sbn.notification.isRequestPromotedOngoing,
             notifStyle = notifStyle(sbn.notification),
+            category = sbn.notification.category,
+            channelId = ranking.channel?.id,
+            isConversation = ranking.isConversation,
         )
     }
 }
@@ -245,6 +249,7 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
     statusBarIcon: Icon?,
     statusBarChipIconView: StatusBarIconView?,
     uid: Int,
+    userId: Int,
     packageName: String,
     appName: String,
     contentIntent: PendingIntent?,
@@ -255,6 +260,9 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
     promotedContent: PromotedNotificationContentModels?,
     requestedPromotion: Boolean,
     notifStyle: NotifStyle?,
+    category: String?,
+    channelId: String?,
+    isConversation: Boolean,
 ): ActiveNotificationModel {
     return individuals[key]?.takeIf {
         it.isCurrent(
@@ -274,6 +282,7 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
             statusBarIcon = statusBarIcon,
             statusBarChipIconView = statusBarChipIconView,
             uid = uid,
+            userId = userId,
             instanceId = instanceId,
             isGroupSummary = isGroupSummary,
             packageName = packageName,
@@ -284,6 +293,9 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
             promotedContent = promotedContent,
             requestedPromotion = requestedPromotion,
             style = notifStyle,
+            category = category,
+            channelId = channelId,
+            isConversation = isConversation,
         )
     }
         ?: ActiveNotificationModel(
@@ -303,6 +315,7 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
             statusBarIcon = statusBarIcon,
             statusBarChipIconView = statusBarChipIconView,
             uid = uid,
+            userId = userId,
             instanceId = instanceId,
             isGroupSummary = isGroupSummary,
             packageName = packageName,
@@ -313,6 +326,9 @@ private fun ActiveNotificationsStore.createOrReuseNotif(
             promotedContent = promotedContent,
             requestedPromotion = requestedPromotion,
             style = notifStyle,
+            category = category,
+            channelId = channelId,
+            isConversation = isConversation,
         )
 }
 
@@ -333,6 +349,7 @@ private fun ActiveNotificationModel.isCurrent(
     statusBarIcon: Icon?,
     statusBarChipIconView: StatusBarIconView?,
     uid: Int,
+    userId: Int,
     packageName: String,
     appName: String,
     contentIntent: PendingIntent?,
@@ -343,6 +360,9 @@ private fun ActiveNotificationModel.isCurrent(
     promotedContent: PromotedNotificationContentModels?,
     requestedPromotion: Boolean,
     style: NotifStyle?,
+    category: String?,
+    channelId: String?,
+    isConversation: Boolean,
 ): Boolean {
     return when {
         key != this.key -> false
@@ -361,6 +381,7 @@ private fun ActiveNotificationModel.isCurrent(
         statusBarIcon != this.statusBarIcon -> false
         statusBarChipIconView != this.statusBarChipIconView -> false
         uid != this.uid -> false
+        userId != this.userId -> false
         instanceId != this.instanceId -> false
         isGroupSummary != this.isGroupSummary -> false
         packageName != this.packageName -> false
@@ -373,6 +394,9 @@ private fun ActiveNotificationModel.isCurrent(
         promotedContent != this.promotedContent -> false
         requestedPromotion != this.requestedPromotion -> false
         style != this.style -> false
+        category != this.category -> false
+        channelId != this.channelId -> false
+        isConversation != this.isConversation -> false
         else -> true
     }
 }

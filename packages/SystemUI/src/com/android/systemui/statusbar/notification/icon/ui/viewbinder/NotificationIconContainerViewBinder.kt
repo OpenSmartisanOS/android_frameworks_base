@@ -25,7 +25,6 @@ import androidx.collection.ArrayMap
 import androidx.lifecycle.lifecycleScope
 import com.android.app.tracing.coroutines.launchTraced as launch
 import com.android.app.tracing.traceSection
-import com.android.internal.R as RInternal
 import com.android.internal.statusbar.StatusBarIcon
 import com.android.internal.util.ContrastColorUtil
 import com.android.systemui.common.ui.ConfigurationState
@@ -42,6 +41,7 @@ import com.android.systemui.statusbar.notification.icon.ui.viewmodel.Notificatio
 import com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconsViewData
 import com.android.systemui.statusbar.notification.icon.ui.viewmodel.NotificationIconsViewData.LimitType
 import com.android.systemui.statusbar.phone.NotificationIconContainer
+import com.android.systemui.statusbar.phone.StatusBarGeometry
 import com.android.systemui.statusbar.ui.SystemBarUtilsState
 import com.android.systemui.util.kotlin.mapValuesNotNullTo
 import com.android.systemui.util.ui.isAnimating
@@ -53,6 +53,8 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 
 /** Binds a view-model to a [NotificationIconContainer]. */
@@ -62,7 +64,6 @@ object NotificationIconContainerViewBinder {
         displayId: Int,
         view: NotificationIconContainer,
         viewModel: NotificationIconContainerStatusBarViewModel,
-        configuration: ConfigurationState,
         systemBarUtilsState: SystemBarUtilsState,
         failureTracker: StatusBarIconViewBindingFailureTracker,
         viewStore: IconViewStore,
@@ -74,7 +75,6 @@ object NotificationIconContainerViewBinder {
             viewModel.icons.bindIcons(
                 logTag = "statusbar",
                 view = view,
-                configuration = configuration,
                 systemBarUtilsState = systemBarUtilsState,
                 notifyBindingFailures = { failureTracker.statusBarFailures = it },
                 viewStore = viewStore,
@@ -125,7 +125,6 @@ object NotificationIconContainerViewBinder {
             viewModel.icons.bindIcons(
                 logTag = "aod",
                 view = view,
-                configuration = configuration,
                 systemBarUtilsState = systemBarUtilsState,
                 notifyBindingFailures = { failureTracker.aodFailures = it },
                 viewStore = viewStore,
@@ -179,24 +178,19 @@ object NotificationIconContainerViewBinder {
     suspend fun Flow<NotificationIconsViewData>.bindIcons(
         logTag: String,
         view: NotificationIconContainer,
-        configuration: ConfigurationState,
         systemBarUtilsState: SystemBarUtilsState,
         notifyBindingFailures: (Collection<String>) -> Unit,
         viewStore: IconViewStore,
         bindIcon: suspend (iconKey: String, view: StatusBarIconView) -> Unit = { _, _ -> },
     ): Unit = coroutineScope {
         val iconSizeFlow: Flow<Int> =
-            configuration.getDimensionPixelSize(RInternal.dimen.status_bar_icon_size_sp)
-        val iconHorizontalPaddingFlow: Flow<Int> =
-            configuration.getDimensionPixelSize(R.dimen.status_bar_icon_horizontal_margin)
+            systemBarUtilsState.statusBarHeight
+                .map { StatusBarGeometry.calculate(view).notificationSlotWidth }
+                .distinctUntilChanged()
         val layoutParams: StateFlow<FrameLayout.LayoutParams> =
-            combine(iconSizeFlow, iconHorizontalPaddingFlow, systemBarUtilsState.statusBarHeight) {
-                    iconSize,
-                    iconHPadding,
-                    statusBarHeight ->
-                    FrameLayout.LayoutParams(iconSize + 2 * iconHPadding, statusBarHeight)
-                }
-                .stateIn(this)
+            combine(iconSizeFlow, systemBarUtilsState.statusBarHeight) { iconSize, statusBarHeight ->
+                FrameLayout.LayoutParams(iconSize, statusBarHeight)
+            }.stateIn(this)
         try {
             bindIcons(logTag, view, layoutParams, notifyBindingFailures, viewStore, bindIcon)
         } finally {
