@@ -268,7 +268,7 @@ constructor(
 
         currentlyDisplayedEvent = event
 
-        chipAnimationController.prepareChipAnimation(event.viewCreator)
+        chipAnimationController.prepareChipAnimationForEvent(event)
         currentlyRunningAnimationJob =
             coroutineScope.launch {
                 runChipAppearAnimation()

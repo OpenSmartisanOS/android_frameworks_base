@@ -46,7 +46,7 @@ enum class PrivacyType(
     ),
     TYPE_MEDIA_PROJECTION(
             R.string.privacy_type_media_projection,
-            R.drawable.stat_sys_cast,
+            R.drawable.platform_stat_sys_cast,
             android.Manifest.permission_group.UNDEFINED,
             "media projection"
     );

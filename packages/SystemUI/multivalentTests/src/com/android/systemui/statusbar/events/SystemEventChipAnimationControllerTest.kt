@@ -31,6 +31,7 @@ import com.android.systemui.SysuiTestCase
 import com.android.systemui.animation.AnimatorTestRule
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsChangedListener
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsProvider
+import com.android.systemui.statusbar.phone.ui.PrivacyHighlightController
 import com.android.systemui.statusbar.window.StatusBarWindowController
 import com.android.systemui.util.mockito.any
 import com.android.systemui.util.mockito.argumentCaptor
@@ -56,6 +57,7 @@ class SystemEventChipAnimationControllerTest : SysuiTestCase() {
     @get:Rule val animatorTestRule = AnimatorTestRule(this)
     @Mock private lateinit var sbWindowController: StatusBarWindowController
     @Mock private lateinit var insetsProvider: StatusBarContentInsetsProvider
+    @Mock private lateinit var privacyHighlightController: PrivacyHighlightController
 
     private val statusbarFake = FrameLayout(mContext)
     private var testView = TestView(mContext)
@@ -96,6 +98,7 @@ class SystemEventChipAnimationControllerTest : SysuiTestCase() {
                 context = mContext,
                 statusBarWindowController = sbWindowController,
                 contentInsetsProvider = insetsProvider,
+                privacyHighlightController = privacyHighlightController,
             )
     }
 

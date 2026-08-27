@@ -22,8 +22,6 @@ import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.display.data.repository.SingleDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.events.PrivacyDotViewController
 import com.android.systemui.statusbar.events.PrivacyDotViewControllerImpl
 import dagger.Lazy
@@ -74,30 +72,14 @@ constructor(
     override val instanceClass = PrivacyDotViewController::class.java
 }
 
-@SysUISingleton
-class SingleDisplayPrivacyDotViewControllerStore
-@Inject
-constructor(defaultController: PrivacyDotViewController) :
-    PrivacyDotViewControllerStore,
-    PerDisplayStore<PrivacyDotViewController> by SingleDisplayStore(
-        defaultInstance = defaultController
-    )
-
 @Module
 object PrivacyDotViewControllerStoreModule {
 
     @Provides
     @SysUISingleton
     fun store(
-        singleDisplayLazy: Lazy<SingleDisplayPrivacyDotViewControllerStore>,
         multiDisplayLazy: Lazy<MultiDisplayPrivacyDotViewControllerStore>,
-    ): PrivacyDotViewControllerStore {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            multiDisplayLazy.get()
-        } else {
-            singleDisplayLazy.get()
-        }
-    }
+    ): PrivacyDotViewControllerStore = multiDisplayLazy.get()
 
     @Provides
     @SysUISingleton
@@ -105,11 +87,5 @@ object PrivacyDotViewControllerStoreModule {
     @ClassKey(PrivacyDotViewControllerStore::class)
     fun storeAsCoreStartable(
         multiDisplayLazy: Lazy<MultiDisplayPrivacyDotViewControllerStore>
-    ): CoreStartable {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            multiDisplayLazy.get()
-        } else {
-            CoreStartable.NOP
-        }
-    }
+    ): CoreStartable = multiDisplayLazy.get()
 }

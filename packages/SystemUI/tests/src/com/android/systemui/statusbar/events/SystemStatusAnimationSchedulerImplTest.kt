@@ -124,6 +124,7 @@ class SystemStatusAnimationSchedulerImplTest(flags: FlagsParameterization) : Sys
                 mContext,
                 statusBarWindowController,
                 statusBarContentInsetProvider,
+                mock(),
             )
 
         // StatusBarContentInsetProvider is mocked. Ensure that it returns some mocked values.

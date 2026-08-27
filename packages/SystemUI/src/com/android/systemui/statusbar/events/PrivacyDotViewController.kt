@@ -52,6 +52,7 @@ import com.android.systemui.statusbar.events.PrivacyDotCorner.TopRight
 import com.android.systemui.statusbar.featurepods.av.domain.interactor.AvControlsChipInteractor
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsChangedListener
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsProvider
+import com.android.systemui.statusbar.phone.ui.PrivacyHighlightController
 import com.android.systemui.statusbar.policy.ConfigurationController
 import com.android.systemui.util.concurrency.DelayableExecutor
 import com.android.systemui.util.leak.RotationUtils
@@ -133,6 +134,7 @@ constructor(
     @ScreenDecorationsThread val uiExecutor: DelayableExecutor,
     @Assisted private val displayId: Int,
     private val shadeDisplaysInteractor: Lazy<ShadeDisplaysInteractor>?,
+    private val privacyHighlightController: PrivacyHighlightController,
 ) : PrivacyDotViewController {
     private lateinit var tl: View
     private lateinit var tr: View
@@ -192,10 +194,46 @@ constructor(
             }
         }
 
+    private val privacyHostAvailabilityCallback: (Boolean) -> Unit = { available ->
+        var restorePlatformIndicatorImmediately = false
+        synchronized(lock) {
+            val replacementForDisplay =
+                privacyHighlightController.isReplacementActive(displayId)
+            val hasActiveItems = privacyHighlightController.hasActivePrivacyItems()
+            restorePlatformIndicatorImmediately =
+                nextViewState.privacyReplacementActive &&
+                    !replacementForDisplay &&
+                    hasActiveItems
+            nextViewState =
+                nextViewState.copy(
+                    privacyReplacementActive = replacementForDisplay,
+                    systemPrivacyEventIsActive =
+                        nextViewState.systemPrivacyEventIsActive ||
+                            (!replacementForDisplay && hasActiveItems),
+                    systemPrivacyEventLocationOnlyIsActive =
+                        if (!replacementForDisplay && hasActiveItems) {
+                            privacyHighlightController.activePrivacyItemsAreLocationOnly()
+                        } else {
+                            nextViewState.systemPrivacyEventLocationOnlyIsActive
+                        },
+                )
+        }
+        if (restorePlatformIndicatorImmediately || available) {
+            uiExecutor.execute {
+                cancelRunnable?.run()
+                cancelRunnable = null
+                processNextViewState()
+            }
+        }
+    }
+
     init {
         contentInsetsProvider.addCallback(insetsChangedListener)
         configurationController.addCallback(configurationListener)
         stateController.addCallback(statusBarStateListener)
+        privacyHighlightController.addReplacementActiveCallback(
+            privacyHostAvailabilityCallback
+        )
         scope.launch {
             avControlsChipInteractor?.isShowingAvChip?.collect { shouldSuppress ->
                 synchronized(lock) {
@@ -232,6 +270,9 @@ constructor(
         contentInsetsProvider.removeCallback(insetsChangedListener)
         configurationController.removeCallback(configurationListener)
         stateController.removeCallback(statusBarStateListener)
+        privacyHighlightController.removeReplacementActiveCallback(
+            privacyHostAvailabilityCallback
+        )
     }
 
     @UiThread
@@ -722,6 +763,7 @@ data class ViewState(
     val shadeExpanded: Boolean = false,
     val qsExpanded: Boolean = false,
     val dotDuplicatedByAvControlsChip: Boolean = false,
+    val privacyReplacementActive: Boolean = false,
     val portraitRect: Rect? = null,
     val landscapeRect: Rect? = null,
     val upsideDownRect: Rect? = null,
@@ -735,6 +777,7 @@ data class ViewState(
 ) {
     fun shouldShowDot(): Boolean {
         return systemPrivacyEventIsActive &&
+            !privacyReplacementActive &&
             !shadeExpanded &&
             !qsExpanded &&
             !dotDuplicatedByAvControlsChip

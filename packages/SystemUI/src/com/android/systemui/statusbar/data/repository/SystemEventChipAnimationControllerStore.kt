@@ -23,7 +23,6 @@ import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.DisplayWindowPropertiesRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.events.SystemEventChipAnimationController
 import com.android.systemui.statusbar.events.SystemEventChipAnimationControllerImpl
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore
@@ -56,10 +55,6 @@ constructor(
         backgroundApplicationScope,
         displayRepository,
     ) {
-
-    init {
-        StatusBarConnectedDisplays.unsafeAssertInNewMode()
-    }
 
     override fun createInstanceForDisplay(displayId: Int): SystemEventChipAnimationController? {
         val displayWindowProperties =
@@ -98,12 +93,6 @@ interface SystemEventChipAnimationControllerStoreModule {
         @ClassKey(SystemEventChipAnimationControllerStore::class)
         fun storeAsCoreStartable(
             implLazy: Lazy<SystemEventChipAnimationControllerStoreImpl>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                implLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = implLazy.get()
     }
 }

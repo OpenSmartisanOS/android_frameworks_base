@@ -44,6 +44,13 @@ constructor(
         forEachController { it.prepareChipAnimation(viewCreator) }
     }
 
+    override fun prepareChipAnimationForEvent(event: StatusEvent) {
+        // Each display decides independently whether its own host fully covers this event. The
+        // default R2 display may suppress a supported privacy chip while external displays retain
+        // the Android platform chip and persistent dot.
+        forEachController { it.prepareChipAnimationForEvent(event) }
+    }
+
     override fun init() {
         forEachController { it.init() }
     }

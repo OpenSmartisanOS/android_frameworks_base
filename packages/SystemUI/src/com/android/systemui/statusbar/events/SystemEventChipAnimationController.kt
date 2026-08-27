@@ -38,6 +38,7 @@ import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsChangedListener
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsProvider
+import com.android.systemui.statusbar.phone.ui.PrivacyHighlightController
 import com.android.systemui.statusbar.window.StatusBarWindowController
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore
 import com.android.systemui.util.animation.AnimationUtil.Companion.frames
@@ -58,6 +59,11 @@ interface SystemEventChipAnimationController : SystemStatusAnimationCallback {
      */
     fun prepareChipAnimation(viewCreator: ViewCreator)
 
+    /** Event-aware entry used to suppress only a fully covered default-display privacy chip. */
+    fun prepareChipAnimationForEvent(event: StatusEvent) {
+        prepareChipAnimation(event.viewCreator)
+    }
+
     fun init()
 
     fun stop()
@@ -76,12 +82,14 @@ constructor(
     @Assisted private val context: Context,
     @Assisted private val statusBarWindowController: StatusBarWindowController,
     @Assisted private val contentInsetsProvider: StatusBarContentInsetsProvider,
+    private val privacyHighlightController: PrivacyHighlightController,
 ) : SystemEventChipAnimationController {
 
     private lateinit var animationWindowView: FrameLayout
     private lateinit var themedContext: ContextThemeWrapper
 
     private var currentAnimatedView: BackgroundAnimatableView? = null
+    private var suppressCurrentAnimation = false
 
     // Left for LTR, Right for RTL
     private var animationDirection = LEFT
@@ -108,6 +116,27 @@ constructor(
     @VisibleForTesting var initialized = false
 
     override fun prepareChipAnimation(viewCreator: ViewCreator) {
+        if (suppressCurrentAnimation) {
+            privacyHighlightController.endPlatformPrivacyAnimationSuppression(context.displayId)
+        }
+        suppressCurrentAnimation = false
+        prepareChipView(viewCreator)
+    }
+
+    override fun prepareChipAnimationForEvent(event: StatusEvent) {
+        if (suppressCurrentAnimation) {
+            privacyHighlightController.endPlatformPrivacyAnimationSuppression(context.displayId)
+        }
+        suppressCurrentAnimation =
+            event is PrivacyEvent &&
+                privacyHighlightController.beginPlatformPrivacyAnimationSuppression(
+                    context.displayId
+                ) == true
+        if (suppressCurrentAnimation) return
+        prepareChipView(event.viewCreator)
+    }
+
+    private fun prepareChipView(viewCreator: ViewCreator) {
         if (!initialized) {
             init()
         }
@@ -154,6 +183,7 @@ constructor(
     }
 
     override fun onSystemEventAnimationBegin(): Animator {
+        if (suppressCurrentAnimation) return AnimatorSet()
         initializeAnimRect()
 
         val alphaIn =
@@ -186,6 +216,11 @@ constructor(
     }
 
     override fun onSystemEventAnimationFinish(hasPersistentDot: Boolean): Animator {
+        if (suppressCurrentAnimation) {
+            suppressCurrentAnimation = false
+            privacyHighlightController.endPlatformPrivacyAnimationSuppression(context.displayId)
+            return AnimatorSet()
+        }
         initializeAnimRect()
         val finish =
             if (hasPersistentDot) {
@@ -345,10 +380,15 @@ constructor(
     }
 
     override fun stop() {
+        if (suppressCurrentAnimation) {
+            privacyHighlightController.endPlatformPrivacyAnimationSuppression(context.displayId)
+        }
+        suppressCurrentAnimation = false
         contentInsetsProvider.removeCallback(statusBarContentInsetsChangedListener)
     }
 
     override fun announceForAccessibility(contentDescriptions: String) {
+        if (suppressCurrentAnimation) return
         currentAnimatedView?.view?.stateDescription = contentDescriptions
     }
 

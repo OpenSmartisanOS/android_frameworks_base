@@ -64,20 +64,22 @@ constructor(
     private val onDisplayConnectedFlow = connectedDisplayInteractor.connectedDisplayAddition
     private val defaultCameraPackageName =
         context.resources.getString(R.string.config_cameraGesturePackage)
-
     private var connectedDisplayCollectionJob: Job? = null
     private lateinit var scheduler: SystemStatusAnimationScheduler
 
     fun startObserving() {
         batteryController.addCallback(batteryStateListener)
-        privacyController.addCallback(privacyStateListener)
         startConnectedDisplayCollection()
+        // Keep the platform privacy event alive for every display. The default-display R2 host
+        // suppresses only its own dot in PrivacyDotViewController; external displays still need
+        // the platform indicator and must never be affected by a process-wide resource switch.
+        privacyController.addCallback(privacyStateListener)
     }
 
     fun stopObserving() {
         batteryController.removeCallback(batteryStateListener)
-        privacyController.removeCallback(privacyStateListener)
         connectedDisplayCollectionJob?.cancel()
+        privacyController.removeCallback(privacyStateListener)
     }
 
     fun attachScheduler(s: SystemStatusAnimationScheduler) {

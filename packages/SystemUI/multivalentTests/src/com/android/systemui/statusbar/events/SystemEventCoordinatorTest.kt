@@ -34,6 +34,7 @@ import com.android.systemui.privacy.PrivacyItemController
 import com.android.systemui.privacy.PrivacyType
 import com.android.systemui.res.R
 import com.android.systemui.statusbar.featurepods.av.domain.interactor.AvControlsChipInteractor
+import com.android.systemui.statusbar.pipeline.battery.domain.interactor.BatteryInteractor
 import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.util.mockito.any
 import com.android.systemui.util.mockito.argThat
@@ -67,6 +68,7 @@ class SystemEventCoordinatorTest(flags: FlagsParameterization) : SysuiTestCase()
     private val connectedDisplayInteractor = FakeConnectedDisplayInteractor()
 
     @Mock lateinit var batteryController: BatteryController
+    @Mock lateinit var batteryInteractor: BatteryInteractor
     @Mock lateinit var privacyController: PrivacyItemController
     @Mock lateinit var avControlsChipInteractor: AvControlsChipInteractor
     @Mock lateinit var scheduler: SystemStatusAnimationScheduler
@@ -97,6 +99,7 @@ class SystemEventCoordinatorTest(flags: FlagsParameterization) : SysuiTestCase()
             SystemEventCoordinator(
                     fakeSystemClock,
                     batteryController,
+                    batteryInteractor,
                     privacyController,
                     avControlsChipInteractor,
                     context,

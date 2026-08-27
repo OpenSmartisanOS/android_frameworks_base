@@ -24,7 +24,6 @@ import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.DisplayWindowPropertiesRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.events.PrivacyDotWindowController
 import dagger.Binds
 import dagger.Lazy
@@ -53,10 +52,6 @@ constructor(
         backgroundApplicationScope,
         displayRepository,
     ) {
-
-    init {
-        StatusBarConnectedDisplays.unsafeAssertInNewMode()
-    }
 
     override fun createInstanceForDisplay(displayId: Int): PrivacyDotWindowController? {
         if (displayId == Display.DEFAULT_DISPLAY) {
@@ -94,12 +89,6 @@ interface PrivacyDotWindowControllerStoreModule {
         @ClassKey(PrivacyDotWindowControllerStore::class)
         fun storeAsCoreStartable(
             storeLazy: Lazy<PrivacyDotWindowControllerStoreImpl>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                storeLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = storeLazy.get()
     }
 }

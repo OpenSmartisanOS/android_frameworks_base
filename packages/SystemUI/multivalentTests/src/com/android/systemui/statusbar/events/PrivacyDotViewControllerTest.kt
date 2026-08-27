@@ -113,7 +113,28 @@ class PrivacyDotViewControllerTest(flags: FlagsParameterization) : SysuiTestCase
             uiExecutor = executor,
             displayId = DISPLAY_ID,
             shadeDisplaysInteractor = { shadeDisplaysInteractor },
+            privacyHighlightController = mock(),
         )
+
+    @Test
+    fun viewState_r2ReplacementSuppressesOnlyThatDisplayDot() {
+        assertThat(
+                ViewState(
+                        systemPrivacyEventIsActive = true,
+                        privacyReplacementActive = true,
+                    )
+                    .shouldShowDot()
+            )
+            .isFalse()
+        assertThat(
+                ViewState(
+                        systemPrivacyEventIsActive = true,
+                        privacyReplacementActive = false,
+                    )
+                    .shouldShowDot()
+            )
+            .isTrue()
+    }
 
     companion object {
         @JvmStatic
