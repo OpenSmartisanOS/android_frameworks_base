@@ -17,7 +17,6 @@
 package com.android.systemui.statusbar.phone.fragment.dagger;
 
 import android.view.View;
-import android.view.ViewStub;
 
 import com.android.systemui.battery.BatteryMeterView;
 import com.android.systemui.dagger.qualifiers.RootView;
@@ -26,6 +25,7 @@ import com.android.systemui.statusbar.HeadsUpStatusBarView;
 import com.android.systemui.statusbar.phone.PhoneStatusBarTransitions;
 import com.android.systemui.statusbar.phone.PhoneStatusBarView;
 import com.android.systemui.statusbar.phone.PhoneStatusBarViewController;
+import com.android.systemui.statusbar.phone.StatusBarTickerController;
 import com.android.systemui.statusbar.phone.StatusBarLocation;
 import com.android.systemui.statusbar.policy.Clock;
 import com.android.systemui.statusbar.window.StatusBarWindowController;
@@ -66,7 +66,7 @@ public interface HomeStatusBarModule {
     @HomeStatusBarScope
     @Named(START_SIDE_CONTENT)
     static View startSideContent(@RootView PhoneStatusBarView view) {
-        return view.findViewById(R.id.status_bar_start_side_content);
+        return view.requireViewById(R.id.status_bar_contents_left);
     }
 
     /** */
@@ -90,9 +90,7 @@ public interface HomeStatusBarModule {
     @HomeStatusBarScope
     @Named(OPERATOR_NAME_VIEW)
     static View provideOperatorNameView(@RootView PhoneStatusBarView view) {
-        View operatorName = ((ViewStub) view.findViewById(R.id.operator_name_stub)).inflate();
-        operatorName.setVisibility(View.GONE);
-        return operatorName;
+        return view.requireViewById(R.id.network_label);
     }
 
     /** */
@@ -125,8 +123,12 @@ public interface HomeStatusBarModule {
     @HomeStatusBarScope
     static PhoneStatusBarTransitions providePhoneStatusBarTransitions(
             @RootView PhoneStatusBarView view,
-            StatusBarWindowController statusBarWindowController) {
-        return new PhoneStatusBarTransitions(view, statusBarWindowController.getBackgroundView());
+            StatusBarWindowController statusBarWindowController,
+            StatusBarTickerController statusBarTickerController) {
+        return new PhoneStatusBarTransitions(
+                view,
+                statusBarWindowController.getBackgroundView(),
+                statusBarTickerController);
     }
 
     /** */

@@ -18,7 +18,6 @@ package com.android.systemui.statusbar.layout
 
 import android.graphics.Rect
 import android.view.View
-import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarComponent
 import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarModule.END_SIDE_CONTENT
 import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarModule.START_SIDE_CONTENT
 import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarScope
@@ -39,7 +38,7 @@ class StatusBarBoundsProvider
 constructor(
     @Named(START_SIDE_CONTENT) private val startSideContent: View,
     @Named(END_SIDE_CONTENT) private val endSideContent: View,
-) : HomeStatusBarComponent.Startable {
+) {
 
     interface BoundsChangeListener {
         fun onStatusBarBoundsChanged(bounds: BoundsPair)
@@ -66,7 +65,7 @@ constructor(
 
     private var isStarted = false
 
-    override fun start() {
+    fun start() {
         if (isStarted) {
             return
         }
@@ -75,7 +74,7 @@ constructor(
         endSideContent.addOnLayoutChangeListener(layoutListener)
     }
 
-    override fun stop() {
+    fun stop() {
         isStarted = false
         startSideContent.removeOnLayoutChangeListener(layoutListener)
         endSideContent.removeOnLayoutChangeListener(layoutListener)

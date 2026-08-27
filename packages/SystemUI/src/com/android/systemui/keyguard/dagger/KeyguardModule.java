@@ -32,7 +32,6 @@ import com.android.keyguard.KeyguardViewController;
 import com.android.keyguard.ViewMediatorCallback;
 import com.android.keyguard.dagger.KeyguardDisplayModule;
 import com.android.keyguard.dagger.KeyguardQsUserSwitchComponent;
-import com.android.keyguard.dagger.KeyguardStatusBarViewComponent;
 import com.android.keyguard.mediator.ScreenOnCoordinator;
 import com.android.systemui.CoreStartable;
 import com.android.systemui.Flags;
@@ -109,9 +108,7 @@ import java.util.concurrent.Executor;
 /**
  * Dagger Module providing keyguard.
  */
-@Module(subcomponents = {
-        KeyguardQsUserSwitchComponent.class,
-        KeyguardStatusBarViewComponent.class},
+@Module(subcomponents = {KeyguardQsUserSwitchComponent.class},
         includes = {
             DeviceEntryIconTransitionModule.class,
             FalsingModule.class,

@@ -28,10 +28,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
-/**
- * Interactor for the home screen status bar (aka
- * [com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment]).
- */
+/** Interactor for the canonical home status bar. */
 @PerDisplaySingleton
 class HomeStatusBarInteractor
 @Inject

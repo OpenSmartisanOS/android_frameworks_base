@@ -32,7 +32,6 @@ import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.statusbar.CommandQueue
 import com.android.systemui.statusbar.StatusBarAlwaysUseRegionSampling
 import com.android.systemui.statusbar.core.StatusBarInitializer.StatusBarViewLifecycleListener
-import com.android.systemui.statusbar.core.StatusBarRootModernization
 import com.android.systemui.statusbar.data.model.StatusBarAppearance
 import com.android.systemui.statusbar.data.model.StatusBarMode
 import com.android.systemui.statusbar.layout.BoundsPair
@@ -184,17 +183,13 @@ constructor(
 
     override fun start() {
         isStarted = true
-        if (StatusBarRootModernization.isEnabled) {
-            statusBarBoundsProvider?.start()
-        }
+        statusBarBoundsProvider?.start()
         commandQueue.addCallback(commandQueueCallback)
     }
 
     override fun stop() {
         isStarted = false
-        if (StatusBarRootModernization.isEnabled) {
-            statusBarBoundsProvider?.stop()
-        }
+        statusBarBoundsProvider?.stop()
         commandQueue.removeCallback(commandQueueCallback)
     }
 
@@ -214,7 +209,7 @@ constructor(
                 }
             }
         statusBarBoundsProvider?.addChangeListener(listener)
-        if (StatusBarRootModernization.isEnabled && isStarted) {
+        if (isStarted) {
             statusBarBoundsProvider?.start()
         }
     }

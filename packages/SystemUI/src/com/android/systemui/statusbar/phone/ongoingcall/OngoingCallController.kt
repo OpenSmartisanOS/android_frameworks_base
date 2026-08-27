@@ -117,8 +117,7 @@ constructor(
     /**
      * Sets the chip view that will contain ongoing call information.
      *
-     * Should only be called from
-     * [com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment].
+     * Called by the canonical status-bar host when its chip view is attached.
      */
     fun setChipView(chipView: View) {
         StatusBarChipsModernization.assertInLegacyMode()
@@ -256,8 +255,8 @@ constructor(
         val timeView = currentChipView?.getTimeView()
 
         if (currentChipView != null && timeView != null) {
-            // Current behavior: Displaying the call chip is handled by HomeStatusBarViewBinder, but
-            // this class is still responsible for the non-display logic.
+            // The canonical R2 bar keeps the ordinary call notification icon. This class remains
+            // responsible only for the non-display call lifetime and gesture logic.
             // Future behavior: if StatusBarChipsModernization flag is enabled, this class is
             // completely deprecated and does nothing.
             uidObserver.registerWithUid(currentCallNotificationInfo.uid)

@@ -9,7 +9,6 @@ import com.android.systemui.shade.ShadeController
 import com.android.systemui.shade.domain.interactor.ShadeAnimationInteractor
 import com.android.systemui.statusbar.CommandQueue
 import com.android.systemui.statusbar.NotificationShadeWindowController
-import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment
 
 /**
  * A [ActivityTransitionAnimator.Controller] that takes care of collapsing the status bar at the
@@ -88,10 +87,13 @@ class StatusBarTransitionAnimatorController(
     }
 
     companion object {
+        private const val STATUS_BAR_FADE_IN_DURATION = 320
+        private const val STATUS_BAR_FADE_IN_DELAY = 50
+
         val ANIMATION_DELAY_ICON_FADE_IN =
             (ActivityTransitionAnimator.TIMINGS.totalDuration -
-                CollapsedStatusBarFragment.FADE_IN_DURATION -
-                CollapsedStatusBarFragment.FADE_IN_DELAY -
+                STATUS_BAR_FADE_IN_DURATION -
+                STATUS_BAR_FADE_IN_DELAY -
                 48)
     }
 }

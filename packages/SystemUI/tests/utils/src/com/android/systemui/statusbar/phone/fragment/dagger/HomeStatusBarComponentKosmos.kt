@@ -38,7 +38,6 @@ fun Kosmos.createFakeHomeStatusBarComponent(
     headsUpAppearanceController: HeadsUpAppearanceController = mock(),
     statusBarDemoMode: StatusBarDemoMode = mock(),
     phoneStatusBarTransitions: PhoneStatusBarTransitions = this.phoneStatusBarTransitions,
-    startables: MutableSet<HomeStatusBarComponent.Startable> = mutableSetOf(),
     boundsProvider: StatusBarBoundsProvider = mock(),
     darkIconDispatcher: DarkIconDispatcher = this.fakeDarkIconDispatcher,
     displayId: Int = testableContext.displayId,
@@ -66,10 +65,6 @@ fun Kosmos.createFakeHomeStatusBarComponent(
 
         override fun getPhoneStatusBarTransitions(): PhoneStatusBarTransitions {
             return phoneStatusBarTransitions
-        }
-
-        override fun getStartables(): MutableSet<HomeStatusBarComponent.Startable> {
-            return startables
         }
 
         override fun getBoundsProvider(): StatusBarBoundsProvider {

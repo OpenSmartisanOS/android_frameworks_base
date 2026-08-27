@@ -22,7 +22,6 @@ import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.dagger.ReferenceSysUIDisplaySubcomponent
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.display.data.repository.SingleDisplayStore
 import com.android.systemui.statusbar.data.repository.StatusBarConfigurationControllerStore
 import com.android.systemui.statusbar.data.repository.StatusBarModeRepositoryStore
 import com.android.systemui.statusbar.data.repository.StatusBarPerDisplayStoreImpl
@@ -52,10 +51,6 @@ constructor(
         displayRepository,
     ) {
 
-    init {
-        StatusBarConnectedDisplays.unsafeAssertInNewMode()
-    }
-
     override fun createInstanceForDisplay(displayId: Int): StatusBarInitializer? {
         val statusBarWindowController =
             statusBarWindowControllerStore.forDisplay(displayId) ?: return null
@@ -68,7 +63,6 @@ constructor(
             statusBarWindowController,
             statusBarModePerDisplayRepository,
             statusBarConfigurationController,
-            displaySubComponent.statusBarFragmentProvider,
             displaySubComponent.statusBarRootFactory,
             displaySubComponent.homeStatusBarComponentFactory,
         )
@@ -79,16 +73,4 @@ constructor(
     }
 
     override val instanceClass = StatusBarInitializer::class.java
-}
-
-@SysUISingleton
-class SingleDisplayStatusBarInitializerStore
-@Inject
-constructor(defaultInitializer: StatusBarInitializer) :
-    StatusBarInitializerStore,
-    PerDisplayStore<StatusBarInitializer> by SingleDisplayStore(defaultInitializer) {
-
-    init {
-        StatusBarConnectedDisplays.assertInLegacyMode()
-    }
 }

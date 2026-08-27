@@ -106,16 +106,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * A view model that manages the visibility of the [CollapsedStatusBarFragment] based on the device
- * state.
- *
- * Right now, most of the status bar visibility management is actually in
- * [CollapsedStatusBarFragment.calculateInternalModel], which uses
- * [CollapsedStatusBarFragment.shouldHideNotificationIcons] and
- * [StatusBarHideIconsForBouncerManager]. We should move those pieces of logic to this class instead
- * so that it's all in one place and easily testable outside of the fragment.
- */
+/** Manages the canonical status-bar child visibility from platform and product state. */
 interface HomeStatusBarViewModel : Activatable {
     /** Factory to create the view model for the battery icon with the percentage alongside */
     val batteryNextToPercentViewModel: BatteryNextToPercentViewModel.Factory
@@ -284,11 +275,9 @@ constructor(
 
     /**
      * The R2 lockscreen intentionally reuses this exact home status bar.  Keeping the decision in
-     * this view model avoids the old race where CollapsedStatusBarFragment made the children
-     * visible and HomeStatusBarViewBinder immediately hid them again because Keyguard was visible.
+     * this view model keeps the lockscreen and home visibility decisions in one state owner.
      */
-    private val isSosKeyguardEnabled =
-        thisDisplayId == Display.DEFAULT_DISPLAY && SosKeyguardRuntime.isEnabled(context)
+    private val isSosKeyguardEnabled = SosKeyguardRuntime.isEnabled(context)
 
     private val hydrator = Hydrator(traceName = "HomeStatusBarViewModel.hydrator")
 
@@ -524,8 +513,7 @@ constructor(
             isSosLockscreen,
         ) { allowedByAndroid, sosLockscreen ->
             // R2 deliberately reuses the normal PhoneStatusBarView on lockscreen.  Android's
-            // scene/legacy policy normally reserves that row for KeyguardStatusBarView, which the
-            // SOS blueprint does not create.
+            // The lockscreen reuses the canonical status bar instead of creating a duplicate row.
             allowedByAndroid || sosLockscreen
         }
 
@@ -719,19 +707,12 @@ constructor(
     override val isNotificationIconContainerVisible: Flow<VisibilityModel> =
         combine(
                 shouldHomeStatusBarBeVisible,
-                isAnyChipVisible,
                 homeStatusBarInteractor.visibilityViaDisableFlags,
                 isSosLockscreen,
-            ) { shouldStatusBarBeVisible, anyChipVisible, visibilityViaDisableFlags,
-                isSosLockscreen ->
+            ) { shouldStatusBarBeVisible, visibilityViaDisableFlags, isSosLockscreen ->
                 val showNotificationIconContainer =
-                    if (anyChipVisible) {
-                        false
-                    } else {
-                        shouldStatusBarBeVisible &&
-                            (isSosLockscreen ||
-                                visibilityViaDisableFlags.areNotificationIconsAllowed)
-                    }
+                    shouldStatusBarBeVisible &&
+                        (isSosLockscreen || visibilityViaDisableFlags.areNotificationIconsAllowed)
                 VisibilityModel(
                     showNotificationIconContainer.toVisibleOrGone(),
                     visibilityViaDisableFlags.animate,

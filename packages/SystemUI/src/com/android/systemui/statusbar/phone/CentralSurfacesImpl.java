@@ -1219,7 +1219,7 @@ public class CentralSurfacesImpl implements CoreStartable, CentralSurfaces {
             mPluginDependencyProvider.allowPluginDependency(DarkIconDispatcher.class);
             mPluginDependencyProvider.allowPluginDependency(StatusBarStateController.class);
 
-            // Set up CollapsedStatusBarFragment and PhoneStatusBarView
+            // Receive the canonical PhoneStatusBarView controller.
             mStatusBarInitializer.setStatusBarViewUpdatedListener(
                     (statusBarViewController, statusBarTransitions) -> {
 

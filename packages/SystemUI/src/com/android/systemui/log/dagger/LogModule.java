@@ -165,17 +165,6 @@ public abstract class LogModule {
     }
 
     /**
-     * Provides a logging buffer for
-     * {@link com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment}.
-     */
-    @Provides
-    @SysUISingleton
-    @CollapsedSbFragmentLog
-    public static LogBuffer provideCollapsedSbFragmentLogBuffer(LogBufferFactory factory) {
-        return factory.create("CollapsedSbFragmentLog", 40);
-    }
-
-    /**
      * Provides a logging buffer for logs related to {@link QSFragmentLegacy}'s
      * disable flag adjustments.
      */

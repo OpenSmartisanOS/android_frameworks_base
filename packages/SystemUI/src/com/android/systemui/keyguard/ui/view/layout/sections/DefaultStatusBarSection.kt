@@ -16,99 +16,22 @@
 
 package com.android.systemui.keyguard.ui.view.layout.sections
 
-import android.content.Context
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.constraintlayout.widget.ConstraintSet.END
-import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
-import androidx.constraintlayout.widget.ConstraintSet.START
-import androidx.constraintlayout.widget.ConstraintSet.TOP
-import com.android.keyguard.dagger.KeyguardStatusBarViewComponent
-import com.android.systemui.keyguard.SosKeyguardRuntime
 import com.android.systemui.keyguard.shared.model.KeyguardSection
-import com.android.systemui.res.R
-import com.android.systemui.scene.shared.flag.SceneContainerFlag
-import com.android.systemui.shade.NotificationPanelView
-import com.android.systemui.shade.ShadeDisplayAware
-import com.android.systemui.shade.ShadeViewStateProvider
-import com.android.systemui.statusbar.phone.KeyguardStatusBarView
-import com.android.systemui.util.Utils
 import javax.inject.Inject
 
 /** A section for the status bar displayed at the top of the lockscreen. */
 class DefaultStatusBarSection
 @Inject
-constructor(
-    @ShadeDisplayAware private val context: Context,
-    private val notificationPanelView: NotificationPanelView,
-    private val keyguardStatusBarViewComponentFactory: KeyguardStatusBarViewComponent.Factory,
-) : KeyguardSection() {
+constructor() : KeyguardSection() {
 
-    private val statusBarViewId = R.id.keyguard_header
-    private fun isSosStatusBar(): Boolean = SosKeyguardRuntime.isEnabled(context)
+    // The lockscreen reuses the canonical phone status-bar window and owns no duplicate view.
+    override fun addViews(constraintLayout: ConstraintLayout) = Unit
 
-    override fun addViews(constraintLayout: ConstraintLayout) {
-        if (isSosStatusBar()) {
-            // SOS always reuses the normal PhoneStatusBarView window. The keyguard header is a
-            // second status bar implementation, even under SceneContainer, and must not be placed
-            // over the imported lockscreen.
-            notificationPanelView.findViewById<View?>(statusBarViewId)?.visibility = View.GONE
-            return
-        }
-        if (!SceneContainerFlag.isEnabled) {
-            return
-        }
+    override fun bindData(constraintLayout: ConstraintLayout) = Unit
 
-        notificationPanelView.findViewById<View>(statusBarViewId)?.let {
-            (it.parent as ViewGroup).removeView(it)
-        }
+    override fun applyConstraints(constraintSet: ConstraintSet) = Unit
 
-        val view =
-            LayoutInflater.from(constraintLayout.context)
-                .inflate(R.layout.keyguard_status_bar, constraintLayout, false)
-                as KeyguardStatusBarView
-
-        constraintLayout.addView(view)
-    }
-
-    override fun bindData(constraintLayout: ConstraintLayout) {
-        if (isSosStatusBar()) return
-        if (!SceneContainerFlag.isEnabled) {
-            // The reused legacy view is already bound by NotificationPanelViewController.
-            return
-        }
-
-        val statusBarView =
-            constraintLayout.findViewById<KeyguardStatusBarView>(statusBarViewId) ?: return
-
-        val provider =
-            object : ShadeViewStateProvider {
-                override val lockscreenShadeDragProgress: Float = 0f
-                override val panelViewExpandedHeight: Float = 0f
-                override fun shouldHeadsUpBeVisible(): Boolean {
-                    return false
-                }
-            }
-        val statusBarViewComponent =
-            keyguardStatusBarViewComponentFactory.build(statusBarView, provider)
-        val controller = statusBarViewComponent.keyguardStatusBarViewController
-        controller.init()
-    }
-
-    override fun applyConstraints(constraintSet: ConstraintSet) {
-        if (isSosStatusBar()) return
-        constraintSet.apply {
-            constrainHeight(statusBarViewId, Utils.getStatusBarHeaderHeightKeyguard(context))
-            connect(statusBarViewId, TOP, PARENT_ID, TOP)
-            connect(statusBarViewId, START, PARENT_ID, START)
-            connect(statusBarViewId, END, PARENT_ID, END)
-        }
-    }
-
-    override fun removeViews(constraintLayout: ConstraintLayout) {
-        constraintLayout.removeView(statusBarViewId)
-    }
+    override fun removeViews(constraintLayout: ConstraintLayout) = Unit
 }

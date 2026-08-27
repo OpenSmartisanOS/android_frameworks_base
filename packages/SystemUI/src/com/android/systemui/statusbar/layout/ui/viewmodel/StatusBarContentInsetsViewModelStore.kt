@@ -21,8 +21,6 @@ import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.display.data.repository.SingleDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
 import com.android.systemui.statusbar.data.repository.StatusBarPerDisplayStoreImpl
 import dagger.Lazy
@@ -59,15 +57,6 @@ constructor(
     override val instanceClass = StatusBarContentInsetsViewModel::class.java
 }
 
-@SysUISingleton
-class SingleDisplayStatusBarContentInsetsViewModelStore
-@Inject
-constructor(statusBarContentInsetsViewModel: StatusBarContentInsetsViewModel) :
-    StatusBarContentInsetsViewModelStore,
-    PerDisplayStore<StatusBarContentInsetsViewModel> by SingleDisplayStore(
-        defaultInstance = statusBarContentInsetsViewModel
-    )
-
 @Module
 object StatusBarContentInsetsViewModelStoreModule {
     @Provides
@@ -76,24 +65,11 @@ object StatusBarContentInsetsViewModelStoreModule {
     @ClassKey(StatusBarContentInsetsViewModelStore::class)
     fun storeAsCoreStartable(
         multiDisplayLazy: Lazy<MultiDisplayStatusBarContentInsetsViewModelStore>
-    ): CoreStartable {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            return multiDisplayLazy.get()
-        } else {
-            CoreStartable.NOP
-        }
-    }
+    ): CoreStartable = multiDisplayLazy.get()
 
     @Provides
     @SysUISingleton
     fun store(
-        singleDisplayLazy: Lazy<SingleDisplayStatusBarContentInsetsViewModelStore>,
         multiDisplayLazy: Lazy<MultiDisplayStatusBarContentInsetsViewModelStore>,
-    ): StatusBarContentInsetsViewModelStore {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            multiDisplayLazy.get()
-        } else {
-            singleDisplayLazy.get()
-        }
-    }
+    ): StatusBarContentInsetsViewModelStore = multiDisplayLazy.get()
 }

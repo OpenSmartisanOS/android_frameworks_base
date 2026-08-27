@@ -17,7 +17,6 @@
 package com.android.systemui.statusbar.phone.dagger
 
 import com.android.systemui.display.dagger.SystemUIDisplaySubcomponent.DisplayAware
-import com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment
 import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarComponent
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.HomeStatusBarViewBinder
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.HomeStatusBarViewBinderImpl
@@ -34,10 +33,6 @@ interface PerDisplayStatusBarReferenceModule {
     fun homeStatusBarComponentFactory(
         factory: HomeStatusBarComponent.Factory
     ): HomeStatusBarComponent.Factory
-
-    @Binds
-    @DisplayAware
-    fun statusBarFragmentProvider(fragment: CollapsedStatusBarFragment): CollapsedStatusBarFragment
 
     @Binds
     @DisplayAware

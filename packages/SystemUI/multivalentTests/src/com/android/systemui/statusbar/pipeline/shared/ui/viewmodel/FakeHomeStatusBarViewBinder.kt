@@ -17,26 +17,21 @@
 package com.android.systemui.statusbar.pipeline.shared.ui.viewmodel
 
 import android.view.View
+import com.android.systemui.statusbar.phone.LeftCarrierNotificationController
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.HomeStatusBarViewBinder
-import com.android.systemui.statusbar.pipeline.shared.ui.binder.StatusBarVisibilityChangeListener
 
 /**
  * A fake view binder that can be used from Java tests.
  *
- * Since Java tests can't run tests within test scopes, we need to bypass the flows from
- * [HomeStatusBarViewModel] and just trigger the listener directly.
+ * Since Java tests can't run tests within test scopes, this binder records no flows.
  */
 class FakeHomeStatusBarViewBinder : HomeStatusBarViewBinder {
-    var listener: StatusBarVisibilityChangeListener? = null
-
     override fun bind(
         displayId: Int,
         view: View,
         viewModel: HomeStatusBarViewModel,
         systemEventChipAnimateIn: ((View) -> Unit)?,
         systemEventChipAnimateOut: ((View) -> Unit)?,
-        listener: StatusBarVisibilityChangeListener?,
-    ) {
-        this.listener = listener
-    }
+        leftCarrierNotificationController: LeftCarrierNotificationController?,
+    ) {}
 }

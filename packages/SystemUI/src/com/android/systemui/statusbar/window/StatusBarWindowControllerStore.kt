@@ -16,16 +16,12 @@
 
 package com.android.systemui.statusbar.window
 
-import android.content.Context
-import android.view.Display
 import android.view.WindowManager
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.DisplayWindowPropertiesRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.display.data.repository.SingleDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.data.repository.StatusBarConfigurationControllerStore
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
 import com.android.systemui.statusbar.data.repository.StatusBarPerDisplayStoreImpl
@@ -52,10 +48,6 @@ constructor(
         displayRepository,
     ) {
 
-    init {
-        StatusBarConnectedDisplays.unsafeAssertInNewMode()
-    }
-
     override fun createInstanceForDisplay(displayId: Int): StatusBarWindowController? {
         val statusBarDisplayContext =
             displayWindowPropertiesRepository.get(
@@ -80,30 +72,4 @@ constructor(
     }
 
     override val instanceClass = StatusBarWindowController::class.java
-}
-
-@SysUISingleton
-class SingleDisplayStatusBarWindowControllerStore
-@Inject
-constructor(
-    context: Context,
-    windowManager: WindowManager,
-    factory: StatusBarWindowControllerImpl.Factory,
-    statusBarConfigurationControllerStore: StatusBarConfigurationControllerStore,
-    statusBarContentInsetsProviderStore: StatusBarContentInsetsProviderStore,
-) :
-    StatusBarWindowControllerStore,
-    PerDisplayStore<StatusBarWindowController> by SingleDisplayStore(
-        factory.create(
-            context,
-            windowManager,
-            statusBarConfigurationControllerStore.defaultDisplay,
-            statusBarContentInsetsProviderStore.defaultDisplay,
-            Display.DEFAULT_DISPLAY,
-        )
-    ) {
-
-    init {
-        StatusBarConnectedDisplays.assertInLegacyMode()
-    }
 }

@@ -157,8 +157,7 @@ constructor(
      * A flow modeling the primary chip that should be shown in the status bar after accounting for
      * possibly multiple ongoing activities and animation requirements.
      *
-     * [com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment] is responsible for
-     * actually displaying the chip.
+     * The canonical status-bar root is responsible for actually displaying the chip.
      */
     val primaryChip: StateFlow<OngoingActivityChipModel> =
         internalChip
@@ -306,8 +305,7 @@ constructor(
      * A flow modeling the primary chip that should be shown in the status bar after accounting for
      * possibly multiple ongoing activities and animation requirements.
      *
-     * [com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment] is responsible for
-     * actually displaying the chip.
+     * The canonical status-bar root is responsible for actually displaying the chip.
      *
      * Deprecated: since StatusBarChipsModernization, use the new [chips] instead.
      */

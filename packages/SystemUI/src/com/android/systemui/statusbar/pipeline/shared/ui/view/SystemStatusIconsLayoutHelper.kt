@@ -17,7 +17,7 @@
 package com.android.systemui.statusbar.pipeline.shared.ui.view
 
 import com.android.systemui.res.R
-import com.android.systemui.statusbar.core.NewStatusBarIcons
+import com.android.systemui.statusbar.phone.StatusIconContainer
 
 /**
  * Icons defined with [NewStatusBarIcons] want to have a simple, uniform margin before/after their
@@ -33,17 +33,8 @@ object SystemStatusIconsLayoutHelper {
     /** Set the paddingEnd to 3sp for the system icons container */
     @JvmStatic
     fun configurePaddingForNewStatusBarIcons(systemIcons: android.widget.LinearLayout) {
-        // Once the flag rolls out, move these values into the layout xml
-        /* check if */ NewStatusBarIcons.isUnexpectedlyInLegacyMode()
-        systemIcons.apply {
-            setPaddingRelative(
-                /* start = */ paddingStart,
-                /* top = */ paddingTop,
-                /* end = */ context.resources.getDimensionPixelSize(
-                    R.dimen.signal_cluster_battery_padding_new
-                ),
-                /* bottom = */ paddingBottom,
-            )
+        systemIcons.findViewById<StatusIconContainer>(R.id.statusIcons)?.apply {
+            setPaddingRelative(paddingStart, paddingTop, 0, paddingBottom)
         }
     }
 }

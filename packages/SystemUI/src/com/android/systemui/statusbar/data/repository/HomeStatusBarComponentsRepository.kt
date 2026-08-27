@@ -17,7 +17,6 @@
 package com.android.systemui.statusbar.data.repository
 
 import com.android.systemui.dagger.SysUISingleton
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.core.StatusBarInitializer.StatusBarViewLifecycleListener
 import com.android.systemui.statusbar.phone.fragment.dagger.HomeStatusBarComponent
 import dagger.Lazy
@@ -63,11 +62,5 @@ object HomeStatusBarComponentsRepositoryModule {
     @ElementsIntoSet
     fun repositoryAsLifecycleListener(
         repo: Lazy<HomeStatusBarComponentsRepository>
-    ): Set<StatusBarViewLifecycleListener> {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            setOf(repo.get())
-        } else {
-            emptySet()
-        }
-    }
+    ): Set<StatusBarViewLifecycleListener> = setOf(repo.get())
 }

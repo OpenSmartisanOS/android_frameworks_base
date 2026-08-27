@@ -20,15 +20,11 @@ import android.view.WindowManager.LayoutParams.TYPE_STATUS_BAR
 import com.android.systemui.CoreStartable
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
-import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.display.data.repository.DisplayRepository
 import com.android.systemui.display.data.repository.DisplayWindowPropertiesRepository
 import com.android.systemui.display.data.repository.PerDisplayStore
-import com.android.systemui.display.data.repository.SingleDisplayStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.phone.ConfigurationControllerImpl
 import com.android.systemui.statusbar.policy.ConfigurationController
-import dagger.Lazy
 import dagger.Module
 import dagger.Provides
 import dagger.multibindings.ClassKey
@@ -57,10 +53,6 @@ constructor(
         displayRepository,
     ) {
 
-    init {
-        StatusBarConnectedDisplays.unsafeAssertInNewMode()
-    }
-
     override fun createInstanceForDisplay(displayId: Int): StatusBarConfigurationController? {
         val displayWindowProperties =
             displayWindowPropertiesRepository.get(displayId, TYPE_STATUS_BAR) ?: return null
@@ -70,47 +62,20 @@ constructor(
     override val instanceClass = StatusBarConfigurationController::class.java
 }
 
-@SysUISingleton
-class SingleDisplayStatusBarConfigurationControllerStore
-@Inject
-constructor(@Main globalConfigurationController: ConfigurationController) :
-    StatusBarConfigurationControllerStore,
-    PerDisplayStore<StatusBarConfigurationController> by SingleDisplayStore(
-        globalConfigurationController as StatusBarConfigurationController
-    ) {
-
-    init {
-        StatusBarConnectedDisplays.assertInLegacyMode()
-    }
-}
-
 @Module
 object StatusBarConfigurationControllerModule {
 
     @Provides
     @SysUISingleton
     fun store(
-        singleDisplayLazy: Lazy<SingleDisplayStatusBarConfigurationControllerStore>,
-        multiDisplayLazy: Lazy<MultiDisplayStatusBarConfigurationControllerStore>,
-    ): StatusBarConfigurationControllerStore {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            multiDisplayLazy.get()
-        } else {
-            singleDisplayLazy.get()
-        }
-    }
+        multiDisplay: MultiDisplayStatusBarConfigurationControllerStore,
+    ): StatusBarConfigurationControllerStore = multiDisplay
 
     @Provides
     @SysUISingleton
     @IntoMap
     @ClassKey(StatusBarConfigurationControllerStore::class)
     fun storeAsCoreStartable(
-        multiDisplayLazy: Lazy<MultiDisplayStatusBarConfigurationControllerStore>
-    ): CoreStartable {
-        return if (StatusBarConnectedDisplays.isEnabled) {
-            multiDisplayLazy.get()
-        } else {
-            CoreStartable.NOP
-        }
-    }
+        multiDisplay: MultiDisplayStatusBarConfigurationControllerStore
+    ): CoreStartable = multiDisplay
 }

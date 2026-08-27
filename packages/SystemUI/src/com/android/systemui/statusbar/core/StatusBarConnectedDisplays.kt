@@ -51,7 +51,7 @@ object StatusBarConnectedDisplays {
     /** Is the refactor enabled */
     @JvmStatic
     inline val isEnabled
-        get() = FLAG.isTrue
+        get() = true
 
     /**
      * Called to ensure code is only run when the flag is enabled. This protects users from the

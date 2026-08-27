@@ -28,7 +28,6 @@ import com.android.systemui.display.data.repository.DisplayWindowPropertiesRepos
 import com.android.systemui.log.LogBuffer
 import com.android.systemui.log.LogBufferFactory
 import com.android.systemui.statusbar.chips.sharetoapp.ui.viewmodel.ShareToAppChipViewModel
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.data.StatusBarDataLayerModule
 import com.android.systemui.statusbar.data.repository.LightBarControllerStore
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsProvider
@@ -46,7 +45,6 @@ import com.android.systemui.statusbar.policy.ConfigurationController
 import com.android.systemui.statusbar.ui.StatusBarUiLayerModule
 import com.android.systemui.statusbar.ui.SystemBarUtilsProxyImpl
 import com.android.systemui.statusbar.window.MultiDisplayStatusBarWindowControllerStore
-import com.android.systemui.statusbar.window.SingleDisplayStatusBarWindowControllerStore
 import com.android.systemui.statusbar.window.StatusBarWindowController
 import com.android.systemui.statusbar.window.StatusBarWindowControllerImpl
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore
@@ -127,14 +125,7 @@ interface StatusBarModule {
         @SysUISingleton
         fun windowControllerStore(
             multiDisplayImplLazy: Lazy<MultiDisplayStatusBarWindowControllerStore>,
-            singleDisplayImplLazy: Lazy<SingleDisplayStatusBarWindowControllerStore>,
-        ): StatusBarWindowControllerStore {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayImplLazy.get()
-            } else {
-                singleDisplayImplLazy.get()
-            }
-        }
+        ): StatusBarWindowControllerStore = multiDisplayImplLazy.get()
 
         @Provides
         @SysUISingleton
@@ -156,13 +147,7 @@ interface StatusBarModule {
         @ClassKey(MultiDisplayStatusBarWindowControllerStore::class)
         fun multiDisplayControllerStoreAsCoreStartable(
             storeLazy: Lazy<MultiDisplayStatusBarWindowControllerStore>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                storeLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = storeLazy.get()
 
         @Provides
         @SysUISingleton
@@ -207,13 +192,7 @@ interface StatusBarModule {
         fun provideDefaultStatusBarContext(
             repoLazy: Lazy<DisplayWindowPropertiesRepositoryImpl>,
             @Main appContext: Context,
-        ): Context {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                return repoLazy.get().get(Display.DEFAULT_DISPLAY, TYPE_STATUS_BAR)?.context
-                    ?: appContext
-            } else {
-                appContext
-            }
-        }
+        ): Context =
+            repoLazy.get().get(Display.DEFAULT_DISPLAY, TYPE_STATUS_BAR)?.context ?: appContext
     }
 }

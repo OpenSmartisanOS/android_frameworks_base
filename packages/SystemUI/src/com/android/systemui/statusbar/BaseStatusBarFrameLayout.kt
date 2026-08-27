@@ -19,15 +19,7 @@ import android.content.Context
 import android.util.AttributeSet
 import android.widget.FrameLayout
 
-/**
- * A temporary base class that's shared between our old status bar connectivity view implementations
- * and our new status bar implementations ([ModernStatusBarWifiView], [ModernStatusBarMobileView]).
- *
- * Once our refactor is over, we should be able to delete this go-between class and the old view
- * class.
- *
- * NOTE: the old classes are now deleted, and this class can be removed.
- */
+/** Common contract for the canonical status-bar connectivity views. */
 abstract class BaseStatusBarFrameLayout
 @JvmOverloads
 constructor(

@@ -403,8 +403,8 @@ class OngoingCallControllerTest : SysuiTestCase() {
      * This test fakes a theme change during an ongoing call.
      *
      * When a theme change happens,
-     * [com.android.systemui.statusbar.phone.fragment.CollapsedStatusBarFragment] and its views get
-     * re-created, so [OngoingCallController.setChipView] gets called with a new view. If there's an
+     * The canonical status-bar root and its views get re-created, so
+     * [OngoingCallController.setChipView] gets called with a new view. If there's an
      * active ongoing call when the theme changes, the new view needs to be updated with the call
      * information.
      */

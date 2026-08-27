@@ -16,7 +16,6 @@
 package com.android.systemui.statusbar.phone.dagger
 
 import android.view.Display
-import com.android.app.displaylib.DefaultDisplayOnlyInstanceRepositoryImpl
 import com.android.app.displaylib.PerDisplayInstanceRepositoryImpl
 import com.android.app.displaylib.PerDisplayRepository
 import com.android.systemui.CoreStartable
@@ -28,12 +27,9 @@ import com.android.systemui.statusbar.core.CommandQueueInitializer
 import com.android.systemui.statusbar.core.MultiDisplayStatusBarInitializerStore
 import com.android.systemui.statusbar.core.MultiDisplayStatusBarOrchestratorStore
 import com.android.systemui.statusbar.core.MultiDisplayStatusBarStarter
-import com.android.systemui.statusbar.core.SingleDisplayStatusBarInitializerStore
-import com.android.systemui.statusbar.core.StatusBarConnectedDisplays
 import com.android.systemui.statusbar.core.StatusBarInitializer
 import com.android.systemui.statusbar.core.StatusBarInitializerImpl
 import com.android.systemui.statusbar.core.StatusBarInitializerStore
-import com.android.systemui.statusbar.core.StatusBarRootModernization
 import com.android.systemui.statusbar.data.repository.PrivacyDotViewControllerStoreModule
 import com.android.systemui.statusbar.data.repository.PrivacyDotWindowControllerStoreModule
 import com.android.systemui.statusbar.data.repository.StatusBarConfigurationControllerStore
@@ -44,7 +40,6 @@ import com.android.systemui.statusbar.events.PrivacyDotViewControllerModule
 import com.android.systemui.statusbar.phone.AutoHideControllerStore
 import com.android.systemui.statusbar.phone.CentralSurfacesCommandQueueCallbacks
 import com.android.systemui.statusbar.phone.MultiDisplayAutoHideControllerStore
-import com.android.systemui.statusbar.phone.SingleDisplayAutoHideControllerStore
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore
 import com.android.systemui.statusbar.window.data.repository.StatusBarWindowStateRepositoryStore
 import com.android.systemui.statusbar.window.data.repository.StatusBarWindowStateRepositoryStoreImpl
@@ -89,19 +84,7 @@ interface StatusBarPhoneModule {
         @SysUISingleton
         @IntoMap
         @ClassKey(StatusBarInitializer::class)
-        fun bindStatusBarInitializer(
-            @Default defaultInitializerLazy: Lazy<StatusBarInitializerImpl>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                // Will be started through MultiDisplayStatusBarStarter
-                CoreStartable.NOP
-            } else if (StatusBarRootModernization.isEnabled) {
-                defaultInitializerLazy.get()
-            } else {
-                // Will be started through CentralSurfaces
-                CoreStartable.NOP
-            }
-        }
+        fun bindStatusBarInitializer(): CoreStartable = CoreStartable.NOP
 
         // Dagger doesn't support providing AssistedInject types, without a qualifier. Using the
         // Default qualifier for this reason.
@@ -120,7 +103,6 @@ interface StatusBarPhoneModule {
                 statusBarWindowControllerStore.defaultDisplay,
                 statusBarModeRepositoryStore.defaultDisplay,
                 statusBarConfigurationControllerStore.defaultDisplay,
-                systemUIDisplaySubcomponent.statusBarFragmentProvider,
                 systemUIDisplaySubcomponent.statusBarRootFactory,
                 systemUIDisplaySubcomponent.homeStatusBarComponentFactory,
             )
@@ -132,13 +114,7 @@ interface StatusBarPhoneModule {
         @ClassKey(MultiDisplayStatusBarStarter::class)
         fun multiDisplayStarter(
             multiDisplayStatusBarStarterLazy: Lazy<MultiDisplayStatusBarStarter>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayStatusBarStarterLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = multiDisplayStatusBarStarterLazy.get()
 
         @Provides
         @SysUISingleton
@@ -146,13 +122,7 @@ interface StatusBarPhoneModule {
         @ClassKey(CommandQueueInitializer::class)
         fun commandQueueInitializerCoreStartable(
             initializerLazy: Lazy<CommandQueueInitializer>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                initializerLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = initializerLazy.get()
 
         @Provides
         @SysUISingleton
@@ -160,39 +130,19 @@ interface StatusBarPhoneModule {
         @ClassKey(StatusBarInitializerStore::class)
         fun initializerStoreAsCoreStartable(
             multiDisplayStoreLazy: Lazy<MultiDisplayStatusBarInitializerStore>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayStoreLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = multiDisplayStoreLazy.get()
 
         @Provides
         @SysUISingleton
         fun initializerStore(
-            singleDisplayStoreLazy: Lazy<SingleDisplayStatusBarInitializerStore>,
             multiDisplayStoreLazy: Lazy<MultiDisplayStatusBarInitializerStore>,
-        ): StatusBarInitializerStore {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayStoreLazy.get()
-            } else {
-                singleDisplayStoreLazy.get()
-            }
-        }
+        ): StatusBarInitializerStore = multiDisplayStoreLazy.get()
 
         @Provides
         @SysUISingleton
         fun autoHideStore(
-            singleDisplayLazy: Lazy<SingleDisplayAutoHideControllerStore>,
             multiDisplayLazy: Lazy<MultiDisplayAutoHideControllerStore>,
-        ): AutoHideControllerStore {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayLazy.get()
-            } else {
-                singleDisplayLazy.get()
-            }
-        }
+        ): AutoHideControllerStore = multiDisplayLazy.get()
 
         @Provides
         @SysUISingleton
@@ -200,13 +150,7 @@ interface StatusBarPhoneModule {
         @ClassKey(AutoHideControllerStore::class)
         fun storeAsCoreStartable(
             multiDisplayLazy: Lazy<MultiDisplayAutoHideControllerStore>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = multiDisplayLazy.get()
 
         /**
          * This is added for compat with SysUISingleton scoped objects.
@@ -219,19 +163,11 @@ interface StatusBarPhoneModule {
             repositoryFactory:
                 PerDisplayInstanceRepositoryImpl.Factory<StatusBarIconRefreshInteractor>,
             instanceProvider: StatusBarIconRefreshPerDisplayInstanceProvider,
-        ): PerDisplayRepository<StatusBarIconRefreshInteractor> {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                repositoryFactory.create(
-                    debugName = "StatusBarIconRefreshInteractor",
-                    instanceProvider,
-                )
-            } else {
-                DefaultDisplayOnlyInstanceRepositoryImpl(
-                    "StatusBarIconRefreshInteractor",
-                    instanceProvider,
-                )
-            }
-        }
+        ): PerDisplayRepository<StatusBarIconRefreshInteractor> =
+            repositoryFactory.create(
+                debugName = "StatusBarIconRefreshInteractor",
+                instanceProvider,
+            )
 
         @Provides
         @SysUISingleton
@@ -239,12 +175,6 @@ interface StatusBarPhoneModule {
         @ClassKey(MultiDisplayStatusBarOrchestratorStore::class)
         fun orchestratorStoreAsCoreStartable(
             multiDisplayLazy: Lazy<MultiDisplayStatusBarOrchestratorStore>
-        ): CoreStartable {
-            return if (StatusBarConnectedDisplays.isEnabled) {
-                multiDisplayLazy.get()
-            } else {
-                CoreStartable.NOP
-            }
-        }
+        ): CoreStartable = multiDisplayLazy.get()
     }
 }

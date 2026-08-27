@@ -64,7 +64,7 @@ data class StatusBarVisibilityModel(
             return StatusBarVisibilityModel(
                 showClock = (disabled1 and DISABLE_CLOCK) == 0,
                 showNotificationIcons = (disabled1 and DISABLE_NOTIFICATION_ICONS) == 0,
-                // TODO(b/279899176): [CollapsedStatusBarFragment] always overwrites this with the
+                // TODO(b/279899176): The status-bar host overwrites this with the
                 //  value of [OngoingCallController]. Do we need to process the flag here?
                 showPrimaryOngoingActivityChip = (disabled1 and DISABLE_ONGOING_CALL_CHIP) == 0,
                 showSecondaryOngoingActivityChip = (disabled1 and DISABLE_ONGOING_CALL_CHIP) == 0,
