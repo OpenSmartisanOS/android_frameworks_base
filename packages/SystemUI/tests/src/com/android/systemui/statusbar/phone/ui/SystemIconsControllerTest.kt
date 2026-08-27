@@ -16,33 +16,63 @@
 
 package com.android.systemui.statusbar.phone.ui
 
+import android.view.Display
 import androidx.test.filters.SmallTest
 import com.android.systemui.SysuiTestCase
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController.HostAppearance
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController.HomeKeyguardThemeListener
+import com.android.systemui.statusbar.phone.StatusBarAppearance
+import com.android.systemui.statusbar.phone.StatusBarAppearanceController
+import com.android.systemui.statusbar.phone.StatusBarCarrierTextController
+import com.android.systemui.statusbar.phone.StatusBarCutoutMode
+import com.android.systemui.statusbar.phone.ui.SystemIconsController.HostAppearance
+import com.android.systemui.statusbar.phone.ui.SystemIconsController.HomeKeyguardThemeListener
 import com.google.common.truth.Truth.assertThat
 import com.android.systemui.util.mockito.mock
+import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito.never
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
+import org.mockito.Mockito.`when` as whenever
 
 @SmallTest
-class SosSystemIconsControllerTest : SysuiTestCase() {
+class SystemIconsControllerTest : SysuiTestCase() {
     private val platformController = mock<StatusBarIconController>()
+    private val appearance = mock<StatusBarAppearanceController>()
+    private val carrierTextController = mock<StatusBarCarrierTextController>()
     private val home = mock<IconManager>()
-    private val keyguard = mock<IconManager>()
     private val panel = mock<IconManager>()
-    private val underTest = SosSystemIconsController(platformController)
+    private lateinit var underTest: SystemIconsController
+
+    @Before
+    fun setup() {
+        whenever(
+                appearance.appearanceFor(
+                    org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.any(),
+                    org.mockito.ArgumentMatchers.anyInt(),
+                    org.mockito.ArgumentMatchers.anyInt(),
+                    org.mockito.ArgumentMatchers.anyBoolean(),
+                )
+            )
+            .thenReturn(
+                StatusBarAppearance(
+                    0,
+                    0,
+                    true,
+                    HostAppearance.HOME,
+                    StatusBarCutoutMode.NONE,
+                )
+            )
+        underTest =
+            SystemIconsController(platformController, appearance, carrierTextController)
+    }
 
     @Test
     fun registerHosts_eachIndependentViewReceivesSharedState() {
         underTest.registerHost(home, HostAppearance.HOME)
-        underTest.registerHost(keyguard, HostAppearance.KEYGUARD)
         underTest.registerHost(panel, HostAppearance.PANEL)
 
         verify(platformController).addIconGroup(home)
-        verify(platformController).addIconGroup(keyguard)
         verify(platformController).addIconGroup(panel)
     }
 
@@ -66,12 +96,12 @@ class SosSystemIconsControllerTest : SysuiTestCase() {
 
     @Test
     fun reRegisterAfterDetach_addsFreshViewGroup() {
-        underTest.registerHost(keyguard, HostAppearance.KEYGUARD)
-        underTest.unregisterHost(keyguard)
-        underTest.registerHost(keyguard, HostAppearance.KEYGUARD)
+        underTest.registerHost(panel, HostAppearance.PANEL)
+        underTest.unregisterHost(panel)
+        underTest.registerHost(panel, HostAppearance.PANEL)
 
-        verify(platformController, times(2)).addIconGroup(keyguard)
-        verify(platformController).removeIconGroup(keyguard)
+        verify(platformController, times(2)).addIconGroup(panel)
+        verify(platformController).removeIconGroup(panel)
     }
 
     @Test
@@ -90,5 +120,17 @@ class SosSystemIconsControllerTest : SysuiTestCase() {
 
         underTest.setKeyguardPresented(false)
         assertThat(lastState).isEqualTo(false to true)
+    }
+
+    @Test
+    fun externalHomeHost_neverReceivesDefaultDisplayKeyguardTheme() {
+        val externalHome = mock<IconManager>()
+        whenever(externalHome.displayId).thenReturn(Display.DEFAULT_DISPLAY + 1)
+        underTest.registerHost(externalHome, HostAppearance.HOME)
+
+        underTest.setKeyguardWallpaperTheme(true)
+        underTest.setKeyguardPresented(true)
+
+        verify(appearance, times(3)).applyHomeColorPreference(null)
     }
 }

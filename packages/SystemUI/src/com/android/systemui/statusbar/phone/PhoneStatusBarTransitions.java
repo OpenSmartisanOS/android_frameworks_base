@@ -16,46 +16,57 @@
 
 package com.android.systemui.statusbar.phone;
 
+import android.annotation.Nullable;
 import android.animation.Animator;
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.res.Resources;
+import android.view.Display;
 import android.view.View;
 
 import com.android.systemui.res.R;
 import com.android.systemui.shared.statusbar.phone.BarTransitions;
 
-import org.lineageos.internal.statusbar.NetworkTraffic;
-
 public final class PhoneStatusBarTransitions extends BarTransitions {
     private static final float ICON_ALPHA_WHEN_NOT_OPAQUE = 1;
     private static final float ICON_ALPHA_WHEN_LIGHTS_OUT_BATTERY_CLOCK = 0.5f;
     private static final float ICON_ALPHA_WHEN_LIGHTS_OUT_NON_BATTERY_CLOCK = 0;
+    private static final long STATUS_BAR_LIGHTS_OUT_DURATION = 1500L;
 
     private final float mIconAlphaWhenOpaque;
+    private final boolean mControlsPhoneTicker;
+    @Nullable private final StatusBarTickerController mTickerController;
 
     private boolean mIsHeadsUp;
 
-    private View mStartSide, mStatusIcons, mBattery;
-    private NetworkTraffic mNetworkTrafficStart, mNetworkTrafficCenter, mNetworkTrafficEnd;
+    private View mStartSide, mClockHost, mStatusIcons, mNetworkCluster, mNetSpeed, mOtg, mBattery;
     private Animator mCurrentAnimation;
 
     /**
      * @param backgroundView view to apply the background drawable
      */
     public PhoneStatusBarTransitions(PhoneStatusBarView statusBarView, View backgroundView) {
+        this(statusBarView, backgroundView, null);
+    }
+
+    public PhoneStatusBarTransitions(PhoneStatusBarView statusBarView, View backgroundView,
+            @Nullable StatusBarTickerController tickerController) {
         super(backgroundView, R.drawable.status_background);
+        mTickerController = tickerController;
         final Resources res = statusBarView.getContext().getResources();
         mIconAlphaWhenOpaque = res.getFraction(R.dimen.status_bar_icon_drawing_alpha, 1, 1);
-        mStartSide = statusBarView.findViewById(R.id.status_bar_start_side_except_heads_up);
+        mControlsPhoneTicker =
+                statusBarView.getContext().getDisplayId() == Display.DEFAULT_DISPLAY;
+        mStartSide = statusBarView.findViewById(R.id.status_bar_contents_left);
         mStatusIcons = statusBarView.findViewById(R.id.statusIcons);
-        mNetworkTrafficStart = statusBarView.findViewById(R.id.network_traffic_start);
-        mNetworkTrafficCenter = statusBarView.findViewById(R.id.network_traffic_center);
-        mNetworkTrafficEnd = statusBarView.findViewById(R.id.network_traffic_end);
+        mClockHost = statusBarView.findViewById(R.id.privacy_highlight);
+        if (mClockHost == null) {
+            mClockHost = statusBarView.findViewById(R.id.clock);
+        }
+        mNetworkCluster = statusBarView.findViewById(R.id.network_signal_cluster);
+        mNetSpeed = statusBarView.findViewById(R.id.net_speed_view);
+        mOtg = statusBarView.findViewById(R.id.otg);
         mBattery = statusBarView.findViewById(R.id.battery);
-        mNetworkTrafficStart.setViewPosition(0);        /* start side display */
-        mNetworkTrafficCenter.setViewPosition(1);       /* center display */
-        mNetworkTrafficEnd.setViewPosition(2);          /* end side display */
         applyModeBackground(-1, getMode(), false /*animate*/);
         applyMode(getMode(), false /*animate*/);
     }
@@ -112,6 +123,9 @@ public final class PhoneStatusBarTransitions extends BarTransitions {
     }
 
     private void applyMode(int mode, boolean animate) {
+        if (mControlsPhoneTicker && mTickerController != null) {
+            mTickerController.setLightsOut(isLightsOut(mode));
+        }
         if (mStartSide == null) return; // pre-init
         float newStartSideAlpha = getStartSideAlphaFor(mode);
         float newStatusIconsAlpha = getStatusIconsAlphaFor(mode);
@@ -121,26 +135,40 @@ public final class PhoneStatusBarTransitions extends BarTransitions {
         }
         if (animate) {
             AnimatorSet anims = new AnimatorSet();
-            anims.playTogether(
-                    animateTransitionTo(mStartSide, newStartSideAlpha),
-                    animateTransitionTo(mStatusIcons, newStatusIconsAlpha),
-                    animateTransitionTo(mNetworkTrafficStart, newStatusIconsAlpha),
-                    animateTransitionTo(mNetworkTrafficCenter, newStatusIconsAlpha),
-                    animateTransitionTo(mNetworkTrafficEnd, newStatusIconsAlpha),
-                    animateTransitionTo(mBattery, newBatteryAlpha)
-                    );
+            java.util.ArrayList<Animator> items = new java.util.ArrayList<>();
+            items.add(animateTransitionTo(mStartSide, newStartSideAlpha));
+            if (mClockHost != null) {
+                items.add(animateTransitionTo(mClockHost, newBatteryAlpha));
+            }
+            if (mStatusIcons != null) {
+                items.add(animateTransitionTo(mStatusIcons, newStatusIconsAlpha));
+            }
+            if (mNetworkCluster != null) {
+                items.add(animateTransitionTo(mNetworkCluster, newStatusIconsAlpha));
+            }
+            if (mNetSpeed != null) {
+                items.add(animateTransitionTo(mNetSpeed, newStatusIconsAlpha));
+            }
+            if (mOtg != null) {
+                items.add(animateTransitionTo(mOtg, newStatusIconsAlpha));
+            }
+            if (mBattery != null) {
+                items.add(animateTransitionTo(mBattery, newBatteryAlpha));
+            }
+            anims.playTogether(items);
             if (isLightsOut(mode)) {
-                anims.setDuration(LIGHTS_OUT_DURATION);
+                anims.setDuration(STATUS_BAR_LIGHTS_OUT_DURATION);
             }
             anims.start();
             mCurrentAnimation = anims;
         } else {
             mStartSide.setAlpha(newStartSideAlpha);
-            mStatusIcons.setAlpha(newStatusIconsAlpha);
-            mNetworkTrafficStart.setAlpha(newStatusIconsAlpha);
-            mNetworkTrafficCenter.setAlpha(newStatusIconsAlpha);
-            mNetworkTrafficEnd.setAlpha(newStatusIconsAlpha);
-            mBattery.setAlpha(newBatteryAlpha);
+            if (mClockHost != null) mClockHost.setAlpha(newBatteryAlpha);
+            if (mStatusIcons != null) mStatusIcons.setAlpha(newStatusIconsAlpha);
+            if (mNetworkCluster != null) mNetworkCluster.setAlpha(newStatusIconsAlpha);
+            if (mNetSpeed != null) mNetSpeed.setAlpha(newStatusIconsAlpha);
+            if (mOtg != null) mOtg.setAlpha(newStatusIconsAlpha);
+            if (mBattery != null) mBattery.setAlpha(newBatteryAlpha);
         }
     }
 }

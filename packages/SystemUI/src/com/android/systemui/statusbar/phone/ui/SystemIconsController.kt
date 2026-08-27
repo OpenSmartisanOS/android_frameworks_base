@@ -16,7 +16,14 @@
 
 package com.android.systemui.statusbar.phone.ui
 
+import android.view.Display
+import android.widget.TextView
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.plugins.DarkIconDispatcher
+import com.android.systemui.statusbar.phone.StatusBarAppearanceController
+import com.android.systemui.statusbar.phone.StatusBarCarrierTextController
+import com.android.systemui.statusbar.phone.StatusBarCutoutMode
+import com.android.systemui.res.R
 import java.util.IdentityHashMap
 import javax.inject.Inject
 
@@ -24,32 +31,28 @@ import javax.inject.Inject
  * Single registration point for every Smartisan phone status-bar host.
  *
  * The platform icon controller remains the source of truth for slots and state.  This class makes
- * HOME, KEYGUARD and PANEL share that state and the same [IconManager] rendering policy while still
- * allowing each surface to own an independent View instance.
+ * HOME and PANEL share that state and the same [IconManager] rendering policy while still allowing
+ * each display to own an independent View instance. The lockscreen reuses the default HOME host.
  */
 @SysUISingleton
-class SosSystemIconsController
+class SystemIconsController
 @Inject
-constructor(private val statusBarIconController: StatusBarIconController) {
-    fun interface KeyguardThemeListener {
-        fun onKeyguardWallpaperThemeChanged(supportsDarkText: Boolean)
-    }
-
+constructor(
+    private val statusBarIconController: StatusBarIconController,
+    private val appearanceController: StatusBarAppearanceController,
+    private val carrierTextController: StatusBarCarrierTextController,
+) {
     fun interface HomeKeyguardThemeListener {
         fun onHomeKeyguardThemeChanged(active: Boolean, supportsDarkText: Boolean)
     }
 
     enum class HostAppearance {
         HOME,
-        KEYGUARD,
         PANEL,
     }
 
     private val hosts = IdentityHashMap<IconManager, HostAppearance>()
-    private val keyguardThemeListeners =
-        java.util.Collections.newSetFromMap(
-            IdentityHashMap<KeyguardThemeListener, Boolean>()
-        )
+    private val carrierHosts = IdentityHashMap<IconManager, TextView>()
     private val homeKeyguardThemeListeners =
         java.util.Collections.newSetFromMap(
             IdentityHashMap<HomeKeyguardThemeListener, Boolean>()
@@ -57,18 +60,27 @@ constructor(private val statusBarIconController: StatusBarIconController) {
     private var keyguardWallpaperSupportsDarkText = false
     private var keyguardPresented = false
 
+    init {
+        appearanceController.addListener { applyAllHosts() }
+    }
+
     @Synchronized
     fun registerHost(iconManager: IconManager, appearance: HostAppearance) {
         if (hosts.put(iconManager, appearance) == null) {
             statusBarIconController.addIconGroup(iconManager)
         }
-        if (appearance == HostAppearance.KEYGUARD) {
-            applyKeyguardTheme(iconManager)
+        iconManager.findContentsRoot()?.findViewById<TextView>(R.id.network_label)?.let { label ->
+            carrierHosts.put(iconManager, label)?.takeIf { it !== label }?.let(
+                carrierTextController::unregisterHost
+            )
+            carrierTextController.registerHost(label)
         }
+        applyHost(iconManager, appearance)
     }
 
     @Synchronized
     fun unregisterHost(iconManager: IconManager) {
+        carrierHosts.remove(iconManager)?.let(carrierTextController::unregisterHost)
         if (hosts.remove(iconManager) != null) {
             statusBarIconController.removeIconGroup(iconManager)
         }
@@ -82,24 +94,8 @@ constructor(private val statusBarIconController: StatusBarIconController) {
     fun setKeyguardWallpaperTheme(supportsDarkText: Boolean) {
         if (keyguardWallpaperSupportsDarkText == supportsDarkText) return
         keyguardWallpaperSupportsDarkText = supportsDarkText
-        hosts.forEach { (host, appearance) ->
-            if (appearance == HostAppearance.KEYGUARD) applyKeyguardTheme(host)
-        }
-        keyguardThemeListeners.toList().forEach {
-            it.onKeyguardWallpaperThemeChanged(supportsDarkText)
-        }
         notifyHomeThemeListeners()
-    }
-
-    @Synchronized
-    fun addKeyguardThemeListener(listener: KeyguardThemeListener) {
-        keyguardThemeListeners.add(listener)
-        listener.onKeyguardWallpaperThemeChanged(keyguardWallpaperSupportsDarkText)
-    }
-
-    @Synchronized
-    fun removeKeyguardThemeListener(listener: KeyguardThemeListener) {
-        keyguardThemeListeners.remove(listener)
+        applyAllHosts()
     }
 
     @Synchronized
@@ -107,6 +103,7 @@ constructor(private val statusBarIconController: StatusBarIconController) {
         if (keyguardPresented == presented) return
         keyguardPresented = presented
         notifyHomeThemeListeners()
+        applyAllHosts()
     }
 
     @Synchronized
@@ -123,13 +120,38 @@ constructor(private val statusBarIconController: StatusBarIconController) {
     @Synchronized
     fun keyguardWallpaperSupportsDarkText(): Boolean = keyguardWallpaperSupportsDarkText
 
-    private fun applyKeyguardTheme(iconManager: IconManager) {
-        (iconManager as? TintedIconManager)?.setTint(
-            if (keyguardWallpaperSupportsDarkText) LIGHT_WALLPAPER_ICON_TINT
-            else DARK_WALLPAPER_ICON_TINT,
-            if (keyguardWallpaperSupportsDarkText) LIGHT_WALLPAPER_NUMBER_TINT
-            else DARK_WALLPAPER_NUMBER_TINT,
-        )
+    private fun applyAllHosts() {
+        hosts.forEach { (host, appearance) -> applyHost(host, appearance) }
+    }
+
+    private fun applyHost(iconManager: IconManager, appearance: HostAppearance) {
+        val keyguardThemeActive =
+            keyguardPresented && iconManager.displayId == Display.DEFAULT_DISPLAY
+        if (appearance == HostAppearance.HOME && !keyguardThemeActive) {
+            appearanceController.applyHomeColorPreference(iconManager.findContentsRoot())
+            return
+        }
+        val homeTint =
+            if (keyguardThemeActive) {
+                iconTintForWallpaper(keyguardWallpaperSupportsDarkText)
+            } else {
+                DarkIconDispatcher.DEFAULT_ICON_TINT
+            }
+        val homeFg =
+            if (keyguardThemeActive) {
+                foregroundTintForWallpaper(keyguardWallpaperSupportsDarkText)
+            } else {
+                DarkIconDispatcher.DEFAULT_INVERSE_ICON_TINT
+            }
+        val snapshot =
+            appearanceController.appearanceFor(
+                host = appearance,
+                cutoutMode = StatusBarCutoutMode.NONE,
+                homeTint = homeTint,
+                homeForeground = homeFg,
+                forceLight = false,
+            )
+        appearanceController.apply(iconManager.findContentsRoot(), snapshot)
     }
 
     private fun notifyHomeThemeListeners() {

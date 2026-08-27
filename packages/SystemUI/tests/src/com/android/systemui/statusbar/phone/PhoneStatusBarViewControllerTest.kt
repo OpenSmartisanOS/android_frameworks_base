@@ -255,8 +255,8 @@ class PhoneStatusBarViewControllerTest(flags: FlagsParameterization) : SysuiTest
         attachToWindow(view)
         val endSideContainer = spy(view.requireViewById<View>(R.id.system_icons))
         whenever(view.requireViewById<View>(R.id.system_icons)).thenReturn(endSideContainer)
-        val startSideContainer = spy(view.requireViewById<View>(R.id.status_bar_start_side_content))
-        whenever(view.requireViewById<View>(R.id.status_bar_start_side_content))
+        val startSideContainer = spy(view.requireViewById<View>(R.id.status_bar_contents_left))
+        whenever(view.requireViewById<View>(R.id.status_bar_contents_left))
             .thenReturn(startSideContainer)
 
         controller = createAndInitController(view)
@@ -594,7 +594,7 @@ class PhoneStatusBarViewControllerTest(flags: FlagsParameterization) : SysuiTest
         controller = createAndInitController(view)
         val event = getActionUpEventFromSource(InputDevice.SOURCE_MOUSE)
 
-        val statusContainer = view.requireViewById<View>(R.id.status_bar_start_side_content)
+        val statusContainer = view.requireViewById<View>(R.id.status_bar_contents_left)
         statusContainer.dispatchTouchEvent(event)
 
         verify(statusBarTouchShadeDisplayPolicy).onStatusBarOrLauncherTouched(eq(event), any())
@@ -715,7 +715,7 @@ class PhoneStatusBarViewControllerTest(flags: FlagsParameterization) : SysuiTest
         attachToWindow(view)
         controller = createAndInitController(view)
 
-        val startSideContainer = view.requireViewById<View>(R.id.status_bar_start_side_content)
+        val startSideContainer = view.requireViewById<View>(R.id.status_bar_contents_left)
         startSideContainer.dispatchTouchEvent(getActionUpEventFromSource(InputDevice.SOURCE_MOUSE))
 
         verify(shadeControllerImpl).animateExpandShade()
@@ -728,7 +728,7 @@ class PhoneStatusBarViewControllerTest(flags: FlagsParameterization) : SysuiTest
         attachToWindow(view)
         controller = createAndInitController(view)
 
-        val startSideContainer = view.requireViewById<View>(R.id.status_bar_start_side_content)
+        val startSideContainer = view.requireViewById<View>(R.id.status_bar_contents_left)
         startSideContainer.dispatchTouchEvent(
             getActionDownEventFromSource(InputDevice.SOURCE_TOUCHSCREEN)
         )
@@ -746,7 +746,7 @@ class PhoneStatusBarViewControllerTest(flags: FlagsParameterization) : SysuiTest
         attachToWindow(view)
         controller = createAndInitController(view)
 
-        val startSideContainer = view.requireViewById<View>(R.id.status_bar_start_side_content)
+        val startSideContainer = view.requireViewById<View>(R.id.status_bar_contents_left)
         startSideContainer.dispatchTouchEvent(
             getActionDownEventFromSource(InputDevice.SOURCE_TOUCHSCREEN)
         )

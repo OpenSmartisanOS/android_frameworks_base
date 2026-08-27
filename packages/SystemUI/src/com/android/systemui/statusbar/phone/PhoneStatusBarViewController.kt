@@ -89,8 +89,6 @@ private constructor(
 
     private lateinit var battery: BatteryMeterView
     private lateinit var clock: Clock
-    private lateinit var clockCenter: Clock
-    private lateinit var clockRight: Clock
     private lateinit var startSideContainer: View
     private lateinit var endSideContainer: View
     private val statusBarContentInsetsProvider
@@ -172,8 +170,6 @@ private constructor(
 
     override fun onViewAttached() {
         clock = mView.requireViewById(R.id.clock)
-        clockCenter = mView.requireViewById(R.id.clock_center)
-        clockRight = mView.requireViewById(R.id.clock_right)
         battery = mView.requireViewById(R.id.battery)
 
         addDarkReceivers()
@@ -221,7 +217,7 @@ private constructor(
             endSideContainer.setOnTouchListener(createMouseClickListener { animateExpandQs() })
         }
 
-        startSideContainer = mView.requireViewById(R.id.status_bar_start_side_content)
+        startSideContainer = mView.requireViewById(R.id.status_bar_contents_left)
         startSideContainer.setOnHoverListener(
             statusOverlayHoverListenerFactory.createDarkAwareListener(
                 startSideContainer,
@@ -311,17 +307,19 @@ private constructor(
     }
 
     private fun addDarkReceivers() {
-        darkIconDispatcher.addDarkReceiver(battery)
+        // The complete right-side SystemIconsView is the sole tint receiver. The clock remains
+        // independent because it is not part of the original Smartisan SystemIconView group.
+        darkIconDispatcher.addDarkReceiver(
+            mView.requireViewById<SystemIconsView>(R.id.system_icons)
+        )
         darkIconDispatcher.addDarkReceiver(clock)
-        darkIconDispatcher.addDarkReceiver(clockCenter)
-        darkIconDispatcher.addDarkReceiver(clockRight)
     }
 
     private fun removeDarkReceivers() {
-        darkIconDispatcher.removeDarkReceiver(battery)
+        darkIconDispatcher.removeDarkReceiver(
+            mView.requireViewById<SystemIconsView>(R.id.system_icons)
+        )
         darkIconDispatcher.removeDarkReceiver(clock)
-        darkIconDispatcher.removeDarkReceiver(clockCenter)
-        darkIconDispatcher.removeDarkReceiver(clockRight)
     }
 
     inner class PhoneStatusBarViewTouchHandler : Gefingerpoken {

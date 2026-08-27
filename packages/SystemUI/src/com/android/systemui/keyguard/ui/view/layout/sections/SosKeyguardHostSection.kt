@@ -47,7 +47,7 @@ import com.android.systemui.plugins.keyguard.ui.clocks.ClockViewIds
 import com.android.systemui.util.kotlin.DisposableHandles
 import com.android.systemui.shade.CameraLauncher
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController
+import com.android.systemui.statusbar.phone.ui.SystemIconsController
 import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.statusbar.policy.FlashlightController
 import com.android.systemui.statusbar.policy.KeyguardStateController
@@ -78,7 +78,7 @@ constructor(
     private val keyguardStateController: KeyguardStateController,
     private val keyguardClockViewModel: KeyguardClockViewModel,
     private val statusBarWindowControllerStore: StatusBarWindowControllerStore,
-    private val sosSystemIconsController: SosSystemIconsController,
+    private val systemIconsController: SystemIconsController,
     private val screenLifecycle: ScreenLifecycle,
     private val authController: AuthController,
     @Main private val mainExecutor: Executor,
@@ -102,8 +102,8 @@ constructor(
         // Feed both the window policy and the modern PhoneStatusBarView binder from one
         // presentation state.  Keyguard transition enums are not a reliable first-frame signal.
         SosKeyguardRuntime.setAwakeLockscreenPresented(presented)
-        sosSystemIconsController.setKeyguardPresented(presented)
-        statusBarWindowControllerStore.defaultDisplay.setSosKeyguardForceStatusBarVisible(presented)
+        systemIconsController.setKeyguardPresented(presented)
+        statusBarWindowControllerStore.defaultDisplay.setKeyguardForceStatusBarVisible(presented)
     }
 
     override fun addViews(constraintLayout: ConstraintLayout) {
@@ -126,7 +126,7 @@ constructor(
                 statusBarKeyguardViewManager,
                 statusBarStateController,
                 keyguardStateController,
-                sosSystemIconsController,
+                systemIconsController,
                 screenLifecycle,
                 authController,
                 mainExecutor,
@@ -336,9 +336,9 @@ constructor(
     override fun removeViews(constraintLayout: ConstraintLayout) {
         keyguardStateController.removeCallback(keyguardCallback)
         statusBarStateController.removeCallback(statusBarStateCallback)
-        statusBarWindowControllerStore.defaultDisplay.setSosKeyguardForceStatusBarVisible(false)
+        statusBarWindowControllerStore.defaultDisplay.setKeyguardForceStatusBarVisible(false)
         SosKeyguardRuntime.setAwakeLockscreenPresented(false)
-        sosSystemIconsController.setKeyguardPresented(false)
+        systemIconsController.setKeyguardPresented(false)
         disposableHandle?.dispose()
         disposableHandle = null
         constraintLayout.removeView(R.id.nssl_placeholder)

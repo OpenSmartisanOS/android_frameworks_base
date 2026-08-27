@@ -49,7 +49,7 @@ class PhoneStatusBarTransitionsTest : SysuiTestCase() {
             whenever(this.context).thenReturn(mContext)
             whenever(this.findViewById<View>(R.id.battery)).thenReturn(batteryView)
             whenever(this.findViewById<View>(R.id.statusIcons)).thenReturn(statusIcons)
-            whenever(this.findViewById<View>(R.id.status_bar_start_side_except_heads_up))
+            whenever(this.findViewById<View>(R.id.status_bar_contents_left))
                 .thenReturn(startIcons)
         }
     private val backgroundView = mock<View>().apply { whenever(this.context).thenReturn(mContext) }

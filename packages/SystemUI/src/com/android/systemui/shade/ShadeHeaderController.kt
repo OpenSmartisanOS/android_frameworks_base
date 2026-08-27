@@ -34,7 +34,7 @@ import android.view.animation.DecelerateInterpolator
 import com.android.internal.policy.SystemBarUtils
 import com.android.systemui.battery.BatteryMeterView
 import com.android.systemui.battery.BatteryMeterViewController
-import com.android.systemui.battery.SosBatteryStateController
+import com.android.systemui.battery.BatteryStateController
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.flags.FeatureFlags
@@ -43,18 +43,18 @@ import com.android.systemui.settings.UserTracker
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsChangedListener
 import com.android.systemui.statusbar.layout.StatusBarContentInsetsProvider
-import com.android.systemui.statusbar.phone.SosLeftCarrierNotificationController
-import com.android.systemui.statusbar.phone.SosStatusBarAccessoryController
-import com.android.systemui.statusbar.phone.SosStatusBarAppearanceController
-import com.android.systemui.statusbar.phone.SosStatusBarCutoutClassifier
-import com.android.systemui.statusbar.phone.SosStatusBarCutoutLayout
-import com.android.systemui.statusbar.phone.SosStatusBarCutoutMode
-import com.android.systemui.statusbar.phone.SosStatusBarGeometry
-import com.android.systemui.statusbar.phone.SosStatusBarModeCoordinator
-import com.android.systemui.statusbar.phone.SosStatusBarTickerController
+import com.android.systemui.statusbar.phone.LeftCarrierNotificationController
+import com.android.systemui.statusbar.phone.StatusBarAccessoryController
+import com.android.systemui.statusbar.phone.StatusBarAppearanceController
+import com.android.systemui.statusbar.phone.StatusBarCutoutClassifier
+import com.android.systemui.statusbar.phone.StatusBarCutoutLayout
+import com.android.systemui.statusbar.phone.StatusBarCutoutMode
+import com.android.systemui.statusbar.phone.StatusBarGeometry
+import com.android.systemui.statusbar.phone.StatusBarModeCoordinator
+import com.android.systemui.statusbar.phone.StatusBarTickerController
 import com.android.systemui.statusbar.phone.StatusBarLocation
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController.HostAppearance
+import com.android.systemui.statusbar.phone.ui.SystemIconsController
+import com.android.systemui.statusbar.phone.ui.SystemIconsController.HostAppearance
 import com.android.systemui.statusbar.phone.ui.TintedIconManager
 import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.statusbar.policy.ConfigurationController
@@ -65,7 +65,7 @@ import javax.inject.Inject
 class ShadeHeaderController
 @Inject
 constructor(
-    private val sosSystemIconsController: SosSystemIconsController,
+    private val systemIconsController: SystemIconsController,
     private val tintedIconManagerFactory: TintedIconManager.Factory,
     private val userTracker: UserTracker,
     @ShadeDisplayAware private val configurationController: ConfigurationController,
@@ -74,12 +74,12 @@ constructor(
     private val contentResolver: ContentResolver,
     private val featureFlags: FeatureFlags,
     private val batteryController: BatteryController,
-    private val sosBatteryStateController: SosBatteryStateController,
+    private val batteryStateController: BatteryStateController,
     private val statusBarContentInsetsProviderStore: StatusBarContentInsetsProviderStore,
-    private val appearanceController: SosStatusBarAppearanceController,
-    private val accessoryController: SosStatusBarAccessoryController,
-    private val modeCoordinator: SosStatusBarModeCoordinator,
-    private val tickerController: SosStatusBarTickerController,
+    private val appearanceController: StatusBarAppearanceController,
+    private val accessoryController: StatusBarAccessoryController,
+    private val modeCoordinator: StatusBarModeCoordinator,
+    private val tickerController: StatusBarTickerController,
 ) {
     /** Kept for the platform shade contract; the R2 panel has no clickable alarm clock. */
     var shadeCollapseAction: Runnable? = null
@@ -106,8 +106,8 @@ constructor(
     private var visible = false
     private var panelExpanded = false
     private var topInset = 0
-    private var cutoutMode = SosStatusBarCutoutMode.NONE
-    private var leftCarrier: SosLeftCarrierNotificationController? = null
+    private var cutoutMode = StatusBarCutoutMode.NONE
+    private var leftCarrier: LeftCarrierNotificationController? = null
     private var animator: Animator? = null
     private var animationGeneration = 0L
     private val layoutChangeListener =
@@ -172,7 +172,7 @@ constructor(
                     contentResolver,
                     featureFlags,
                     batteryController,
-                    sosBatteryStateController,
+                    batteryStateController,
                 )
                 .apply {
                     init()
@@ -185,7 +185,7 @@ constructor(
 
         val left = panel.findViewById<ViewGroup>(R.id.status_bar_contents_left)
         if (left != null) {
-            leftCarrier = SosLeftCarrierNotificationController(left)
+            leftCarrier = LeftCarrierNotificationController(left)
         }
 
         applyTopInset()
@@ -301,12 +301,12 @@ constructor(
         animator?.cancel()
         animator = null
         val duration =
-            panel.resources.getInteger(R.integer.sos_status_bar_panel_anim_duration).toLong()
+            panel.resources.getInteger(R.integer.status_bar_panel_anim_duration).toLong()
         val childDuration =
-            panel.resources.getInteger(R.integer.sos_status_bar_panel_anim_child_duration).toLong()
+            panel.resources.getInteger(R.integer.status_bar_panel_anim_child_duration).toLong()
         val tickerDelay =
             if (controlsBuiltInHome && modeCoordinator.state.tickerVisible) {
-                panel.resources.getInteger(R.integer.sos_status_bar_panel_ticker_delay).toLong()
+                panel.resources.getInteger(R.integer.status_bar_panel_ticker_delay).toLong()
             } else {
                 0L
             }
@@ -398,12 +398,12 @@ constructor(
                         WindowInsets.Type.statusBars() or WindowInsets.Type.displayCutout()
                     )
                 ?: Insets.of(
-                    resources.getDimensionPixelSize(R.dimen.sos_status_bar_contents_margin_start),
+                    resources.getDimensionPixelSize(R.dimen.status_bar_contents_margin_start),
                     0,
-                    resources.getDimensionPixelSize(R.dimen.sos_status_bar_contents_margin_end),
+                    resources.getDimensionPixelSize(R.dimen.status_bar_contents_margin_end),
                     0,
                 )
-        val metrics = SosStatusBarGeometry.calculate(content)
+        val metrics = StatusBarGeometry.calculate(content)
         (content.layoutParams as? ViewGroup.MarginLayoutParams)?.let { lp ->
             lp.marginStart = metrics.contentMarginStart
             lp.marginEnd = metrics.contentMarginEnd
@@ -430,9 +430,9 @@ constructor(
         val cutout = root?.rootWindowInsets?.displayCutout
         val screenWidth = root?.width?.takeIf { it > 0 } ?: content.width
         val previousMode = cutoutMode
-        cutoutMode = SosStatusBarCutoutClassifier.classify(cutout, screenWidth)
+        cutoutMode = StatusBarCutoutClassifier.classify(cutout, screenWidth)
         val bounds = cutout?.boundingRectTop?.let { Rect(it) }
-        SosStatusBarCutoutLayout.apply(
+        StatusBarCutoutLayout.apply(
             content as? ViewGroup,
             cutoutMode,
             bounds,
@@ -448,7 +448,6 @@ constructor(
                     cutoutMode = cutoutMode,
                     homeTint = PANEL_TINT,
                     homeForeground = PANEL_TINT,
-                    keyguardSupportsDarkText = false,
                     forceLight = false,
                 ),
             )
@@ -461,9 +460,9 @@ constructor(
         }
         val manager = iconManager ?: return
         if (registered) {
-            sosSystemIconsController.registerHost(manager, HostAppearance.PANEL)
+            systemIconsController.registerHost(manager, HostAppearance.PANEL)
         } else {
-            sosSystemIconsController.unregisterHost(manager)
+            systemIconsController.unregisterHost(manager)
         }
         iconGroupRegistered = registered
     }

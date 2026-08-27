@@ -84,7 +84,7 @@ import com.android.systemui.shade.CameraLauncher
 import com.android.systemui.shared.system.QuickStepContract
 import com.android.systemui.statusbar.StatusBarState
 import com.android.systemui.statusbar.phone.StatusBarKeyguardViewManager
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController
+import com.android.systemui.statusbar.phone.ui.SystemIconsController
 import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.statusbar.policy.FlashlightController
 import com.android.systemui.statusbar.policy.KeyguardStateController
@@ -120,7 +120,7 @@ class SosKeyguardHostView(
     private val statusBarKeyguardViewManager: StatusBarKeyguardViewManager,
     private val statusBarStateController: StatusBarStateController,
     private val keyguardStateController: KeyguardStateController,
-    private val sosSystemIconsController: SosSystemIconsController,
+    private val systemIconsController: SystemIconsController,
     private val screenLifecycle: ScreenLifecycle,
     private val authController: AuthController,
     private val mainExecutor: Executor,
@@ -715,8 +715,8 @@ class SosKeyguardHostView(
         resetOriginalVerticalGesture(hideBouncer = true)
         resetToMainPage()
         timeController.update()
-        sosSystemIconsController.setKeyguardWallpaperTheme(
-            sosSystemIconsController.keyguardWallpaperSupportsDarkText()
+        systemIconsController.setKeyguardWallpaperTheme(
+            systemIconsController.keyguardWallpaperSupportsDarkText()
         )
         navigationMode = navigationModeController.addListener(navigationModeListener)
         timeController.start()
@@ -3331,7 +3331,7 @@ class SosKeyguardHostView(
                         ownedWallpaperBitmap?.isRecycled == false
                 if (!hasCurrentRealWallpaper) {
                     installOpaqueBlackWallpaper()
-                    sosSystemIconsController.setKeyguardWallpaperTheme(false)
+                    systemIconsController.setKeyguardWallpaperTheme(false)
                     applyOriginalWallpaperTheme(SosKeyguardWallpaperTheme.DARK_WALLPAPER)
                 }
                 if (
@@ -3393,7 +3393,7 @@ class SosKeyguardHostView(
             }
             installOwnedWallpaperBitmap(bitmap, generation)
             setWallpaperLoadState(generation, WallpaperLoadState.READY)
-            sosSystemIconsController.setKeyguardWallpaperTheme(topSupportsDarkText)
+            systemIconsController.setKeyguardWallpaperTheme(topSupportsDarkText)
             applyOriginalWallpaperTheme(originalTheme)
             Log.d(TAG, "Installed $source for user=$userId generation=$generation")
             if (persistAfterPublish) {
@@ -3522,7 +3522,7 @@ class SosKeyguardHostView(
         val supportsDarkText =
             colors != null &&
                 colors.colorHints and WallpaperColors.HINT_SUPPORTS_DARK_TEXT != 0
-        sosSystemIconsController.setKeyguardWallpaperTheme(supportsDarkText)
+        systemIconsController.setKeyguardWallpaperTheme(supportsDarkText)
         applyOriginalWallpaperTheme(
             if (supportsDarkText) {
                 SosKeyguardWallpaperTheme.LIGHT_WALLPAPER
