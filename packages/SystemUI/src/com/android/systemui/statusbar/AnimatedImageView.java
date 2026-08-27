@@ -17,6 +17,7 @@
 package com.android.systemui.statusbar;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.content.res.TypedArray;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
@@ -25,6 +26,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.RemoteViews.RemoteView;
 
+import com.android.internal.util.ContrastColorUtil;
 import com.android.systemui.res.R;
 
 @RemoteView
@@ -33,6 +35,8 @@ public class AnimatedImageView extends ImageView {
     AnimationDrawable mAnim;
     boolean mAttached;
     private boolean mAllowAnimation = true;
+    private boolean mUseSosHostTint;
+    private int mHostTint;
 
     // Tracks the last image that was set, so that we don't refresh the image if it is exactly
     // the same as the previous one. If this is a resid, we track that. If it's a drawable, we
@@ -68,6 +72,30 @@ public class AnimatedImageView extends ImageView {
         }
     }
 
+    /**
+     * Applies the R2 ticker host color only to monochrome notification icons.
+     *
+     * <p>The factory ticker preserves application-provided colored artwork while adapting white
+     * status icons to the current light/dark host. Keeping this on the icon View also means a
+     * switcher can replace its drawable without the appearance controller racing the next frame.
+     */
+    public void setHostTint(int tint) {
+        mUseSosHostTint = true;
+        mHostTint = tint;
+        updateSosHostTint();
+    }
+
+    private void updateSosHostTint() {
+        if (!mUseSosHostTint) {
+            return;
+        }
+        final Drawable drawable = getDrawable();
+        final boolean monochrome = drawable != null
+                && ContrastColorUtil.getInstance(getContext()).isGrayscaleIcon(drawable);
+        clearColorFilter();
+        setImageTintList(monochrome ? ColorStateList.valueOf(mHostTint) : null);
+    }
+
     private void updateAnim() {
         Drawable drawable = getDrawable();
         if (mAttached && mAnim != null) {
@@ -94,6 +122,7 @@ public class AnimatedImageView extends ImageView {
         }
         super.setImageDrawable(drawable);
         updateAnim();
+        updateSosHostTint();
     }
 
     @Override
@@ -104,6 +133,7 @@ public class AnimatedImageView extends ImageView {
         mDrawableId = resid;
         super.setImageResource(resid);
         updateAnim();
+        updateSosHostTint();
     }
 
     @Override
@@ -139,4 +169,3 @@ public class AnimatedImageView extends ImageView {
         return mHasOverlappingRendering;
     }
 }
-
