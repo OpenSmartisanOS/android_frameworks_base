@@ -287,6 +287,7 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
     private final ContentObserver mOneFingerQuickSettingsInterceptObserver;
 
     private final Region mInterceptRegion = new Region();
+    private final Rect mQsHeaderBounds = new Rect();
     /** The end bounds of a clipping animation. */
     private final Rect mClippingAnimationEndBounds = new Rect();
     private final Rect mLastClipBounds = new Rect();
@@ -721,21 +722,8 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
                 && mKeyguardBypassController.getBypassEnabled()) || mSplitShadeEnabled) {
             return false;
         }
-        int headerTop, headerBottom;
-        if (keyguardShowing || mQs == null) {
-            headerTop = mKeyguardStatusBar.getTop();
-            headerBottom = mKeyguardStatusBar.getBottom();
-        } else {
-            headerTop = mQs.getHeader().getTop();
-            headerBottom = mQs.getHeader().getBottom();
-        }
-        int frameTop = keyguardShowing
-                || mQs == null ? 0 : mQsFrame.getTop();
-        mInterceptRegion.set(
-                /* left= */ (int) mQsFrame.getX(),
-                /* top= */ headerTop + frameTop,
-                /* right= */ (int) mQsFrame.getX() + mQsFrame.getWidth(),
-                /* bottom= */ headerBottom + frameTop);
+        final Rect headerBounds = getQsHeaderBoundsOnPanel();
+        mInterceptRegion.set(headerBounds);
         // Also allow QS to intercept if the touch is near the notch.
         mShadeTouchableRegionManager.updateRegionForNotch(mInterceptRegion);
         final boolean onHeader = mInterceptRegion.contains((int) x, (int) y);
@@ -782,14 +770,30 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
         if (mCollapsedOnDown || mBarState == KEYGUARD || getExpanded()) {
             return false;
         }
-        int headerBottom;
-        if (mQs == null) {
-            headerBottom = mKeyguardStatusBar.getBottom();
-        } else {
-            headerBottom = mQs.getHeader().getBottom();
+        final Rect headerBounds = getQsHeaderBoundsOnPanel();
+        return downX >= headerBounds.left && downX <= headerBounds.right
+                && downY <= headerBounds.bottom;
+    }
+
+    /** Returns the QS header bounds in {@link NotificationPanelView}'s coordinate space. */
+    private Rect getQsHeaderBoundsOnPanel() {
+        final int frameLeft = (int) mQsFrame.getX();
+        final int frameTop = mQsFrame.getTop();
+        int headerTop = frameTop;
+        int headerBottom = frameTop + mStatusBarMinHeight;
+        if (mQs != null && mQs.getHeader() != null) {
+            headerTop = frameTop + mQs.getHeader().getTop();
+            headerBottom = frameTop + mQs.getHeader().getBottom();
+            if (headerBottom <= headerTop) {
+                headerBottom = headerTop + mStatusBarMinHeight;
+            }
         }
-        return downX >= mQsFrame.getX() && downX <= mQsFrame.getX() + mQsFrame.getWidth()
-                && downY <= headerBottom;
+        mQsHeaderBounds.set(
+                frameLeft,
+                headerTop,
+                frameLeft + mQsFrame.getWidth(),
+                headerBottom);
+        return mQsHeaderBounds;
     }
 
     /** Closes the Qs customizer. */
