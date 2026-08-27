@@ -183,17 +183,8 @@ public class BrightnessSliderController extends ViewController<BrightnessSliderV
      */
     @Override
     public void setMirrorControllerAndMirror(@Nullable MirrorController c) {
-        if (mView.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-            mMirrorController = null;
-            setMirror(null);
-            return;
-        }
-        mMirrorController = c;
-        if (c != null) {
-            setMirror(c.getToggleSlider());
-        } else {
-            setMirror(null);
-        }
+        mMirrorController = null;
+        setMirror(null);
     }
 
     @Override
@@ -279,12 +270,6 @@ public class BrightnessSliderController extends ViewController<BrightnessSliderV
                 mBrightnessSliderHapticPlugin.onStartTrackingTouch();
             }
 
-            if (mMirrorController != null) {
-                if (!mView.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-                    mMirrorController.showMirror();
-                    mMirrorController.setLocationAndSize(mView);
-                }
-            }
         }
 
         @Override
@@ -296,11 +281,6 @@ public class BrightnessSliderController extends ViewController<BrightnessSliderV
                 mBrightnessSliderHapticPlugin.onStopTrackingTouch();
             }
 
-            if (mMirrorController != null) {
-                if (!mView.getResources().getBoolean(R.bool.config_sos_legacy_shade)) {
-                    mMirrorController.hideMirror();
-                }
-            }
         }
     };
 
