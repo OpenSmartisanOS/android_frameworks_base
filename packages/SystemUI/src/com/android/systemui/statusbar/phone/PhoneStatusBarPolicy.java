@@ -24,6 +24,7 @@ import android.app.AlarmManager;
 import android.app.AlarmManager.AlarmClockInfo;
 import android.app.NotificationManager;
 import android.app.admin.DevicePolicyManager;
+import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -44,16 +45,20 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.UserHandle;
 import android.os.UserManager;
-import android.provider.Settings.Global;
+import android.provider.Settings;
 import android.service.notification.ZenModeConfig;
 import android.telecom.TelecomManager;
 import android.text.format.DateFormat;
 import android.util.Log;
+import android.view.Display;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Observer;
 
 import com.android.internal.statusbar.StatusBarIcon;
+import com.android.settingslib.bluetooth.CachedBluetoothDevice;
+import com.android.systemui.Flags;
+import com.android.systemui.Prefs;
 import com.android.systemui.broadcast.BroadcastDispatcher;
 import com.android.systemui.common.shared.model.Icon;
 import com.android.systemui.dagger.qualifiers.DisplayId;
@@ -121,19 +126,23 @@ public class PhoneStatusBarPolicy
     private final String mSlotBluetooth;
     private final String mSlotTty;
     private final String mSlotZen;
-    private final String mSlotMute;
-    private final String mSlotVibrate;
+    private final String mSlotVolume;
     private final String mSlotAlarmClock;
     private final String mSlotManagedProfile;
     private final String mSlotRotate;
-    private final String mSlotHeadset;
     private final String mSlotDataSaver;
     private final String mSlotLocation;
     private final String mSlotMicrophone;
     private final String mSlotCamera;
     private final String mSlotSensorsOff;
     private final String mSlotScreenRecord;
-    private final String mSlotConnectedDisplay;
+    private final String mSlotCast;
+    private final String mSlotBluetoothHeadset;
+    private final String mSlotNormalHeadset;
+    private final String mSlotVolte;
+    private final String mSlotSyncActive;
+    private final String mSlotSyncFailing;
+    private final String mSlotCdmaEri;
     private final String mSlotFirewall;
     private final int mDisplayId;
     private final SharedPreferences mSharedPreferences;
@@ -170,10 +179,13 @@ public class PhoneStatusBarPolicy
     private final ZenModeInteractor mZenModeInteractor;
     private final ConnectivityManager mConnectivityManager;
     private final AudioManager mAudioManager;
+    private final ScreenRecordUxController mScreenRecordController;
+    private final VolteStateController mVolteStateController;
+    private final VolteStateController.Callback mVolteCallback;
+    private final Runnable mRemoveCastIconRunnable;
 
-    private boolean mZenVisible;
-    private boolean mVibrateVisible;
-    private boolean mMuteVisible;
+    private boolean mZenIconVisible;
+    private boolean mVolumeVisible;
     private boolean mCurrentUserSetup;
 
     private boolean mProfileIconVisible = false;
@@ -218,6 +230,8 @@ public class PhoneStatusBarPolicy
             PrivacyItemController privacyItemController,
             PrivacyLogger privacyLogger,
             ConnectedDisplayInteractor connectedDisplayInteractor,
+            VolteStateController volteStateController,
+            ScreenRecordUxController screenRecordController,
             ZenModeInteractor zenModeInteractor,
             JavaAdapter javaAdapter
     ) {
@@ -249,24 +263,32 @@ public class PhoneStatusBarPolicy
         mTelecomManager = telecomManager;
         mRingerModeTracker = ringerModeTracker;
         mPrivacyLogger = privacyLogger;
+        mScreenRecordController = screenRecordController;
         mZenModeInteractor = zenModeInteractor;
         mJavaAdapter = javaAdapter;
         mConnectivityManager = context.getSystemService(ConnectivityManager.class);
         mAudioManager = context.getSystemService(AudioManager.class);
 
-        mSlotConnectedDisplay = resources.getString(
-                com.android.internal.R.string.status_bar_connected_display);
+        mDisplayId = displayId;
         mSlotHotspot = resources.getString(com.android.internal.R.string.status_bar_hotspot);
-        mSlotBluetooth = resources.getString(com.android.internal.R.string.status_bar_bluetooth);
+        mSlotBluetooth = resources.getString(
+                com.android.internal.R.string.status_bar_bluetooth);
         mSlotTty = resources.getString(com.android.internal.R.string.status_bar_tty);
         mSlotZen = resources.getString(com.android.internal.R.string.status_bar_zen);
-        mSlotMute = resources.getString(com.android.internal.R.string.status_bar_mute);
-        mSlotVibrate = resources.getString(com.android.internal.R.string.status_bar_volume);
+        mSlotVolume = resources.getString(com.android.internal.R.string.status_bar_volume);
         mSlotAlarmClock = resources.getString(com.android.internal.R.string.status_bar_alarm_clock);
         mSlotManagedProfile = resources.getString(
                 com.android.internal.R.string.status_bar_managed_profile);
         mSlotRotate = resources.getString(com.android.internal.R.string.status_bar_rotate);
-        mSlotHeadset = resources.getString(com.android.internal.R.string.status_bar_headset);
+        mSlotBluetoothHeadset = DynamicIconPolicy.SLOT_BLUETOOTH_HEADSET;
+        mSlotNormalHeadset = DynamicIconPolicy.SLOT_NORMAL_HEADSET;
+        mSlotCast = resources.getString(com.android.internal.R.string.status_bar_cast);
+        mSlotVolte = DynamicIconPolicy.SLOT_VOLTE;
+        mSlotSyncActive = resources.getString(
+                com.android.internal.R.string.status_bar_sync_active);
+        mSlotSyncFailing = resources.getString(
+                com.android.internal.R.string.status_bar_sync_failing);
+        mSlotCdmaEri = resources.getString(com.android.internal.R.string.status_bar_cdma_eri);
         mSlotDataSaver = resources.getString(com.android.internal.R.string.status_bar_data_saver);
         mSlotLocation = resources.getString(com.android.internal.R.string.status_bar_location);
         mSlotMicrophone = resources.getString(com.android.internal.R.string.status_bar_microphone);
@@ -275,8 +297,31 @@ public class PhoneStatusBarPolicy
         mSlotScreenRecord = resources.getString(
                 com.android.internal.R.string.status_bar_screen_record);
         mSlotFirewall = resources.getString(R.string.status_bar_firewall_slot);
+        mVolteStateController = volteStateController;
+        mVolteCallback =
+                state -> {
+                    final int icon;
+                    switch (state) {
+                        case CALLING:
+                            icon = R.drawable.stat_sys_volte_mode_calling;
+                            break;
+                        case READY:
+                            icon = R.drawable.stat_sys_volte_mode_ready;
+                            break;
+                        case DISABLED:
+                            icon = R.drawable.stat_sys_volte_mode_disabled;
+                            break;
+                        case HIDDEN:
+                        default:
+                            mIconController.setIconVisibility(mSlotVolte, false);
+                            return;
+                    }
+                    mIconController.setIcon(mSlotVolte, icon, null);
+                    mIconController.setIconVisibility(mSlotVolte, true);
+                };
+        mRemoveCastIconRunnable =
+                () -> mIconController.setIconVisibility(mSlotCast, false);
 
-        mDisplayId = displayId;
         mSharedPreferences = sharedPreferences;
         mDateFormatUtil = dateFormatUtil;
     }
@@ -287,7 +332,6 @@ public class PhoneStatusBarPolicy
         IntentFilter filter = new IntentFilter();
 
         filter.addAction(AudioManager.ACTION_HEADSET_PLUG);
-        filter.addAction(Intent.ACTION_SIM_STATE_CHANGED);
         filter.addAction(TelecomManager.ACTION_CURRENT_TTY_MODE_CHANGED);
         filter.addAction(Intent.ACTION_MANAGED_PROFILE_AVAILABLE);
         filter.addAction(Intent.ACTION_MANAGED_PROFILE_UNAVAILABLE);
@@ -295,7 +339,7 @@ public class PhoneStatusBarPolicy
         filter.addAction(Intent.ACTION_PROFILE_ACCESSIBLE);
         filter.addAction(Intent.ACTION_PROFILE_INACCESSIBLE);
         mBroadcastDispatcher.registerReceiverWithHandler(mIntentReceiver, filter, mHandler);
-        if (mResources.getBoolean(R.bool.config_sos_legacy_shade) && mAudioManager != null) {
+        if (mAudioManager != null) {
             mAudioManager.registerAudioDeviceCallback(mHeadsetDeviceCallback, mHandler);
         }
         Observer<Integer> observer = ringer -> mHandler.post(this::updateVolumeZen);
@@ -317,24 +361,31 @@ public class PhoneStatusBarPolicy
         mIconController.setIcon(mSlotAlarmClock, R.drawable.stat_sys_alarm, null);
         mIconController.setIconVisibility(mSlotAlarmClock, false);
 
-        // zen
+        mIconController.setIcon(mSlotVolume, R.drawable.stat_sys_ringer_vibrate,
+                mResources.getString(R.string.accessibility_ringer_vibrate));
+        mIconController.setIconVisibility(mSlotVolume, false);
         mIconController.setIcon(mSlotZen, R.drawable.stat_sys_dnd, null);
         mIconController.setIconVisibility(mSlotZen, false);
-
-        // vibrate
-        mIconController.setIcon(mSlotVibrate, R.drawable.stat_sys_ringer_vibrate,
-                mResources.getString(R.string.accessibility_ringer_vibrate));
-        mIconController.setIconVisibility(mSlotVibrate, false);
-        // mute
-        mIconController.setIcon(mSlotMute, R.drawable.stat_sys_ringer_silent,
-                mResources.getString(R.string.accessibility_ringer_silent));
-        mIconController.setIconVisibility(mSlotMute, false);
         updateVolumeZen();
 
-        // connected display
-        mIconController.setIcon(mSlotConnectedDisplay, R.drawable.stat_sys_connected_display,
+        mIconController.setIcon(mSlotCast, R.drawable.stat_sys_cast,
                 mResources.getString(R.string.connected_display_icon_desc));
-        mIconController.setIconVisibility(mSlotConnectedDisplay, false);
+        mIconController.setIconVisibility(mSlotCast, false);
+
+        // VoLTE is sourced from Android's public IMS registration/capability callbacks.
+        mIconController.setIcon(mSlotVolte, R.drawable.stat_sys_volte_mode_ready, null);
+        mIconController.setIconVisibility(mSlotVolte, false);
+        mVolteStateController.addCallback(mVolteCallback);
+
+        // Keep the factory legacy slots present in the logical queue. Android 16 no longer
+        // has the old global sync broadcaster, and CDMA ERI is supplied only when telephony
+        // publishes that standard state.
+        mIconController.setIcon(mSlotSyncActive, R.drawable.stat_sys_sync, null);
+        mIconController.setIconVisibility(mSlotSyncActive, false);
+        mIconController.setIcon(mSlotSyncFailing, R.drawable.stat_sys_sync_error, null);
+        mIconController.setIconVisibility(mSlotSyncFailing, false);
+        mIconController.setIcon(mSlotCdmaEri, R.drawable.stat_sys_roaming_cdma_0, null);
+        mIconController.setIconVisibility(mSlotCdmaEri, false);
 
         // hotspot
         mIconController.setIcon(mSlotHotspot, R.drawable.stat_sys_hotspot,
@@ -377,7 +428,13 @@ public class PhoneStatusBarPolicy
 
         // screen record
         mIconController.setIcon(mSlotScreenRecord, R.drawable.stat_sys_screen_record, null);
-        mIconController.setIconVisibility(mSlotScreenRecord, false);
+        final boolean screenRecordCallbacksSupported = !Flags.screenReactions();
+        mIconController.setIconVisibility(
+                mSlotScreenRecord,
+                screenRecordCallbacksSupported && mScreenRecordController.isRecording());
+        if (screenRecordCallbacksSupported) {
+            mScreenRecordController.addCallback(this);
+        }
 
         // firewall
         mIconController.setIcon(mSlotFirewall, R.drawable.stat_sys_firewall, null);
@@ -412,24 +469,7 @@ public class PhoneStatusBarPolicy
     }
 
     private void onMainActiveModeChanged(@Nullable ZenModeInfo mainActiveMode) {
-        boolean visible = mainActiveMode != null;
-        if (visible) {
-            // Shape=FIXED_SPACE because mode icons can be from 3P packages and may not be square;
-            // we don't want to allow apps to set incredibly wide icons and take up too much space
-            // in the status bar.
-            Icon.Loaded icon = mainActiveMode.getIcon();
-            mIconController.setResourceIcon(mSlotZen,
-                    icon.getPackageName(),
-                    icon.getResId(),
-                    icon.getDrawable(),
-                    mResources.getString(R.string.active_mode_content_description,
-                            mainActiveMode.getName()),
-                    StatusBarIcon.Shape.FIXED_SPACE);
-        }
-        if (visible != mZenVisible) {
-            mIconController.setIconVisibility(mSlotZen, visible);
-            mZenVisible = visible;
-        }
+        updateZenPresentation(mZenController.getZen());
     }
 
     // TODO: b/308591859 - Should be removed and use the ZenModeInteractor only.
@@ -449,10 +489,12 @@ public class PhoneStatusBarPolicy
     private void updateAlarm() {
         final AlarmClockInfo alarm = mAlarmManager.getNextAlarmClock(mUserTracker.getUserId());
         final boolean hasAlarm = alarm != null && alarm.getTriggerTime() > 0;
-        int zen = mZenController.getZen();
-        final boolean zenNone = zen == Global.ZEN_MODE_NO_INTERRUPTIONS;
-        mIconController.setIcon(mSlotAlarmClock, zenNone ? R.drawable.stat_sys_alarm_dim
-                : R.drawable.stat_sys_alarm, buildAlarmContentDescription());
+        int alarmIcon = R.drawable.stat_sys_alarm;
+        if (mZenController.getZen() == Settings.Global.ZEN_MODE_NO_INTERRUPTIONS) {
+            alarmIcon = R.drawable.stat_sys_alarm_dim;
+        }
+        mIconController.setIcon(mSlotAlarmClock, alarmIcon,
+                buildAlarmContentDescription());
         mIconController.setIconVisibility(mSlotAlarmClock, mCurrentUserSetup && hasAlarm);
     }
 
@@ -470,12 +512,46 @@ public class PhoneStatusBarPolicy
 
     private void updateVolumeZen() {
         int zen = mZenController.getZen();
+        updateZenPresentation(zen);
         updateRingerAndAlarmIcons(zen);
     }
 
+    private void updateZenPresentation(int zen) {
+        final boolean dndTileVisible =
+                Prefs.getBoolean(mContext, Prefs.Key.DND_TILE_VISIBLE, false);
+        final boolean combinedIcon =
+                Prefs.getBoolean(mContext, Prefs.Key.DND_TILE_COMBINED_ICON, false);
+        final boolean visible;
+        final int icon;
+        if (dndTileVisible || combinedIcon) {
+            visible = zen != Settings.Global.ZEN_MODE_OFF;
+            icon = zen == Settings.Global.ZEN_MODE_NO_INTERRUPTIONS
+                    ? R.drawable.stat_sys_dnd_total_silence
+                    : R.drawable.stat_sys_dnd;
+        } else if (zen == Settings.Global.ZEN_MODE_NO_INTERRUPTIONS) {
+            visible = true;
+            icon = R.drawable.stat_sys_zen_none;
+        } else if (zen == Settings.Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS) {
+            visible = true;
+            icon = R.drawable.stat_sys_zen_important;
+        } else {
+            visible = false;
+            icon = R.drawable.stat_sys_dnd;
+        }
+        if (visible) {
+            mIconController.setIcon(
+                    mSlotZen, icon, mResources.getString(R.string.quick_settings_dnd_label));
+        }
+        if (visible != mZenIconVisible) {
+            mIconController.setIconVisibility(mSlotZen, visible);
+            mZenIconVisible = visible;
+        }
+    }
+
     private void updateRingerAndAlarmIcons(int zen) {
-        boolean vibrateVisible = false;
-        boolean muteVisible = false;
+        int icon = 0;
+        String description = null;
+        boolean volumeVisible = false;
 
         NotificationManager.Policy consolidatedPolicy = mZenController.getConsolidatedPolicy();
         if (!ZenModeConfig.isZenOverridingRinger(zen, consolidatedPolicy)) {
@@ -483,21 +559,23 @@ public class PhoneStatusBarPolicy
                     mRingerModeTracker.getRingerModeInternal().getValue();
             if (ringerModeInternal != null) {
                 if (ringerModeInternal == AudioManager.RINGER_MODE_VIBRATE) {
-                    vibrateVisible = true;
+                    volumeVisible = true;
+                    icon = R.drawable.stat_sys_ringer_vibrate;
+                    description = mResources.getString(R.string.accessibility_ringer_vibrate);
                 } else if (ringerModeInternal == AudioManager.RINGER_MODE_SILENT) {
-                    muteVisible = true;
+                    volumeVisible = true;
+                    icon = R.drawable.stat_sys_ringer_silent;
+                    description = mResources.getString(R.string.accessibility_ringer_silent);
                 }
             }
         }
 
-        if (vibrateVisible != mVibrateVisible) {
-            mIconController.setIconVisibility(mSlotVibrate, vibrateVisible);
-            mVibrateVisible = vibrateVisible;
+        if (volumeVisible) {
+            mIconController.setIcon(mSlotVolume, icon, description);
         }
-
-        if (muteVisible != mMuteVisible) {
-            mIconController.setIconVisibility(mSlotMute, muteVisible);
-            mMuteVisible = muteVisible;
+        if (volumeVisible != mVolumeVisible) {
+            mIconController.setIconVisibility(mSlotVolume, volumeVisible);
+            mVolumeVisible = volumeVisible;
         }
 
         updateAlarm();
@@ -514,44 +592,53 @@ public class PhoneStatusBarPolicy
     }
 
     private final void updateBluetooth() {
-        int iconId = R.drawable.stat_sys_data_bluetooth_connected;
-        String contentDescription =
-                mResources.getString(R.string.accessibility_quick_settings_bluetooth_on);
-        boolean bluetoothVisible = false;
-        if (mBluetooth != null) {
-            if (mBluetooth.isBluetoothConnected()
-                    && (mBluetooth.isBluetoothAudioActive()
-                    || !mBluetooth.isBluetoothAudioProfileOnly())) {
-                int batteryLevel = mBluetooth.getBatteryLevel();
-                if (batteryLevel == 100) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_9;
-                } else if (batteryLevel >= 90) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_8;
-                } else if (batteryLevel >= 80) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_7;
-                } else if (batteryLevel >= 70) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_6;
-                } else if (batteryLevel >= 60) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_5;
-                } else if (batteryLevel >= 50) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_4;
-                } else if (batteryLevel >= 40) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_3;
-                } else if (batteryLevel >= 30) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_2;
-                } else if (batteryLevel >= 20) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_1;
-                } else if (batteryLevel >= 10) {
-                    iconId = R.drawable.stat_sys_data_bluetooth_connected_battery_0;
-                }
-                contentDescription = mResources.getString(
-                        R.string.accessibility_bluetooth_connected);
-                bluetoothVisible = mBluetooth.isBluetoothEnabled();
-            }
+        if (mBluetooth == null) return;
+        final boolean enabled = mBluetooth.isBluetoothEnabled();
+        boolean audioConnected = false;
+        boolean hidConnected = false;
+        for (CachedBluetoothDevice device : mBluetooth.getConnectedDevices()) {
+            audioConnected |= device.isConnectedProfile(BluetoothProfile.A2DP)
+                    || device.isConnectedProfile(BluetoothProfile.HEADSET)
+                    || device.isConnectedProfile(BluetoothProfile.HEARING_AID)
+                    || device.isConnectedProfile(BluetoothProfile.LE_AUDIO);
+            hidConnected |= device.isConnectedProfile(BluetoothProfile.HID_HOST);
         }
 
-        mIconController.setIcon(mSlotBluetooth, iconId, contentDescription);
-        mIconController.setIconVisibility(mSlotBluetooth, bluetoothVisible);
+        final boolean anyConnected = mBluetooth.isBluetoothConnected();
+        final int bluetoothIcon = (hidConnected || (anyConnected && !audioConnected))
+                ? R.drawable.stat_sys_data_bluetooth_connected
+                : R.drawable.stat_sys_data_bluetooth;
+        mIconController.setIcon(mSlotBluetooth, bluetoothIcon,
+                mResources.getString(anyConnected
+                        ? R.string.accessibility_bluetooth_connected
+                        : R.string.accessibility_quick_settings_bluetooth_on));
+        mIconController.setIconVisibility(mSlotBluetooth,
+                enabled && (!audioConnected || hidConnected));
+
+        mIconController.setIcon(mSlotBluetoothHeadset,
+                getBluetoothEarphoneIcon(mBluetooth.getBatteryLevel()),
+                mResources.getString(R.string.accessibility_bluetooth_connected));
+        mIconController.setIconVisibility(mSlotBluetoothHeadset,
+                enabled && audioConnected);
+    }
+
+    private int getBluetoothEarphoneIcon(int batteryLevel) {
+        if (batteryLevel < 0) {
+            return R.drawable.stat_sys_data_bluetooth_earphone;
+        }
+        final int[] batteryIcons = {
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_0,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_1,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_2,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_3,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_4,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_5,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_6,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_7,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_8,
+                R.drawable.stat_sys_data_bluetooth_earphonebattery_9,
+        };
+        return batteryIcons[Math.min(9, batteryLevel / 10)];
     }
 
     private final void updateTTY() {
@@ -607,9 +694,8 @@ public class PhoneStatusBarPolicy
                             accessibilityString = getManagedProfileAccessibilityString();
                         }
                         showIcon = true;
-                        mIconController.setIcon(mSlotManagedProfile,
-                                iconResId,
-                                accessibilityString);
+                        mIconController.setIcon(
+                                mSlotManagedProfile, iconResId, accessibilityString);
                     } else {
                         showIcon = false;
                     }
@@ -682,8 +768,10 @@ public class PhoneStatusBarPolicy
                                                 && (!mKeyguardStateController.isShowing()
                                                 || mKeyguardStateController.isOccluded())) {
                                             showIcon = true;
-                                            mIconController.setIcon(mSlotFirewall,
-                                                    R.drawable.stat_sys_firewall, null);
+                                            mIconController.setIcon(
+                                                    mSlotFirewall,
+                                                    R.drawable.stat_sys_firewall,
+                                                    null);
                                         } else {
                                             showIcon = false;
                                         }
@@ -796,38 +884,21 @@ public class PhoneStatusBarPolicy
 
     private void updateHeadsetPlug(Intent intent) {
         boolean connected = intent.getIntExtra("state", 0) != 0;
-        if (mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
-            mWiredHeadsetConnected = connected || hasWiredHeadsetDevice();
-            updateSosHeadsetIcon();
-            return;
-        }
-        boolean hasMic = intent.getIntExtra("microphone", 0) != 0;
-        if (connected) {
-            String contentDescription = mResources.getString(hasMic
-                    ? R.string.accessibility_status_bar_headset
-                    : R.string.accessibility_status_bar_headphones);
-            mIconController.setIcon(mSlotHeadset, hasMic ? R.drawable.stat_sys_headset_mic
-                    : R.drawable.stat_sys_headset, contentDescription);
-            mIconController.setIconVisibility(mSlotHeadset, true);
-        } else {
-            mIconController.setIconVisibility(mSlotHeadset, false);
-        }
+        mWiredHeadsetConnected = connected || hasWiredHeadsetDevice();
+        updateHeadsetPresentation();
     }
 
     private void updateHeadsetDeviceState() {
-        if (!mResources.getBoolean(R.bool.config_sos_legacy_shade)) {
-            return;
-        }
         mWiredHeadsetConnected = hasWiredHeadsetDevice();
-        updateSosHeadsetIcon();
+        updateHeadsetPresentation();
     }
 
-    private void updateSosHeadsetIcon() {
+    private void updateHeadsetPresentation() {
         if (mWiredHeadsetConnected) {
-            mIconController.setIcon(mSlotHeadset, R.drawable.stat_sys_normal_earphone,
+            mIconController.setIcon(mSlotNormalHeadset, R.drawable.stat_sys_normal_earphone,
                     mResources.getString(R.string.accessibility_status_bar_headphones));
         }
-        mIconController.setIconVisibility(mSlotHeadset, mWiredHeadsetConnected);
+        mIconController.setIconVisibility(mSlotNormalHeadset, mWiredHeadsetConnected);
     }
 
     private boolean hasWiredHeadsetDevice() {
@@ -947,6 +1018,23 @@ public class PhoneStatusBarPolicy
             Log.d(TAG, "connected_display: " + (visible ? "showing" : "hiding") + " icon");
         }
 
-        mIconController.setIconVisibility(mSlotConnectedDisplay, visible);
+        // Keep the last cast frame around briefly after disconnect, matching the factory R2
+        // policy and avoiding a one-frame hole while the display route is being torn down.
+        mHandler.removeCallbacks(mRemoveCastIconRunnable);
+        if (visible) {
+            mIconController.setIconVisibility(mSlotCast, true);
+        } else {
+            mHandler.postDelayed(mRemoveCastIconRunnable, 3000L);
+        }
+    }
+
+    @Override
+    public void onRecordingStart() {
+        mIconController.setIconVisibility(mSlotScreenRecord, true);
+    }
+
+    @Override
+    public void onRecordingEnd() {
+        mIconController.setIconVisibility(mSlotScreenRecord, false);
     }
 }

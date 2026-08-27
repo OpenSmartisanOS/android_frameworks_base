@@ -16,7 +16,6 @@
 
 package com.android.systemui.statusbar.pipeline.shared.domain.interactor
 
-import android.provider.Settings
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.systemui.SysuiTestCase
@@ -24,7 +23,6 @@ import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.kosmos.collectLastValue
 import com.android.systemui.kosmos.runTest
 import com.android.systemui.res.R
-import com.android.systemui.shared.settings.data.repository.fakeSecureSettingsRepository
 import com.android.systemui.testKosmos
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
@@ -45,9 +43,6 @@ class HomeStatusBarIconBlockListInteractorTest : SysuiTestCase() {
                 arrayOf("test1", "test2"),
             )
 
-            // GIVEN the vibrate is set to show (not blocked)
-            fakeSecureSettingsRepository.setInt(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, 1)
-
             val latest by collectLastValue(underTest.iconBlockList)
 
             // THEN the volume is not the blocklist
@@ -55,49 +50,17 @@ class HomeStatusBarIconBlockListInteractorTest : SysuiTestCase() {
         }
 
     @Test
-    fun iconBlockList_checksVolumeSetting() =
+    fun iconBlockList_neverBlocksFactoryVolumeSlot() =
         kosmos.runTest {
             // GIVEN a list of blocked icons
             overrideResource(
                 R.array.config_collapsed_statusbar_icon_blocklist,
-                arrayOf("test1", "test2"),
+                arrayOf("test1", "volume", "test2"),
             )
-
-            // GIVEN the vibrate icon is set to be hidden
-            fakeSecureSettingsRepository.setInt(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, 0)
 
             val latest by collectLastValue(underTest.iconBlockList)
 
-            // THEN the volume is in the blocklist
-            assertThat(latest).containsExactly("test1", "test2", "volume")
-        }
-
-    @Test
-    fun iconBlockList_updatesWithVolumeSetting() =
-        kosmos.runTest {
-            // GIVEN a list of blocked icons
-            overrideResource(
-                R.array.config_collapsed_statusbar_icon_blocklist,
-                arrayOf("test1", "test2"),
-            )
-
-            fakeSecureSettingsRepository.setInt(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, 0)
-
-            val latest by collectLastValue(underTest.iconBlockList)
-
-            // Initially blocked
-            assertThat(latest).containsExactly("test1", "test2", "volume")
-
-            // Setting updates
-            fakeSecureSettingsRepository.setInt(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, 1)
-
-            // Not blocked
+            // R2 owns the shared silent/vibrate icon and never lets the A16 setting suppress it.
             assertThat(latest).containsExactly("test1", "test2")
-
-            // Setting updates again
-            fakeSecureSettingsRepository.setInt(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, 0)
-
-            // ... blocked
-            assertThat(latest).containsExactly("test1", "test2", "volume")
         }
 }

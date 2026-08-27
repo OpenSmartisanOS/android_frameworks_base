@@ -16,7 +16,12 @@
 
 package com.android.systemui.statusbar.phone.ui;
 
+import android.graphics.PorterDuff;
+import android.view.View;
+import android.view.ViewParent;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import androidx.annotation.Nullable;
 
 import com.android.internal.statusbar.StatusBarIcon;
@@ -26,9 +31,9 @@ import com.android.systemui.kairos.KairosNetwork;
 import com.android.systemui.plugins.DarkIconDispatcher;
 import com.android.systemui.statusbar.StatusIconDisplayable;
 import com.android.systemui.statusbar.connectivity.ui.MobileContextProvider;
-import com.android.systemui.statusbar.phone.DemoStatusIcons;
 import com.android.systemui.statusbar.phone.StatusBarIconHolder;
 import com.android.systemui.statusbar.phone.StatusBarLocation;
+import com.android.systemui.statusbar.phone.SystemIconsView;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapter;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapterKairos;
 import com.android.systemui.statusbar.pipeline.wifi.ui.WifiUiAdapter;
@@ -46,10 +51,16 @@ import kotlinx.coroutines.CoroutineScope;
 @OptIn(markerClass = ExperimentalKairosApi.class)
 public class DarkIconManager extends IconManager {
     private final DarkIconDispatcher mDarkIconDispatcher;
-    private final int mIconHorizontalMargin;
-    private final boolean mUseSosIconGeometry;
-    @Nullable private Integer mSosKeyguardTint;
-    @Nullable private Integer mSosKeyguardForegroundTint;
+    @Nullable private Integer mKeyguardTint;
+    @Nullable private Integer mKeyguardForegroundTint;
+    @Nullable private final SystemIconsView mSystemIconsView;
+    private final java.util.ArrayList<View> mAccessoryViews = new java.util.ArrayList<>();
+    private final DarkIconDispatcher.DarkReceiver mAccessoryReceiver =
+            (areas, darkIntensity, tint) -> {
+                for (View view : mAccessoryViews) {
+                    applyAccessoryTint(view, DarkIconDispatcher.getTint(areas, view, tint));
+                }
+            };
 
     @AssistedInject
     public DarkIconManager(
@@ -70,49 +81,65 @@ public class DarkIconManager extends IconManager {
                 mobileContextProvider,
                 kairosNetwork,
                 appScope);
-        mIconHorizontalMargin = mContext.getResources().getDimensionPixelSize(
-                com.android.systemui.res.R.dimen.status_bar_icon_horizontal_margin);
-        mUseSosIconGeometry = mContext.getResources().getBoolean(
-                com.android.systemui.res.R.bool.config_sos_legacy_shade);
         mDarkIconDispatcher = darkIconDispatcher;
+        Object rawParent = linearLayout.getParent();
+        View parent = rawParent instanceof View ? (View) rawParent : null;
+        mSystemIconsView = parent == null ? null
+                : parent.findViewById(com.android.systemui.res.R.id.system_icons);
+        View statusBarRoot = linearLayout;
+        ViewParent ancestor = statusBarRoot.getParent();
+        while (ancestor instanceof View ancestorView) {
+            statusBarRoot = ancestorView;
+            if (statusBarRoot.getId() == com.android.systemui.res.R.id.status_bar) break;
+            ancestor = ancestorView.getParent();
+        }
+        // These two live outside SystemIconsView and therefore keep an independent left-side
+        // receiver. OTG and net speed are children of SystemIconsView and are tinted atomically.
+        addAccessory(statusBarRoot.findViewById(com.android.systemui.res.R.id.sidebar_drag));
+        addAccessory(statusBarRoot.findViewById(com.android.systemui.res.R.id.network_label));
+        if (!mAccessoryViews.isEmpty()) {
+            mDarkIconDispatcher.addDarkReceiver(mAccessoryReceiver);
+        }
     }
 
     @Override
     protected void onIconAdded(
             int index, String slot, boolean blocked, StatusBarIconHolder holder) {
         StatusIconDisplayable view = addHolder(index, slot, blocked, holder);
-        if (mSosKeyguardTint == null) {
+        if (mSystemIconsView != null) {
+            mSystemIconsView.applyCurrentTint(view);
+        } else if (mKeyguardTint == null) {
             mDarkIconDispatcher.addDarkReceiver(view);
         } else {
-            applySosTint(view);
+            applyTintOverride(view);
         }
-    }
-
-    @Override
-    protected LinearLayout.LayoutParams onCreateLayoutParams(StatusBarIcon.Shape shape) {
-        LinearLayout.LayoutParams lp = super.onCreateLayoutParams(shape);
-        if (!mUseSosIconGeometry) {
-            lp.setMargins(mIconHorizontalMargin, 0, mIconHorizontalMargin, 0);
-        }
-        return lp;
     }
 
     @Override
     protected void destroy() {
-        if (mSosKeyguardTint == null) {
-            for (int i = 0; i < mGroup.getChildCount(); i++) {
-                mDarkIconDispatcher.removeDarkReceiver(
-                        (DarkIconDispatcher.DarkReceiver) mGroup.getChildAt(i));
-            }
+        // Demo network overrides are process-wide and are cleared by IconManager only when the
+        // global Demo Mode session ends. Destroying one HOME/PANEL/display host during rotation or
+        // display removal must not reset the state still consumed by the remaining hosts.
+        if (!mAccessoryViews.isEmpty() && mKeyguardTint == null) {
+            mDarkIconDispatcher.removeDarkReceiver(mAccessoryReceiver);
         }
-        mGroup.removeAllViews();
+        if (mSystemIconsView == null && mKeyguardTint == null) {
+            forEachAttachedView(child -> {
+                if (child instanceof DarkIconDispatcher.DarkReceiver receiver) {
+                    mDarkIconDispatcher.removeDarkReceiver(receiver);
+                }
+            });
+        }
+        super.destroy();
     }
 
     @Override
     protected void onRemoveIcon(int viewIndex) {
-        if (mSosKeyguardTint == null) {
-            mDarkIconDispatcher.removeDarkReceiver(
-                    (DarkIconDispatcher.DarkReceiver) mGroup.getChildAt(viewIndex));
+        if (mSystemIconsView == null && mKeyguardTint == null) {
+            View child = getAttachedView(viewIndex);
+            if (child instanceof DarkIconDispatcher.DarkReceiver receiver) {
+                mDarkIconDispatcher.removeDarkReceiver(receiver);
+            }
         }
         super.onRemoveIcon(viewIndex);
     }
@@ -120,64 +147,94 @@ public class DarkIconManager extends IconManager {
     @Override
     public void onSetIcon(int viewIndex, StatusBarIcon icon) {
         super.onSetIcon(viewIndex, icon);
-        StatusIconDisplayable child = (StatusIconDisplayable) mGroup.getChildAt(viewIndex);
-        if (mSosKeyguardTint == null) {
-            mDarkIconDispatcher.applyDark((DarkIconDispatcher.DarkReceiver) child);
+        View attached = getAttachedView(viewIndex);
+        if (!(attached instanceof StatusIconDisplayable child)) {
+            return;
+        }
+        if (mSystemIconsView != null) {
+            mSystemIconsView.applyCurrentTint(child);
+        } else if (mKeyguardTint == null) {
+            if (attached instanceof DarkIconDispatcher.DarkReceiver receiver) {
+                mDarkIconDispatcher.applyDark(receiver);
+            }
         } else {
-            applySosTint(child);
+            applyTintOverride(child);
         }
     }
 
     /** Temporarily removes HOME icons from Monet/dark dispatch while R2 owns the status bar. */
-    public void setSosKeyguardTintOverride(
+    public void setKeyguardTintOverride(
             @Nullable Integer tint, @Nullable Integer foregroundTint) {
-        final boolean wasOverridden = mSosKeyguardTint != null;
+        final boolean wasOverridden = mKeyguardTint != null;
         final boolean willOverride = tint != null;
         if (wasOverridden == willOverride
-                && java.util.Objects.equals(mSosKeyguardTint, tint)
-                && java.util.Objects.equals(mSosKeyguardForegroundTint, foregroundTint)) {
+                && java.util.Objects.equals(mKeyguardTint, tint)
+                && java.util.Objects.equals(mKeyguardForegroundTint, foregroundTint)) {
             return;
         }
         if (!wasOverridden && willOverride) {
-            for (int i = 0; i < mGroup.getChildCount(); i++) {
-                mDarkIconDispatcher.removeDarkReceiver(
-                        (DarkIconDispatcher.DarkReceiver) mGroup.getChildAt(i));
+            if (mSystemIconsView == null) {
+                forEachAttachedView(child -> {
+                    if (child instanceof DarkIconDispatcher.DarkReceiver receiver) {
+                        mDarkIconDispatcher.removeDarkReceiver(receiver);
+                    }
+                });
+            }
+            if (!mAccessoryViews.isEmpty()) {
+                mDarkIconDispatcher.removeDarkReceiver(mAccessoryReceiver);
             }
         }
-        mSosKeyguardTint = tint;
-        mSosKeyguardForegroundTint = foregroundTint;
-        for (int i = 0; i < mGroup.getChildCount(); i++) {
-            StatusIconDisplayable child = (StatusIconDisplayable) mGroup.getChildAt(i);
+        mKeyguardTint = tint;
+        mKeyguardForegroundTint = foregroundTint;
+        if (mSystemIconsView != null) {
+            mSystemIconsView.setKeyguardTintOverride(tint, foregroundTint);
+        }
+        if (mSystemIconsView == null) {
+            forEachAttachedView(child -> {
+                if (!(child instanceof StatusIconDisplayable displayable)) {
+                    return;
+                }
+                if (willOverride) {
+                    applyTintOverride(displayable);
+                } else if (child instanceof DarkIconDispatcher.DarkReceiver receiver) {
+                    mDarkIconDispatcher.addDarkReceiver(receiver);
+                    mDarkIconDispatcher.applyDark(receiver);
+                }
+            });
+        }
+        if (!mAccessoryViews.isEmpty()) {
             if (willOverride) {
-                applySosTint(child);
+                for (View view : mAccessoryViews) {
+                    applyAccessoryTint(view, tint);
+                }
             } else {
-                mDarkIconDispatcher.addDarkReceiver((DarkIconDispatcher.DarkReceiver) child);
-                mDarkIconDispatcher.applyDark((DarkIconDispatcher.DarkReceiver) child);
+                mDarkIconDispatcher.addDarkReceiver(mAccessoryReceiver);
+                mDarkIconDispatcher.applyDark(mAccessoryReceiver);
             }
         }
     }
 
-    private void applySosTint(StatusIconDisplayable view) {
-        if (mSosKeyguardTint == null) return;
+    private void addAccessory(@Nullable View view) {
+        if (view != null && !mAccessoryViews.contains(view)) {
+            mAccessoryViews.add(view);
+        }
+    }
+
+    private static void applyAccessoryTint(View view, int tint) {
+        if (view instanceof TextView textView) {
+            textView.setTextColor(tint);
+        } else if (view instanceof ImageView imageView) {
+            imageView.setColorFilter(tint, PorterDuff.Mode.SRC_IN);
+        }
+    }
+
+    private void applyTintOverride(StatusIconDisplayable view) {
+        if (mKeyguardTint == null) return;
         view.setStaticDrawableColor(
-                mSosKeyguardTint,
-                mSosKeyguardForegroundTint != null
-                        ? mSosKeyguardForegroundTint : mSosKeyguardTint);
-        view.setDecorColor(mSosKeyguardTint);
-    }
-
-    @Override
-    protected DemoStatusIcons createDemoStatusIcons() {
-        DemoStatusIcons icons = super.createDemoStatusIcons();
-        mDarkIconDispatcher.addDarkReceiver(icons);
-
-        return icons;
-    }
-
-    @Override
-    protected void exitDemoMode() {
-        mDarkIconDispatcher.removeDarkReceiver(mDemoStatusIcons);
-        super.exitDemoMode();
+                mKeyguardTint,
+                mKeyguardForegroundTint != null
+                        ? mKeyguardForegroundTint : mKeyguardTint);
+        view.setDecorColor(mKeyguardTint);
     }
 
     /**  */

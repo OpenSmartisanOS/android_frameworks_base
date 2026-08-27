@@ -29,6 +29,7 @@ import com.android.internal.statusbar.StatusBarIcon
 import com.android.systemui.SysuiTestCase
 import com.android.systemui.kairos.ExperimentalKairosApi
 import com.android.systemui.kairos.KairosNetwork
+import com.android.systemui.res.R
 import com.android.systemui.statusbar.StatusBarIconView
 import com.android.systemui.statusbar.connectivity.ui.MobileContextProvider
 import com.android.systemui.statusbar.phone.StatusBarLocation
@@ -95,6 +96,21 @@ class IconManagerTest : SysuiTestCase() {
         assertThat(iconView.layoutParams.width).isNotEqualTo(ViewGroup.LayoutParams.WRAP_CONTENT)
         assertThat(iconView.layoutParams.width).isEqualTo(iconView.layoutParams.height)
         assertThat(iconView.scaleType).isEqualTo(ImageView.ScaleType.FIT_CENTER)
+    }
+
+    @Test
+    fun addIcon_defaultR2Host_mapsPlatformArtworkWithoutMutatingSharedIcon() {
+        val alarmSlot = context.getString(com.android.internal.R.string.status_bar_alarm_clock)
+        val sharedIcon =
+            newStatusBarIcon(StatusBarIcon.Shape.WRAP_CONTENT).apply {
+                icon = Icon.createWithResource(context, R.drawable.platform_stat_sys_alarm)
+            }
+
+        underTest.addIcon(0, alarmSlot, false, sharedIcon)
+
+        val displayed = (viewGroup.getChildAt(0) as StatusBarIconView).statusBarIcon
+        assertThat(displayed.icon.resId).isEqualTo(R.drawable.stat_sys_alarm)
+        assertThat(sharedIcon.icon.resId).isEqualTo(R.drawable.platform_stat_sys_alarm)
     }
 
     private fun newStatusBarIcon(shape: StatusBarIcon.Shape) =

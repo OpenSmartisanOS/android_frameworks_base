@@ -94,7 +94,7 @@ class MuteIconViewModelTest : SysuiTestCase() {
 
             val expected =
                 Icon.Resource(
-                    R.drawable.ic_speaker_mute,
+                    R.drawable.platform_ic_speaker_mute,
                     ContentDescription.Resource(R.string.accessibility_ringer_silent),
                 )
             assertThat(underTest.icon).isEqualTo(expected)

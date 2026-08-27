@@ -581,9 +581,7 @@
          status bar that are part of this list are never displayed. Each item in the list must be a
          string defined in core/res/res/config.xml to properly exclude the icon.
      -->
-    <string-array name="config_statusBarIconsToExclude" translatable="false">
-        <item>@*android:string/status_bar_rotate</item>
-    </string-array>
+    <string-array name="config_statusBarIconsToExclude" translatable="false" />
 
 
     <!-- Whether to show estimate in QS header. Default to false in case there's not enough
@@ -956,15 +954,11 @@
 
     <!-- Icons that don't show in a collapsed non-keyguard statusbar -->
     <string-array name="config_collapsed_statusbar_icon_blocklist" translatable="false">
-        <item>@*android:string/status_bar_volume</item>
-        <item>@*android:string/status_bar_alarm_clock</item>
         <item>@*android:string/status_bar_call_strength</item>
     </string-array>
 
     <!-- Icons that don't show in a collapsed statusbar on keyguard -->
     <string-array name="config_keyguard_statusbar_icon_blocklist" translatable="false">
-        <item>@*android:string/status_bar_volume</item>
-        <item>@*android:string/status_bar_alarm_clock</item>
         <item>@*android:string/status_bar_call_strength</item>
     </string-array>
 

@@ -90,19 +90,19 @@ constructor(
             val batteryRes =
                 if (batteryLevel in 0..100) {
                     when ((batteryLevel / 10).coerceAtMost(9)) {
-                        0 -> R.drawable.stat_sys_data_bluetooth_connected_battery_0
-                        1 -> R.drawable.stat_sys_data_bluetooth_connected_battery_1
-                        2 -> R.drawable.stat_sys_data_bluetooth_connected_battery_2
-                        3 -> R.drawable.stat_sys_data_bluetooth_connected_battery_3
-                        4 -> R.drawable.stat_sys_data_bluetooth_connected_battery_4
-                        5 -> R.drawable.stat_sys_data_bluetooth_connected_battery_5
-                        6 -> R.drawable.stat_sys_data_bluetooth_connected_battery_6
-                        7 -> R.drawable.stat_sys_data_bluetooth_connected_battery_7
-                        8 -> R.drawable.stat_sys_data_bluetooth_connected_battery_8
-                        else -> R.drawable.stat_sys_data_bluetooth_connected_battery_9
+                        0 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_0
+                        1 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_1
+                        2 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_2
+                        3 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_3
+                        4 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_4
+                        5 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_5
+                        6 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_6
+                        7 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_7
+                        8 -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_8
+                        else -> R.drawable.platform_stat_sys_data_bluetooth_connected_battery_9
                     }
                 } else {
-                    R.drawable.ic_bluetooth_connected
+                    R.drawable.platform_ic_bluetooth_connected
                 }
             Icon.Resource(
                 resId = batteryRes,

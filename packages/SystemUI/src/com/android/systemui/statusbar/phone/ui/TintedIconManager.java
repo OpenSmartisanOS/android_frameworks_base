@@ -16,18 +16,18 @@
 
 package com.android.systemui.statusbar.phone.ui;
 
-import android.view.View;
 import android.view.ViewGroup;
 
+import com.android.internal.statusbar.StatusBarIcon;
 import com.android.systemui.dagger.SysUISingleton;
 import com.android.systemui.dagger.qualifiers.Application;
 import com.android.systemui.kairos.ExperimentalKairosApi;
 import com.android.systemui.kairos.KairosNetwork;
 import com.android.systemui.statusbar.StatusIconDisplayable;
 import com.android.systemui.statusbar.connectivity.ui.MobileContextProvider;
-import com.android.systemui.statusbar.phone.DemoStatusIcons;
 import com.android.systemui.statusbar.phone.StatusBarIconHolder;
 import com.android.systemui.statusbar.phone.StatusBarLocation;
+import com.android.systemui.statusbar.phone.SystemIconsView;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapter;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapterKairos;
 import com.android.systemui.statusbar.pipeline.wifi.ui.WifiUiAdapter;
@@ -49,6 +49,7 @@ public class TintedIconManager extends IconManager {
     private int mColor;
     // To be used as the main tint in drawables that wish to have a layer
     private int mForegroundColor;
+    private final SystemIconsView mSystemIconsView;
 
     public TintedIconManager(
             ViewGroup group,
@@ -66,14 +67,32 @@ public class TintedIconManager extends IconManager {
                 mobileUiAdapter,
                 mobileUiAdapterKairos,
                 mobileContextProvider, kairosNetwork, appScope);
+        mSystemIconsView = group.getParent() instanceof android.view.View parent
+                ? parent.findViewById(com.android.systemui.res.R.id.system_icons) : null;
     }
 
     @Override
     protected void onIconAdded(int index, String slot, boolean blocked,
             StatusBarIconHolder holder) {
         StatusIconDisplayable view = addHolder(index, slot, blocked, holder);
-        view.setStaticDrawableColor(mColor, mForegroundColor);
-        view.setDecorColor(mColor);
+        if (mSystemIconsView != null) {
+            mSystemIconsView.applyCurrentTint(view);
+        } else {
+            view.setStaticDrawableColor(mColor, mForegroundColor);
+            view.setDecorColor(mColor);
+        }
+    }
+
+    @Override
+    public void onSetIcon(int viewIndex, StatusBarIcon icon) {
+        super.onSetIcon(viewIndex, icon);
+        if (mSystemIconsView == null) {
+            return;
+        }
+        android.view.View attached = getAttachedView(viewIndex);
+        if (attached instanceof StatusIconDisplayable displayable) {
+            mSystemIconsView.applyCurrentTint(displayable);
+        }
     }
 
     /**
@@ -89,24 +108,18 @@ public class TintedIconManager extends IconManager {
         mColor = tintColor;
         mForegroundColor = foregroundColor;
 
-        for (int i = 0; i < mGroup.getChildCount(); i++) {
-            View child = mGroup.getChildAt(i);
+        if (mSystemIconsView != null) {
+            mSystemIconsView.setStaticAppearance(tintColor, foregroundColor, false);
+            return;
+        }
+
+        forEachAttachedView(child -> {
             if (child instanceof StatusIconDisplayable icon) {
                 icon.setStaticDrawableColor(mColor, mForegroundColor);
                 icon.setDecorColor(mColor);
             }
-        }
+        });
 
-        if (mDemoStatusIcons != null) {
-            mDemoStatusIcons.setColor(tintColor, foregroundColor);
-        }
-    }
-
-    @Override
-    protected DemoStatusIcons createDemoStatusIcons() {
-        DemoStatusIcons icons = super.createDemoStatusIcons();
-        icons.setColor(mColor, mForegroundColor);
-        return icons;
     }
 
     @SysUISingleton

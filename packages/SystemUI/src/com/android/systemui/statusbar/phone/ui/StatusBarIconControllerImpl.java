@@ -506,6 +506,10 @@ public class StatusBarIconControllerImpl implements Tunable,
     public List<String> demoCommands() {
         List<String> s = new ArrayList<>();
         s.add(DemoMode.COMMAND_STATUS);
+        // The modern Wi-Fi/mobile repositories consume COMMAND_NETWORK directly.  Forward the
+        // same command to fixed R2 icon groups so their no-SIM and airplane siblings remain in
+        // the same demo transaction instead of showing stale real-device state.
+        s.add(DemoMode.COMMAND_NETWORK);
         return s;
     }
 

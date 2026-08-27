@@ -17,40 +17,24 @@
 package com.android.systemui.statusbar.pipeline.shared.domain.interactor
 
 import android.content.res.Resources
-import android.provider.Settings
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Main
 import com.android.systemui.res.R
-import com.android.systemui.shared.settings.data.repository.SecureSettingsRepository
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOf
 
 /** A place to define the blocklist/allowlist for home status bar icons */
 @SysUISingleton
 class HomeStatusBarIconBlockListInteractor
 @Inject
-constructor(@Main res: Resources, secureSettingsRepository: SecureSettingsRepository) {
+constructor(@Main res: Resources) {
     private val defaultBlockedIcons =
         res.getStringArray(R.array.config_collapsed_statusbar_icon_blocklist)
 
-    private val vibrateIconSlot = res.getString(com.android.internal.R.string.status_bar_volume)
+    private val volumeSlot = res.getString(com.android.internal.R.string.status_bar_volume)
 
-    /** Tracks the user setting [Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON] */
-    private val shouldShowVibrateIcon: Flow<Boolean> =
-        secureSettingsRepository.boolSetting(Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON, false)
-
+    /** The factory status bar always owns and displays its shared silent/vibrate slot. */
     val iconBlockList: Flow<List<String>> =
-        shouldShowVibrateIcon.map {
-            val defaultSet = defaultBlockedIcons.toMutableSet()
-            // It's possible that the vibrate icon was in the default blocklist, so we manually
-            // merge the setting and list
-            if (it) {
-                defaultSet.remove(vibrateIconSlot)
-            } else {
-                defaultSet.add(vibrateIconSlot)
-            }
-
-            defaultSet.toList()
-        }
+        flowOf(defaultBlockedIcons.filterNot { it == volumeSlot })
 }

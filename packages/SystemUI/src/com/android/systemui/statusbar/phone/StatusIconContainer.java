@@ -41,6 +41,7 @@ import com.android.systemui.statusbar.notification.stack.ViewState;
 import com.android.systemui.statusbar.phone.ui.StatusBarIconController;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -108,10 +109,10 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
 
     private void reloadDimens() {
         // This is the same value that StatusBarIconView uses
-        mIconDotFrameWidth = getResources().getDimensionPixelSize(
-                com.android.internal.R.dimen.status_bar_icon_size_sp);
+        StatusBarMetrics metrics = StatusBarGeometry.calculate(this);
+        mIconDotFrameWidth = metrics.getIconHeight();
         mDotPadding = getResources().getDimensionPixelSize(R.dimen.overflow_icon_dot_padding);
-        mIconSpacing = getResources().getDimensionPixelSize(R.dimen.status_bar_system_icon_spacing);
+        mIconSpacing = metrics.getItemMarginStart() + metrics.getItemMarginEnd();
         int radius = getResources().getDimensionPixelSize(R.dimen.overflow_dot_radius);
         mStaticDotDiameter = 2 * radius;
         mUnderflowWidth = mIconDotFrameWidth + (MAX_DOTS - 1) * (mStaticDotDiameter + mDotPadding);
@@ -158,10 +159,11 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
         mMeasureViews.clear();
         int widthMode = MeasureSpec.getMode(widthMeasureSpec);
         final int specWidth = MeasureSpec.getSize(widthMeasureSpec);
-        final int count = getChildCount();
+        final List<View> layoutChildren = getLayoutChildren();
+        final int count = layoutChildren.size();
         // Collect all of the views which want to be laid out
         for (int i = 0; i < count; i++) {
-            StatusIconDisplayable icon = (StatusIconDisplayable) getChildAt(i);
+            StatusIconDisplayable icon = (StatusIconDisplayable) layoutChildren.get(i);
             if (icon.isIconVisible() && !icon.isIconBlocked()
                     && !mIgnoredSlots.contains(icon.getSlot())) {
                 mMeasureViews.add((View) icon);
@@ -208,6 +210,18 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
             }
             return highest + getPaddingTop() + getPaddingBottom();
         }
+    }
+
+    /** Returns visual ordering without changing child indices used by the icon controller. */
+    protected List<View> getLayoutChildren() {
+        if (getChildCount() == 0) {
+            return Collections.emptyList();
+        }
+        ArrayList<View> children = new ArrayList<>(getChildCount());
+        for (int i = 0; i < getChildCount(); i++) {
+            children.add(getChildAt(i));
+        }
+        return children;
     }
 
     private int getMeasuredWidth(int widthMode, int specWidth, int totalWidth) {
@@ -325,14 +339,15 @@ public class StatusIconContainer extends AlphaOptimizedLinearLayout {
         float width = getWidth();
         float translationX = width - getPaddingEnd();
         float contentStart = getPaddingStart();
-        int childCount = getChildCount();
+        List<View> layoutChildren = getLayoutChildren();
+        int childCount = layoutChildren.size();
         // Underflow === don't show content until that index
         if (DEBUG) Log.d(TAG, "calculateIconTranslations: start=" + translationX
                 + " width=" + width + " underflow=" + mNeedsUnderflow);
 
         // Collect all of the states which want to be visible
         for (int i = childCount - 1; i >= 0; i--) {
-            View child = getChildAt(i);
+            View child = layoutChildren.get(i);
             StatusIconDisplayable iconView = (StatusIconDisplayable) child;
             StatusIconState childState = getViewStateFromChild(child);
 

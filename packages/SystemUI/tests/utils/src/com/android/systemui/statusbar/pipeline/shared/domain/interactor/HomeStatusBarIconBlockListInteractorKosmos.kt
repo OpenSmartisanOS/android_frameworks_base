@@ -17,15 +17,12 @@
 package com.android.systemui.statusbar.pipeline.shared.domain.interactor
 
 import android.content.res.mainResources
-import android.provider.Settings
 import com.android.systemui.kosmos.Kosmos
 import com.android.systemui.kosmos.testCase
 import com.android.systemui.res.R
-import com.android.systemui.shared.settings.data.repository.fakeSecureSettingsRepository
-import com.android.systemui.shared.settings.data.repository.secureSettingsRepository
 
 val Kosmos.homeStatusBarIconBlockListInteractor by
-    Kosmos.Fixture { HomeStatusBarIconBlockListInteractor(mainResources, secureSettingsRepository) }
+    Kosmos.Fixture { HomeStatusBarIconBlockListInteractor(mainResources) }
 
 /**
  * [icons] can be a list of icons that should appear on the blocklist. Note that this should be
@@ -33,23 +30,8 @@ val Kosmos.homeStatusBarIconBlockListInteractor by
  * is not reactive to resource changes.
  */
 suspend fun Kosmos.setHomeStatusBarIconBlockList(icons: List<String>) {
-    var volBlocked = false
-    val otherIcons = mutableListOf<String>()
-    icons.forEach { icon ->
-        if (icon.lowercase() == "volume") {
-            volBlocked = true
-        } else {
-            otherIcons.add(icon)
-        }
-    }
-
-    fakeSecureSettingsRepository.setInt(
-        Settings.Secure.STATUS_BAR_SHOW_VIBRATE_ICON,
-        if (volBlocked) 0 else 1,
-    )
-
     testCase.overrideResource(
         R.array.config_collapsed_statusbar_icon_blocklist,
-        otherIcons.toTypedArray(),
+        icons.toTypedArray(),
     )
 }

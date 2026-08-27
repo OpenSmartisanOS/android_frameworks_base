@@ -17,7 +17,6 @@
 package com.android.systemui.statusbar.phone
 
 import android.app.AlarmManager
-import android.app.AutomaticZenRule
 import android.app.NotificationManager
 import android.app.admin.DevicePolicyManager
 import android.app.admin.DevicePolicyResourcesManager
@@ -25,15 +24,12 @@ import android.content.SharedPreferences
 import android.net.Uri
 import android.os.UserManager
 import android.provider.Settings
-import android.service.notification.SystemZenRules
 import android.service.notification.ZenModeConfig
 import android.telecom.TelecomManager
 import android.testing.TestableLooper
 import android.testing.TestableLooper.RunWithLooper
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
-import com.android.internal.statusbar.StatusBarIcon
-import com.android.settingslib.notification.modes.TestModeBuilder
 import com.android.systemui.SysuiTestCase
 import com.android.systemui.broadcast.BroadcastDispatcher
 import com.android.systemui.display.domain.interactor.ConnectedDisplayInteractor
@@ -42,6 +38,7 @@ import com.android.systemui.display.domain.interactor.ConnectedDisplayInteractor
 import com.android.systemui.kosmos.testScope
 import com.android.systemui.privacy.PrivacyItemController
 import com.android.systemui.privacy.logging.PrivacyLogger
+import com.android.systemui.screenrecord.ScreenRecordUxController
 import com.android.systemui.settings.UserTracker
 import com.android.systemui.statusbar.CommandQueue
 import com.android.systemui.statusbar.phone.ui.StatusBarIconController
@@ -56,7 +53,6 @@ import com.android.systemui.statusbar.policy.RotationLockController
 import com.android.systemui.statusbar.policy.SensorPrivacyController
 import com.android.systemui.statusbar.policy.UserInfoController
 import com.android.systemui.statusbar.policy.ZenModeController
-import com.android.systemui.statusbar.policy.data.repository.fakeZenModeRepository
 import com.android.systemui.statusbar.policy.domain.interactor.zenModeInteractor
 import com.android.systemui.testKosmos
 import com.android.systemui.util.RingerModeTracker
@@ -78,6 +74,7 @@ import org.mockito.Captor
 import org.mockito.Mock
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.anyString
+import org.mockito.Mockito.atLeastOnce
 import org.mockito.Mockito.clearInvocations
 import org.mockito.Mockito.inOrder
 import org.mockito.Mockito.never
@@ -94,12 +91,10 @@ import org.mockito.kotlin.reset
 class PhoneStatusBarPolicyTest : SysuiTestCase() {
 
     private val kosmos = testKosmos()
-    private val zenModeRepository = kosmos.fakeZenModeRepository
-
     companion object {
-        private const val ZEN_SLOT = "zen"
         private const val ALARM_SLOT = "alarm"
-        private const val CONNECTED_DISPLAY_SLOT = "connected_display"
+        private const val CAST_SLOT = "cast"
+        private const val ZEN_SLOT = "zen"
         private const val MANAGED_PROFILE_SLOT = "managed_profile"
     }
 
@@ -128,6 +123,8 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
     private lateinit var ringerModeTracker: RingerModeTracker
     @Mock private lateinit var privacyItemController: PrivacyItemController
     @Mock private lateinit var privacyLogger: PrivacyLogger
+    @Mock private lateinit var volteStateController: VolteStateController
+    @Mock private lateinit var screenRecordController: ScreenRecordUxController
     @Captor
     private lateinit var alarmCallbackCaptor:
         ArgumentCaptor<NextAlarmController.NextAlarmChangeCallback>
@@ -241,8 +238,26 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
             fakeConnectedDisplayStateProvider.setState(State.CONNECTED)
             runCurrent()
 
-            verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, true)
+            verify(iconController).setIconVisibility(CAST_SLOT, true)
         }
+
+    @Test
+    fun initializesCanonicalPresentation() {
+        statusBarPolicy.init()
+
+        verify(iconController)
+            .setIcon(
+                eq(CAST_SLOT),
+                eq(com.android.systemui.res.R.drawable.stat_sys_cast),
+                any(),
+            )
+        verify(iconController, atLeastOnce())
+            .setIcon(
+                eq(ALARM_SLOT),
+                eq(com.android.systemui.res.R.drawable.stat_sys_alarm),
+                any(),
+            )
+    }
 
     @Test
     fun connectedDisplay_disconnected_iconHidden() =
@@ -252,8 +267,10 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
 
             fakeConnectedDisplayStateProvider.setState(State.DISCONNECTED)
             runCurrent()
+            testableLooper.moveTimeForward(3000)
+            testableLooper.processAllMessages()
 
-            verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, false)
+            verify(iconController).setIconVisibility(CAST_SLOT, false)
         }
 
     @Test
@@ -270,10 +287,10 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
             runCurrent()
 
             inOrder(iconController).apply {
-                verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, true)
-                verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, false)
-                verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, true)
+                verify(iconController).setIconVisibility(CAST_SLOT, true)
+                verify(iconController).setIconVisibility(CAST_SLOT, true)
             }
+            verify(iconController, never()).setIconVisibility(CAST_SLOT, false)
         }
 
     @Test
@@ -285,76 +302,42 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
             fakeConnectedDisplayStateProvider.setState(State.CONNECTED_SECURE)
             runCurrent()
 
-            verify(iconController).setIconVisibility(CONNECTED_DISPLAY_SLOT, true)
+            verify(iconController).setIconVisibility(CAST_SLOT, true)
         }
 
     @Test
-    fun zenModeInteractorActiveModeChanged_showsModeIcon() =
+    fun connectedDisplay_nonDefaultDisplayUsesCanonicalPresentation() =
         testScope.runTest {
+            statusBarPolicy = createStatusBarPolicy(displayId = 1)
             statusBarPolicy.init()
-            reset(iconController)
+            verify(volteStateController).addCallback(any())
+            verify(screenRecordController).addCallback(any())
+            clearInvocations(iconController)
 
-            zenModeRepository.addModes(
-                listOf(
-                    TestModeBuilder()
-                        .setId("bedtime")
-                        .setName("Bedtime Mode")
-                        .setType(AutomaticZenRule.TYPE_BEDTIME)
-                        .setActive(true)
-                        .setPackage(mContext.packageName)
-                        .setIconResId(android.R.drawable.ic_lock_lock)
-                        .build(),
-                    TestModeBuilder()
-                        .setId("other")
-                        .setName("Other Mode")
-                        .setType(AutomaticZenRule.TYPE_OTHER)
-                        .setActive(true)
-                        .setPackage(SystemZenRules.PACKAGE_ANDROID)
-                        .setIconResId(android.R.drawable.ic_media_play)
-                        .build(),
-                )
-            )
+            fakeConnectedDisplayStateProvider.setState(State.CONNECTED)
+            runCurrent()
+            fakeConnectedDisplayStateProvider.setState(State.DISCONNECTED)
             runCurrent()
 
-            verify(iconController).setIconVisibility(eq(ZEN_SLOT), eq(true))
-            verify(iconController)
-                .setResourceIcon(
-                    eq(ZEN_SLOT),
-                    eq(mContext.packageName),
-                    eq(android.R.drawable.ic_lock_lock),
-                    any(), // non-null
-                    eq("Bedtime Mode is on"),
-                    eq(StatusBarIcon.Shape.FIXED_SPACE),
-                )
-
-            zenModeRepository.deactivateMode("bedtime")
-            runCurrent()
-
-            verify(iconController)
-                .setResourceIcon(
-                    eq(ZEN_SLOT),
-                    eq(null),
-                    eq(android.R.drawable.ic_media_play),
-                    any(), // non-null
-                    eq("Other Mode is on"),
-                    eq(StatusBarIcon.Shape.FIXED_SPACE),
-                )
-
-            zenModeRepository.deactivateMode("other")
-            runCurrent()
-
-            verify(iconController).setIconVisibility(eq(ZEN_SLOT), eq(false))
+            verify(iconController).setIconVisibility(CAST_SLOT, true)
+            testableLooper.moveTimeForward(3000)
+            testableLooper.processAllMessages()
+            verify(iconController).setIconVisibility(CAST_SLOT, false)
         }
 
     @Test
-    fun zenModeControllerOnGlobalZenChanged_doesNotUpdateDndIcon() {
+    fun zenModeControllerOnGlobalZenChanged_updatesR2DndIcon() {
         statusBarPolicy.init()
         reset(iconController)
 
         zenModeController.setZen(Settings.Global.ZEN_MODE_IMPORTANT_INTERRUPTIONS, null, null)
 
-        verify(iconController, never()).setIconVisibility(eq(ZEN_SLOT), any())
-        verify(iconController, never()).setIcon(eq(ZEN_SLOT), anyInt(), any())
+        verify(iconController).setIcon(
+            eq(ZEN_SLOT),
+            eq(com.android.systemui.res.R.drawable.stat_sys_zen_important),
+            any(),
+        )
+        verify(iconController).setIconVisibility(eq(ZEN_SLOT), eq(true))
         verify(iconController, never())
             .setResourceIcon(eq(ZEN_SLOT), any(), any(), any(), any(), any())
     }
@@ -363,7 +346,7 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
         return AlarmManager.AlarmClockInfo(10L, null)
     }
 
-    private fun createStatusBarPolicy(): PhoneStatusBarPolicy {
+    private fun createStatusBarPolicy(displayId: Int = 0): PhoneStatusBarPolicy {
         return PhoneStatusBarPolicy(
             context,
             iconController,
@@ -389,13 +372,15 @@ class PhoneStatusBarPolicyTest : SysuiTestCase() {
             userTracker,
             devicePolicyManager,
             telecomManager,
-            /* displayId = */ 0,
+            displayId,
             sharedPreferences,
             dateFormatUtil,
             ringerModeTracker,
             privacyItemController,
             privacyLogger,
             fakeConnectedDisplayStateProvider,
+            volteStateController,
+            screenRecordController,
             kosmos.zenModeInteractor,
             kosmos.javaAdapter,
         )

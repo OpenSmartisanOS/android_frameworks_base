@@ -23,7 +23,10 @@ import static com.android.systemui.statusbar.phone.StatusBarIconHolder.TYPE_WIFI
 
 import android.annotation.Nullable;
 import android.content.Context;
+import android.graphics.drawable.Icon;
 import android.os.Bundle;
+import android.os.UserHandle;
+import android.provider.Settings;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
@@ -36,11 +39,15 @@ import com.android.internal.statusbar.StatusBarIcon.Shape;
 import com.android.systemui.demomode.DemoModeCommandReceiver;
 import com.android.systemui.kairos.ExperimentalKairosApi;
 import com.android.systemui.kairos.KairosNetwork;
+import com.android.systemui.res.R;
 import com.android.systemui.statusbar.BaseStatusBarFrameLayout;
 import com.android.systemui.statusbar.StatusBarIconView;
 import com.android.systemui.statusbar.StatusIconDisplayable;
 import com.android.systemui.statusbar.connectivity.ui.MobileContextProvider;
-import com.android.systemui.statusbar.phone.DemoStatusIcons;
+import com.android.systemui.statusbar.phone.NetworkSignalCluster;
+import com.android.systemui.statusbar.phone.NetworkClusterStateController;
+import com.android.systemui.statusbar.phone.DynamicIconPolicy;
+import com.android.systemui.statusbar.phone.StatusBarGeometry;
 import com.android.systemui.statusbar.phone.StatusBarIconHolder;
 import com.android.systemui.statusbar.phone.StatusBarIconHolder.BindableIconHolder;
 import com.android.systemui.statusbar.phone.StatusBarLocation;
@@ -48,11 +55,11 @@ import com.android.systemui.statusbar.pipeline.mobile.StatusBarMobileIconKairos;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapter;
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileUiAdapterKairos;
 import com.android.systemui.statusbar.pipeline.mobile.ui.binder.MobileIconsBinder;
-import com.android.systemui.statusbar.pipeline.mobile.ui.view.ModernStatusBarMobileView;
+import com.android.systemui.statusbar.pipeline.mobile.ui.view.SignalClusterView;
 import com.android.systemui.statusbar.pipeline.mobile.ui.viewmodel.MobileIconsViewModel;
 import com.android.systemui.statusbar.pipeline.shared.ui.view.ModernStatusBarView;
 import com.android.systemui.statusbar.pipeline.wifi.ui.WifiUiAdapter;
-import com.android.systemui.statusbar.pipeline.wifi.ui.view.ModernStatusBarWifiView;
+import com.android.systemui.statusbar.pipeline.wifi.ui.view.WifiView;
 import com.android.systemui.statusbar.pipeline.wifi.ui.viewmodel.LocationBasedWifiViewModel;
 import com.android.systemui.util.Assert;
 
@@ -67,6 +74,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * Turns info from StatusBarIconController into ImageViews in a ViewGroup.
@@ -94,11 +102,15 @@ public class IconManager implements DemoModeCommandReceiver {
     protected boolean mShouldLog = false;
     private StatusBarIconController mController;
     private final StatusBarLocation mLocation;
+    private final ArrayList<View> mAttachedViews = new ArrayList<>();
+    private final ArrayList<View> mSuppressedViews = new ArrayList<>();
+    private final Map<String, Integer> mDemoOverrides = new HashMap<>();
+    private final Map<StatusBarIconView, StatusBarIcon> mDemoOriginalIcons = new HashMap<>();
+    private NetworkSignalCluster mSignalCluster;
 
     // Enables SystemUI demo mode to take effect in this group
     protected boolean mDemoable = true;
     private boolean mIsInDemoMode;
-    protected DemoStatusIcons mDemoStatusIcons;
 
     protected ArrayList<String> mBlockList = new ArrayList<>();
 
@@ -116,6 +128,7 @@ public class IconManager implements DemoModeCommandReceiver {
         mMobileContextProvider = mobileContextProvider;
         mContext = group.getContext();
         mLocation = location;
+        mDemoable = true;
         mKairosNetwork = kairosNetwork;
         mAppScope = appScope;
 
@@ -172,6 +185,14 @@ public class IconManager implements DemoModeCommandReceiver {
         if (mBlockList.contains(slot)) {
             blocked = true;
         }
+        if (!DynamicIconPolicy.shouldCreateView(mContext, slot)) {
+            return addSuppressedIcon(index, slot);
+        }
+        String configuredHideList = Settings.Secure.getStringForUser(
+                mContext.getContentResolver(), StatusBarIconController.ICON_HIDE_LIST,
+                UserHandle.USER_CURRENT);
+        blocked |= DynamicIconPolicy.shouldApplyFactoryDefault(
+                mContext, slot, configuredHideList);
         return switch (holder.getType()) {
             case TYPE_ICON -> addIcon(index, slot, blocked, holder.getIcon());
             case TYPE_WIFI_NEW -> addNewWifiIcon(index, slot);
@@ -186,9 +207,37 @@ public class IconManager implements DemoModeCommandReceiver {
     protected StatusBarIconView addIcon(int index, String slot, boolean blocked,
             StatusBarIcon icon) {
         StatusBarIconView view = onCreateStatusBarIconView(slot, blocked);
-        view.set(icon);
-        mGroup.addView(view, index, onCreateLayoutParams(icon.shape));
+        view.set(iconForHost(slot, icon));
+        attachView(index, view, onCreateLayoutParams(icon.shape), slot);
+        applyDemoOverride(view);
         return view;
+    }
+
+    /**
+     * Converts process-wide icon state into the canonical artwork owned by this display host.
+     * The holder stays immutable because all attached display hosts consume the same state.
+     */
+    private StatusBarIcon iconForHost(String slot, StatusBarIcon source) {
+        if (source == null) {
+            return source;
+        }
+        int sourceResource = source.icon.getType() == Icon.TYPE_RESOURCE
+                ? source.icon.getResId() : 0;
+        int resourceId = DynamicIconPolicy.resourceForHost(mContext, slot, sourceResource);
+        if (resourceId == 0 || resourceId == sourceResource) {
+            return source;
+        }
+        StatusBarIcon result = source.clone();
+        result.icon = Icon.createWithResource(mContext, resourceId);
+        return result;
+    }
+
+    private StatusBarIconView addSuppressedIcon(int index, String slot) {
+        StatusBarIconView placeholder = onCreateStatusBarIconView(slot, true);
+        placeholder.setVisibility(View.GONE);
+        rememberAttachedView(index, placeholder);
+        mSuppressedViews.add(placeholder);
+        return placeholder;
     }
 
     /**
@@ -201,20 +250,14 @@ public class IconManager implements DemoModeCommandReceiver {
             int index) {
         mBindableIcons.put(holder.getSlot(), holder);
         ModernStatusBarView view = holder.getInitializer().createAndBind(mContext);
-        mGroup.addView(view, index, onCreateLayoutParams(Shape.WRAP_CONTENT));
-        if (mIsInDemoMode) {
-            mDemoStatusIcons.addBindableIcon(holder);
-        }
+        attachView(index, view, onCreateLayoutParams(Shape.WRAP_CONTENT), holder.getSlot());
         return view;
     }
 
     protected StatusIconDisplayable addNewWifiIcon(int index, String slot) {
-        ModernStatusBarWifiView view = onCreateModernStatusBarWifiView(slot);
-        mGroup.addView(view, index, onCreateLayoutParams(Shape.WRAP_CONTENT));
-
-        if (mIsInDemoMode) {
-            mDemoStatusIcons.addModernWifiView(mWifiViewModel);
-        }
+        StatusIconDisplayable view = WifiView.constructAndBind(mContext, slot, mWifiViewModel);
+        View child = (View) view;
+        attachView(index, child, onCreateLayoutParams(Shape.WRAP_CONTENT), slot);
 
         return view;
     }
@@ -225,17 +268,8 @@ public class IconManager implements DemoModeCommandReceiver {
             String slot,
             int subId
     ) {
-        BaseStatusBarFrameLayout view = onCreateModernStatusBarMobileView(slot, subId);
-        mGroup.addView(view, index, onCreateLayoutParams(Shape.WRAP_CONTENT));
-
-        if (mIsInDemoMode) {
-            Context mobileContext = mMobileContextProvider
-                    .getMobileContextForSub(subId, mContext);
-            mDemoStatusIcons.addModernMobileView(
-                    mobileContext,
-                    mMobileIconsViewModel.getLogger(),
-                    subId);
-        }
+        BaseStatusBarFrameLayout view = onCreateSignalClusterView(slot, subId);
+        attachView(index, view, onCreateLayoutParams(Shape.WRAP_CONTENT), slot);
 
         return view;
     }
@@ -244,37 +278,27 @@ public class IconManager implements DemoModeCommandReceiver {
         return new StatusBarIconView(mContext, slot, null, blocked);
     }
 
-    private ModernStatusBarWifiView onCreateModernStatusBarWifiView(String slot) {
-        return ModernStatusBarWifiView.constructAndBind(mContext, slot, mWifiViewModel);
-    }
-
-    private ModernStatusBarMobileView onCreateModernStatusBarMobileView(
-            String slot, int subId) {
+    private SignalClusterView onCreateSignalClusterView(String slot, int subId) {
         Context mobileContext = mMobileContextProvider.getMobileContextForSub(subId, mContext);
         if (StatusBarMobileIconKairos.isEnabled()) {
-            Pair<ModernStatusBarMobileView, Job> viewAndJob =
-                    ModernStatusBarMobileView.constructAndBind(
-                            mobileContext,
-                            mMobileUiAdapterKairos.get().getMobileIconsViewModel().getLogger(),
-                            slot,
-                            mMobileUiAdapterKairos.get().getMobileIconsViewModel()
-                                    .viewModelForSub(subId, mLocation),
-                            mAppScope,
-                            subId,
-                            mLocation,
-                            mKairosNetwork
-                    );
+            Pair<SignalClusterView, Job> viewAndJob = SignalClusterView.constructAndBind(
+                    mobileContext,
+                    mMobileUiAdapterKairos.get().getMobileIconsViewModel().getLogger(),
+                    slot,
+                    mMobileUiAdapterKairos.get().getMobileIconsViewModel().viewModelForSub(
+                            subId, mLocation),
+                    mAppScope,
+                    subId,
+                    mLocation,
+                    mKairosNetwork);
             mBindingJobs.put(subId, viewAndJob.getSecond());
             return viewAndJob.getFirst();
-        } else {
-            return ModernStatusBarMobileView
-                    .constructAndBind(
-                            mobileContext,
-                            mMobileIconsViewModel.getLogger(),
-                            slot,
-                            mMobileIconsViewModel.viewModelForSub(subId, mLocation)
-                    );
         }
+        return SignalClusterView.constructAndBind(
+                mobileContext,
+                mMobileIconsViewModel.getLogger(),
+                slot,
+                mMobileIconsViewModel.viewModelForSub(subId, mLocation));
     }
 
     protected LinearLayout.LayoutParams onCreateLayoutParams(Shape shape) {
@@ -286,39 +310,82 @@ public class IconManager implements DemoModeCommandReceiver {
     }
 
     protected void destroy() {
+        for (int i = mAttachedViews.size() - 1; i >= 0; i--) {
+            View view = mAttachedViews.get(i);
+            if (view == null) continue;
+            cancelBinding(view);
+            if (view.getParent() instanceof ViewGroup parent) {
+                parent.removeView(view);
+            }
+        }
+        mAttachedViews.clear();
+        mSuppressedViews.clear();
+        mDemoOriginalIcons.clear();
+        if (!mIsInDemoMode) {
+            mDemoOverrides.clear();
+        }
         mGroup.removeAllViews();
     }
 
     protected void reloadDimens() {
-        mIconSize = mContext.getResources().getDimensionPixelSize(
-                com.android.internal.R.dimen.status_bar_icon_size_sp);
+        mIconSize = StatusBarGeometry.calculate(mGroup).getIconHeight();
     }
 
     protected void onRemoveIcon(int viewIndex) {
-        if (mIsInDemoMode) {
-            mDemoStatusIcons.onRemoveIcon((StatusIconDisplayable) mGroup.getChildAt(viewIndex));
+        View view = getAttachedView(viewIndex);
+        mSuppressedViews.remove(view);
+        if (view instanceof StatusBarIconView iconView) {
+            mDemoOriginalIcons.remove(iconView);
         }
-        if (StatusBarMobileIconKairos.isEnabled()) {
-            View view = mGroup.getChildAt(viewIndex);
-            if (view instanceof ModernStatusBarMobileView) {
-                Job bindingJob = mBindingJobs.remove(((ModernStatusBarMobileView) view).getSubId());
-                if (bindingJob != null) {
-                    bindingJob.cancel(null);
-                }
+        cancelBinding(view);
+        if (viewIndex >= 0 && viewIndex < mAttachedViews.size()) {
+            mAttachedViews.remove(viewIndex);
+        }
+        if (view != null) {
+            NetworkSignalCluster cluster = findCluster();
+            if (cluster != null && cluster.hasAttached(view)) {
+                cluster.detach(view);
+            } else if (view.getParent() instanceof ViewGroup parent) {
+                parent.removeView(view);
             }
         }
-        mGroup.removeViewAt(viewIndex);
+    }
+
+    private void cancelBinding(@Nullable View view) {
+        if (!StatusBarMobileIconKairos.isEnabled() || view == null) return;
+        final int subId;
+        if (view instanceof SignalClusterView mobile) {
+            subId = mobile.getSubId();
+        } else {
+            return;
+        }
+        Job bindingJob = mBindingJobs.remove(subId);
+        if (bindingJob != null) bindingJob.cancel(null);
     }
 
     /** Called once an icon has been set. */
     public void onSetIcon(int viewIndex, StatusBarIcon icon) {
-        StatusBarIconView view = (StatusBarIconView) mGroup.getChildAt(viewIndex);
+        View attached = getAttachedView(viewIndex);
+        if (!(attached instanceof StatusBarIconView view)) {
+            return;
+        }
+        if (mSuppressedViews.contains(view)) {
+            return;
+        }
         ViewGroup.LayoutParams current = view.getLayoutParams();
         ViewGroup.LayoutParams desired = onCreateLayoutParams(icon.shape);
         if (desired.width != current.width || desired.height != current.height) {
             view.setLayoutParams(desired);
         }
-        view.set(icon);
+        if (mIsInDemoMode
+                && mDemoOverrides.containsKey(view.getSlot())) {
+            // Real policy updates remain authoritative and are restored when demo mode ends, but
+            // must not overwrite the active demo frame.
+            mDemoOriginalIcons.put(view, iconForHost(view.getSlot(), icon).clone());
+            setDemoIcon(view, mDemoOverrides.get(view.getSlot()));
+        } else {
+            view.set(iconForHost(view.getSlot(), icon));
+        }
     }
 
     /** Called once an icon holder has been set. */
@@ -342,51 +409,215 @@ public class IconManager implements DemoModeCommandReceiver {
         return mGroup.getContext().getDisplayId();
     }
 
+    @Nullable
+    public View findContentsRoot() {
+        View current = mGroup;
+        while (current != null) {
+            int id = current.getId();
+            if (id == R.id.status_bar_contents || id == R.id.shade_panel_status_bar_content
+                    || id == R.id.system_icons) {
+                if (id != R.id.system_icons) {
+                    return current;
+                }
+            }
+            Object parent = current.getParent();
+            current = parent instanceof View ? (View) parent : null;
+        }
+        return mGroup;
+    }
+
+    @Nullable
+    protected View getAttachedView(int viewIndex) {
+        if (viewIndex < 0 || viewIndex >= mAttachedViews.size()) {
+            return null;
+        }
+        return mAttachedViews.get(viewIndex);
+    }
+
+    protected int getAttachedViewCount() {
+        return mAttachedViews.size();
+    }
+
+    protected void forEachAttachedView(Consumer<View> consumer) {
+        for (int i = 0; i < mAttachedViews.size(); i++) {
+            View view = mAttachedViews.get(i);
+            if (view != null) {
+                consumer.accept(view);
+            }
+        }
+    }
+
+    private void attachView(int index, View view, ViewGroup.LayoutParams params, String slot) {
+        rememberAttachedView(index, view);
+        NetworkSignalCluster cluster = DynamicIconPolicy.shouldAttachToFixedCluster(mContext, slot)
+                ? findCluster() : null;
+        if (cluster != null) {
+            cluster.attach(view);
+            return;
+        }
+        int mergerIndex = mergerChildIndex(index);
+        mGroup.addView(view, Math.min(mergerIndex, mGroup.getChildCount()), params);
+    }
+
+    private void rememberAttachedView(int index, View view) {
+        while (mAttachedViews.size() < index) {
+            mAttachedViews.add(null);
+        }
+        if (index >= mAttachedViews.size()) {
+            mAttachedViews.add(view);
+        } else {
+            mAttachedViews.add(index, view);
+        }
+    }
+
+    private int mergerChildIndex(int attachedIndex) {
+        int childIndex = 0;
+        int limit = Math.min(attachedIndex, mAttachedViews.size());
+        for (int i = 0; i < limit; i++) {
+            View view = mAttachedViews.get(i);
+            if (view != null && view.getParent() == mGroup) {
+                childIndex++;
+            }
+        }
+        return childIndex;
+    }
+
+    @Nullable
+    private NetworkSignalCluster findCluster() {
+        if (mSignalCluster != null) {
+            return mSignalCluster;
+        }
+        ViewGroup parent = mGroup.getParent() instanceof ViewGroup
+                ? (ViewGroup) mGroup.getParent() : null;
+        if (parent != null) {
+            mSignalCluster = parent.findViewById(R.id.network_signal_cluster);
+        }
+        return mSignalCluster;
+    }
+
     @Override
     public void dispatchDemoCommand(String command, Bundle args) {
         if (!mDemoable) {
             return;
         }
 
-        mDemoStatusIcons.dispatchDemoCommand(command, args);
+        if (!mIsInDemoMode) return;
+        if (args.containsKey("nosim")) {
+            NetworkClusterStateController.get(mContext).setDemoNoSim(
+                    "show".equals(args.getString("nosim")));
+        }
+        if (args.containsKey("airplane")) {
+            NetworkClusterStateController.get(mContext).setDemoAirplane(
+                    "show".equals(args.getString("airplane")));
+        }
+        dispatchDemoCommand(args);
     }
 
     @Override
     public void onDemoModeStarted() {
         mIsInDemoMode = true;
-        if (mDemoStatusIcons == null) {
-            mDemoStatusIcons = createDemoStatusIcons();
-            mDemoStatusIcons.addModernWifiView(mWifiViewModel);
-            for (BindableIconHolder holder : mBindableIcons.values()) {
-                mDemoStatusIcons.addBindableIcon(holder);
-            }
-        }
-        mDemoStatusIcons.onDemoModeStarted();
+        NetworkClusterStateController.get(mContext).clearDemoOverrides();
+        mDemoOverrides.clear();
+        mDemoOriginalIcons.clear();
     }
 
     @Override
     public void onDemoModeFinished() {
-        if (mDemoStatusIcons != null) {
-            mDemoStatusIcons.onDemoModeFinished();
-            exitDemoMode();
-            mIsInDemoMode = false;
+        NetworkClusterStateController.get(mContext).clearDemoOverrides();
+        restoreDemoIcons();
+        mIsInDemoMode = false;
+    }
+
+    private void dispatchDemoCommand(Bundle args) {
+        String volume = args.getString("volume");
+        if (volume != null) {
+            updateDemoSlot(
+                    mContext.getString(com.android.internal.R.string.status_bar_volume),
+                    "vibrate".equals(volume) ? R.drawable.stat_sys_ringer_vibrate : 0);
+        }
+        String mute = args.getString("mute");
+        if (mute != null) {
+            updateDemoSlot(
+                    mContext.getString(com.android.internal.R.string.status_bar_volume),
+                    "show".equals(mute) ? R.drawable.stat_sys_ringer_silent : 0);
+        }
+        String zen = args.getString("zen");
+        if (zen != null) {
+            updateDemoSlot(
+                    mContext.getString(com.android.internal.R.string.status_bar_zen),
+                    "dnd".equals(zen) ? R.drawable.stat_sys_dnd : 0);
+        }
+        String bluetooth = args.getString("bluetooth");
+        if (bluetooth != null) {
+            updateDemoSlot(
+                    mContext.getString(com.android.internal.R.string.status_bar_bluetooth),
+                    "connected".equals(bluetooth)
+                            ? R.drawable.stat_sys_data_bluetooth_connected : 0);
+        }
+        updateDemoShowSlot(args, "alarm",
+                mContext.getString(com.android.internal.R.string.status_bar_alarm_clock),
+                R.drawable.stat_sys_alarm);
+        updateDemoShowSlot(args, "tty",
+                mContext.getString(com.android.internal.R.string.status_bar_tty),
+                R.drawable.stat_sys_tty_mode);
+        updateDemoShowSlot(args, "cast",
+                mContext.getString(com.android.internal.R.string.status_bar_cast),
+                R.drawable.stat_sys_cast);
+        updateDemoShowSlot(args, "hotspot",
+                mContext.getString(com.android.internal.R.string.status_bar_hotspot),
+                R.drawable.stat_sys_hotspot);
+    }
+
+    private void updateDemoShowSlot(Bundle args, String command, String slot, int iconId) {
+        String value = args.getString(command);
+        if (value != null) {
+            updateDemoSlot(slot, "show".equals(value) ? iconId : 0);
         }
     }
 
-    protected void exitDemoMode() {
-        mDemoStatusIcons.remove();
-        mDemoStatusIcons = null;
+    private void updateDemoSlot(String slot, int iconId) {
+        mDemoOverrides.put(slot, iconId);
+        for (View child : mAttachedViews) {
+            if (child instanceof StatusBarIconView iconView
+                    && slot.equals(iconView.getSlot())
+                    && !mSuppressedViews.contains(iconView)) {
+                applyDemoOverride(iconView);
+            }
+        }
     }
 
-    protected DemoStatusIcons createDemoStatusIcons() {
-        return new DemoStatusIcons(
-                (LinearLayout) mGroup,
-                mMobileIconsViewModel,
-                mLocation,
-                mIconSize,
-                mMobileUiAdapterKairos,
-                mKairosNetwork,
-                mAppScope
-        );
+    private void applyDemoOverride(StatusBarIconView view) {
+        if (!mIsInDemoMode) return;
+        Integer iconId = mDemoOverrides.get(view.getSlot());
+        if (iconId == null) return;
+        StatusBarIcon current = view.getStatusBarIcon();
+        if (current == null) return;
+        mDemoOriginalIcons.putIfAbsent(view, current.clone());
+        setDemoIcon(view, iconId);
     }
+
+    private void setDemoIcon(StatusBarIconView view, int iconId) {
+        StatusBarIcon current = view.getStatusBarIcon();
+        if (current == null) return;
+        StatusBarIcon demo = current.clone();
+        demo.visible = iconId != 0;
+        if (iconId != 0) {
+            demo.icon = Icon.createWithResource(mContext.getPackageName(), iconId);
+        }
+        view.set(demo);
+        if (iconId != 0) view.updateDrawable();
+    }
+
+    private void restoreDemoIcons() {
+        for (Map.Entry<StatusBarIconView, StatusBarIcon> entry
+                : mDemoOriginalIcons.entrySet()) {
+            if (mAttachedViews.contains(entry.getKey())) {
+                entry.getKey().set(entry.getValue());
+                entry.getKey().updateDrawable();
+            }
+        }
+        mDemoOriginalIcons.clear();
+        mDemoOverrides.clear();
+    }
+
 }
