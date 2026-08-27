@@ -435,6 +435,10 @@ public class AudioService extends IAudioService.Stub
     /** The controller for the volume UI. */
     private final VolumeController mVolumeController = new VolumeController();
 
+    /** Smartisan timed mute owns only stream mute states that it changed itself. */
+    private SosTimedMuteController mSosTimedMuteController;
+    private final ArraySet<Integer> mSosTimedMuteOwnedStreams = new ArraySet<>();
+
     /** Used only for testing to enable/disable the long press timeout volume actions. */
     private final AtomicBoolean mVolumeControllerLongPressEnabled = new AtomicBoolean(true);
 
@@ -1656,6 +1660,25 @@ public class AudioService extends IAudioService.Stub
             mAudioHandler = new AudioHandler(looper);
         }
 
+        mSosTimedMuteController = new SosTimedMuteController(mContext, mAudioHandler,
+                new SosTimedMuteController.Host() {
+                    @Override
+                    public int getCurrentUserId() {
+                        return AudioService.this.getCurrentUserId();
+                    }
+
+                    @Override
+                    public void applyTimedMute(boolean active) {
+                        applySosTimedMute(active);
+                    }
+
+                    @Override
+                    public void broadcastEffectiveRingerMode() {
+                        broadcastRingerMode(AudioManager.RINGER_MODE_CHANGED_ACTION,
+                                getRingerModeExternal());
+                    }
+                });
+
         mSoundDoseHelper = new SoundDoseHelper(this, mContext, mAudioHandler, mSettings,
                 mVolumeController);
 
@@ -1788,6 +1811,8 @@ public class AudioService extends IAudioService.Stub
                 sRingerAndZenModeMutedStreams, "onInitStreamsAndVolumes"));
         setRingerModeInt(getRingerModeInternal(), false);
 
+        mSosTimedMuteController.start();
+
         if (!disablePrescaleAbsoluteVolume()) {
             final float[] preScale = new float[3];
             preScale[0] = mContext.getResources().getFraction(
@@ -1877,6 +1902,8 @@ public class AudioService extends IAudioService.Stub
             intentFilter.addAction(Intent.ACTION_SCREEN_OFF);
         }
         intentFilter.addAction(Intent.ACTION_USER_SWITCHED);
+        intentFilter.addAction(Intent.ACTION_TIME_CHANGED);
+        intentFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);
         intentFilter.addAction(Intent.ACTION_USER_BACKGROUND);
         intentFilter.addAction(Intent.ACTION_USER_FOREGROUND);
         intentFilter.addAction(UsbManager.ACTION_USB_DEVICE_ATTACHED);
@@ -2453,6 +2480,9 @@ public class AudioService extends IAudioService.Stub
         // success
         sLifecycleLogger.enqueue(new EventLogger.StringEvent(
                 caller + ": initStreamVolume succeeded").printLog(ALOGI, TAG));
+        if (mSosTimedMuteController != null) {
+            mSosTimedMuteController.reapply();
+        }
     }
 
     /**
@@ -3446,7 +3476,8 @@ public class AudioService extends IAudioService.Stub
 
         // Broadcast the sticky intents
         synchronized (mSettingsLock) {
-            broadcastRingerMode(AudioManager.RINGER_MODE_CHANGED_ACTION, mRingerModeExternal);
+            broadcastRingerMode(AudioManager.RINGER_MODE_CHANGED_ACTION,
+                    getRingerModeExternal());
             broadcastRingerMode(AudioManager.INTERNAL_RINGER_MODE_CHANGED_ACTION, mRingerMode);
         }
 
@@ -4534,6 +4565,64 @@ public class AudioService extends IAudioService.Stub
         }
     }
 
+    /** Applies Smartisan timed mute without changing any persisted stream volume index. */
+    private void applySosTimedMute(boolean active) {
+        synchronized (mSettingsLock) {
+            synchronized (mVolumeStateLock) {
+                final ArrayList<Integer> changedStreams = new ArrayList<>();
+                if (active) {
+                    for (int i = 0; i < mStreamStates.size(); i++) {
+                        final VolumeStreamState vss = mStreamStates.valueAt(i);
+                        if (vss == null) continue;
+                        final int stream = vss.getStreamType();
+                        if (!isSosTimedMuteStream(stream) || !vss.isMutable() || vss.mIsMuted) {
+                            continue;
+                        }
+                        if (vss.mute(true, false, "SosTimedMute.enable")) {
+                            mSosTimedMuteOwnedStreams.add(stream);
+                            changedStreams.add(stream);
+                        }
+                    }
+                } else {
+                    for (int i = mSosTimedMuteOwnedStreams.size() - 1; i >= 0; i--) {
+                        final int stream = mSosTimedMuteOwnedStreams.valueAt(i);
+                        final VolumeStreamState vss = mStreamStates.get(stream);
+                        if (vss != null && vss.mIsMuted
+                                && vss.mute(false, false, "SosTimedMute.disable")) {
+                            changedStreams.add(stream);
+                        }
+                    }
+                    mSosTimedMuteOwnedStreams.clear();
+                }
+                changedStreams.forEach(stream -> {
+                    final VolumeStreamState vss = mStreamStates.get(stream);
+                    if (vss != null) {
+                        vss.doMute();
+                        broadcastMuteSetting(stream, vss.mIsMuted);
+                    }
+                });
+            }
+        }
+    }
+
+    private boolean isSosTimedMuteStream(int stream) {
+        return isSosTimedMuteStream(stream, mMuteAffectedStreams);
+    }
+
+    @VisibleForTesting
+    static boolean isSosTimedMuteStream(int stream, int muteAffectedStreams) {
+        if ((muteAffectedStreams & (1 << stream)) == 0) return false;
+        switch (stream) {
+            case AudioSystem.STREAM_VOICE_CALL:
+            case AudioSystem.STREAM_BLUETOOTH_SCO:
+            case AudioSystem.STREAM_ACCESSIBILITY:
+            case AudioSystem.STREAM_SYSTEM_ENFORCED:
+                return false;
+            default:
+                return true;
+        }
+    }
+
     private void broadcastMuteSetting(int streamType, boolean isMuted) {
         // Stream mute changed, fire the intent.
         Intent intent = new Intent(AudioManager.STREAM_MUTE_CHANGED_ACTION);
@@ -4597,7 +4686,7 @@ public class AudioService extends IAudioService.Stub
     private int getNewRingerMode(int stream, int index, int flags) {
         // setRingerMode does nothing if the device is single volume,so the value would be unchanged
         if (mIsSingleVolume) {
-            return getRingerModeExternal();
+            return getStoredRingerModeExternal();
         }
 
         // setting volume on ui sounds stream type also controls silent mode
@@ -4613,7 +4702,7 @@ public class AudioService extends IAudioService.Stub
             }
             return newRingerMode;
         }
-        return getRingerModeExternal();
+        return getStoredRingerModeExternal();
     }
 
     private boolean isAndroidNPlus(String caller) {
@@ -4631,10 +4720,10 @@ public class AudioService extends IAudioService.Stub
     }
 
     private boolean wouldToggleZenMode(int newMode) {
-        if (getRingerModeExternal() == AudioManager.RINGER_MODE_SILENT
+        if (getStoredRingerModeExternal() == AudioManager.RINGER_MODE_SILENT
                 && newMode != AudioManager.RINGER_MODE_SILENT) {
             return true;
-        } else if (getRingerModeExternal() != AudioManager.RINGER_MODE_SILENT
+        } else if (getStoredRingerModeExternal() != AudioManager.RINGER_MODE_SILENT
                 && newMode == AudioManager.RINGER_MODE_SILENT) {
             return true;
         }
@@ -6590,7 +6679,16 @@ public class AudioService extends IAudioService.Stub
 
     @Override
     public int getRingerModeExternal() {
+        final int stored;
         synchronized(mSettingsLock) {
+            stored = mRingerModeExternal;
+        }
+        return mSosTimedMuteController == null
+                ? stored : mSosTimedMuteController.getEffectiveRingerMode(stored);
+    }
+
+    private int getStoredRingerModeExternal() {
+        synchronized (mSettingsLock) {
             return mRingerModeExternal;
         }
     }
@@ -6690,7 +6788,7 @@ public class AudioService extends IAudioService.Stub
         try {
             synchronized (mSettingsLock) {
                 final int ringerModeInternal = getRingerModeInternal();
-                final int ringerModeExternal = getRingerModeExternal();
+                final int ringerModeExternal = getStoredRingerModeExternal();
                 if (external) {
                     setRingerModeExt(ringerMode);
                     int delegateModified = ringerMode;
@@ -6733,7 +6831,8 @@ public class AudioService extends IAudioService.Stub
             mRingerModeExternal = ringerMode;
         }
         // Send sticky broadcast
-        broadcastRingerMode(AudioManager.RINGER_MODE_CHANGED_ACTION, ringerMode);
+        broadcastRingerMode(AudioManager.RINGER_MODE_CHANGED_ACTION,
+                getRingerModeExternal());
     }
 
     /* package */ void updateRingerModeMutedStreams() {
@@ -6824,6 +6923,11 @@ public class AudioService extends IAudioService.Stub
         }
         sMuteLogger.enqueue(new AudioServiceEvents.RingerZenMutedStreamsEvent(
                 sRingerAndZenModeMutedStreams, "updateStreamMuteFromRingerMode"));
+        // Re-apply an active timed mute after platform ringer/Zen policy reaches its final state.
+        // Existing platform mutes remain unowned and are never undone when the timer expires.
+        if (mSosTimedMuteController != null) {
+            mSosTimedMuteController.reapply();
+        }
     }
 
     private boolean isAlarm(int streamType) {
@@ -6870,10 +6974,10 @@ public class AudioService extends IAudioService.Stub
         switch (getVibrateSetting(vibrateType)) {
 
             case AudioManager.VIBRATE_SETTING_ON:
-                return getRingerModeExternal() != AudioManager.RINGER_MODE_SILENT;
+                return getStoredRingerModeExternal() != AudioManager.RINGER_MODE_SILENT;
 
             case AudioManager.VIBRATE_SETTING_ONLY_SILENT:
-                return getRingerModeExternal() == AudioManager.RINGER_MODE_VIBRATE;
+                return getStoredRingerModeExternal() == AudioManager.RINGER_MODE_VIBRATE;
 
             case AudioManager.VIBRATE_SETTING_OFF:
                 // return false, even for incoming calls
@@ -10711,6 +10815,12 @@ public class AudioService extends IAudioService.Stub
                         return false;
                     }
                     mIsMuted = state;
+                    if ((src == null || !src.startsWith("SosTimedMute"))
+                            && mSosTimedMuteOwnedStreams.contains(mStreamType)) {
+                        // A real user/policy operation supersedes our temporary ownership. This
+                        // prevents expiry from undoing a later manual mute choice.
+                        mSosTimedMuteOwnedStreams.remove(mStreamType);
+                    }
                     if (apply) {
                         doMute();
                     }
@@ -11565,6 +11675,7 @@ public class AudioService extends IAudioService.Stub
                         0,
                         null, 0);
             } else if (action.equals(Intent.ACTION_USER_SWITCHED)) {
+                mSosTimedMuteController.prepareForUserChange();
                 // the current audio focus owner is likely no longer valid
                 final boolean audioDiscarded = mMediaFocusControl.maybeDiscardAudioFocusOwner();
                 if (audioDiscarded && mUserSwitchedReceived) {
@@ -11590,6 +11701,10 @@ public class AudioService extends IAudioService.Stub
                         0,
                         0,
                         getVssForStreamOrDefault(AudioSystem.STREAM_MUSIC), 0);
+                mSosTimedMuteController.onUserChanged();
+            } else if (action.equals(Intent.ACTION_TIME_CHANGED)
+                    || action.equals(Intent.ACTION_TIMEZONE_CHANGED)) {
+                mSosTimedMuteController.onTimeChanged();
             } else if (action.equals(Intent.ACTION_USER_BACKGROUND)) {
                 // Disable audio recording for the background user/profile
                 int userId = intent.getIntExtra(Intent.EXTRA_USER_HANDLE, -1);
@@ -15645,7 +15760,7 @@ public class AudioService extends IAudioService.Stub
         //       then ringtones should play even when the stream is muted.
         if (ringMyCar()
                 && maybeMutingFromVolume
-                && (getRingerModeExternal() == RINGER_MODE_VIBRATE)
+                && (getStoredRingerModeExternal() == RINGER_MODE_VIBRATE)
                 && (stream == AudioSystem.STREAM_RING)) {
             final boolean hasAlwaysRingDevice = mDeviceBroker.hasAlwaysRingDevice();
             if (hasAlwaysRingDevice) {
