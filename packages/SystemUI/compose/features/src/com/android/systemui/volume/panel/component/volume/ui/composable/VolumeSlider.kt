@@ -78,13 +78,11 @@ import com.android.systemui.haptics.slider.SliderHapticFeedbackFilter
 import com.android.systemui.haptics.slider.compose.ui.SliderHapticsViewModel
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.res.R
-import com.android.systemui.volume.dialog.sliders.ui.compose.SliderTrack
 import com.android.systemui.volume.haptics.ui.VolumeHapticsConfigsProvider
 import com.android.systemui.volume.panel.component.volume.slider.ui.viewmodel.SliderState
 import com.android.systemui.volume.ui.compose.slider.AccessibilityParams
 import com.android.systemui.volume.ui.compose.slider.Haptics
 import com.android.systemui.volume.ui.compose.slider.Slider
-import com.android.systemui.volume.ui.compose.slider.SliderIcon
 import com.google.common.annotations.VisibleForTesting
 import kotlin.math.round
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -161,51 +159,19 @@ fun VolumeSlider(
                             stateDescription = state.a11yStateDescription,
                         ),
                     track = { sliderState ->
-                        SliderTrack(
+                        // The full-screen volume panel is not the hardware-key volume dialog.
+                        // Keep its standalone Material track self-contained so the canonical R2
+                        // dialog does not retain a dependency on the removed AOSP dialog UI tree.
+                        SliderDefaults.Track(
                             sliderState = sliderState,
                             colors = materialSliderColors,
-                            isEnabled = state.isEnabled,
-                            trackSize = dimensions.trackHeight,
-                            activeTrackEndIcon =
-                                state.icon?.let { icon ->
-                                    { iconsState ->
-                                        SliderIcon(
-                                            icon = {
-                                                Icon(
-                                                    icon = icon,
-                                                    tint = null,
-                                                    modifier =
-                                                        Modifier.size(24.dp)
-                                                            .testTag(
-                                                                VolumeSlidersMotionTestKeys
-                                                                    .ACTIVE_ICON_TAG
-                                                            ),
-                                                )
-                                            },
-                                            isVisible = !iconsState.isInactiveTrackEndIconVisible,
-                                        )
-                                    }
-                                },
-                            inactiveTrackEndIcon =
-                                state.icon?.let { icon ->
-                                    { iconsState ->
-                                        SliderIcon(
-                                            icon = {
-                                                Icon(
-                                                    icon = icon,
-                                                    tint = null,
-                                                    modifier =
-                                                        Modifier.size(24.dp)
-                                                            .testTag(
-                                                                VolumeSlidersMotionTestKeys
-                                                                    .INACTIVE_ICON_TAG
-                                                            ),
-                                                )
-                                            },
-                                            isVisible = iconsState.isInactiveTrackEndIconVisible,
-                                        )
-                                    }
-                                },
+                            enabled = state.isEnabled,
+                            trackCornerSize = 12.dp,
+                            trackInsideCornerSize = 2.dp,
+                            drawStopIndicator = null,
+                            thumbTrackGapSize = 6.dp,
+                            drawTick = { _, _ -> },
+                            modifier = Modifier.height(dimensions.trackHeight),
                         )
                     },
                     thumb = { sliderState, interactionSource ->
