@@ -5469,6 +5469,15 @@ public final class Settings {
         @Readable
         public static final String MUTE_STREAMS_AFFECTED = "mute_streams_affected";
 
+        /** Whether Smartisan's R2 volume panel was last left expanded. @hide */
+        public static final String VOLUME_PANEL_IS_EXPANDED = "volume_panel_is_expanded";
+
+        /** Whether Smartisan's global timed mute is active for the current user. @hide */
+        public static final String VOLUME_PANEL_MUTE_ENABLE = "volume_panel_mute_enable";
+
+        /** Wall-clock deadline for Smartisan's global timed mute, or zero for no deadline. @hide */
+        public static final String MUTE_TIMEOUT = "mute_timeout";
+
         /**
          * Whether vibrate is on for different events. This is used internally,
          * changing this value will not change the vibrate. See AudioManager.
@@ -6879,6 +6888,9 @@ public final class Settings {
             PRIVATE_SETTINGS.add(PREFERRED_REGION);
             PRIVATE_SETTINGS.add(MOUSE_SCROLLING_ACCELERATION);
             PRIVATE_SETTINGS.add(MOUSE_SCROLLING_SPEED);
+            PRIVATE_SETTINGS.add(VOLUME_PANEL_IS_EXPANDED);
+            PRIVATE_SETTINGS.add(VOLUME_PANEL_MUTE_ENABLE);
+            PRIVATE_SETTINGS.add(MUTE_TIMEOUT);
         }
 
         /**
@@ -16050,6 +16062,14 @@ public final class Settings {
         */
         @Readable
         public static final String MODE_RINGER = "mode_ringer";
+
+        /**
+         * Whether Smartisan timed mute reports vibrate instead of silent and plays its
+         * confirmation haptic. This is a device-wide telephony preference.
+         * @hide
+         */
+        public static final String TELEPHONY_VIBRATION_ENABLED =
+                "telephony_vibration_enabled";
 
         /**
          * Whether or not Alarm stream should always be muted with Ringer.
