@@ -109,7 +109,8 @@ public class ViewTransformationHelper implements TransformableView,
         mViewTransformationAnimation.addUpdateListener(
                 animation -> transformTo(notification, animation.getAnimatedFraction()));
         mViewTransformationAnimation.setInterpolator(Interpolators.LINEAR);
-        mViewTransformationAnimation.setDuration(StackStateAnimator.ANIMATION_DURATION_STANDARD);
+        mViewTransformationAnimation.setDuration(
+                StackStateAnimator.ANIMATION_DURATION_CONTENT_TRANSFORM);
         mViewTransformationAnimation.addListener(new AnimatorListenerAdapter() {
             public boolean mCancelled;
 
@@ -183,7 +184,8 @@ public class ViewTransformationHelper implements TransformableView,
             }
         });
         mViewTransformationAnimation.setInterpolator(Interpolators.LINEAR);
-        mViewTransformationAnimation.setDuration(StackStateAnimator.ANIMATION_DURATION_STANDARD);
+        mViewTransformationAnimation.setDuration(
+                StackStateAnimator.ANIMATION_DURATION_CONTENT_TRANSFORM);
         mViewTransformationAnimation.start();
     }
 
