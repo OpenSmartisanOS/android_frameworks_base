@@ -31,6 +31,6 @@
           android:gravity="center"
           android:width="@dimen/ongoing_appops_dialog_icon_size"
           android:height="@dimen/ongoing_appops_dialog_icon_size"
-          android:drawable="@drawable/stat_sys_cast"
+          android:drawable="@drawable/platform_stat_sys_cast"
     />
 </layer-list>
