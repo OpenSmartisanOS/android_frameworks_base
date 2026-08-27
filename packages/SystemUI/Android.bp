@@ -260,7 +260,6 @@ filegroup {
         "tests/src/**/systemui/touch/TouchInsetManagerTest.java",
         "tests/src/**/systemui/util/LifecycleFragmentTest.java",
         "tests/src/**/systemui/util/sensors/ThresholdSensorImplTest.java",
-        "tests/src/**/systemui/volume/VolumeDialogImplTest.java",
         "tests/src/**/systemui/wallet/controller/QuickAccessWalletControllerTest.java",
         "tests/src/**/systemui/wallet/ui/WalletScreenControllerTest.java",
         "tests/src/**/systemui/accessibility/data/repository/AccessibilityQsShortcutsRepositoryImplForDeviceTest.kt",

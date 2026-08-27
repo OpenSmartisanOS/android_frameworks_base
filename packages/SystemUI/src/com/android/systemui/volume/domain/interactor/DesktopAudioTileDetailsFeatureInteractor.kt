@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.systemui.volume.dialog.domain.interactor
+package com.android.systemui.volume.domain.interactor
 
 import android.content.Context
 import com.android.systemui.dagger.SysUISingleton
@@ -23,15 +23,14 @@ import com.android.systemui.qs.flags.QsDetailedView
 import com.android.systemui.res.R
 import javax.inject.Inject
 
+/** Feature gate shared by the volume panel and media input/output backends. */
 @SysUISingleton
 class DesktopAudioTileDetailsFeatureInteractor
 @Inject
 constructor(@Application private val context: Context) {
-    private val isEnabled =
+    private val enabled =
         QsDetailedView.isEnabled &&
             context.resources.getBoolean(R.bool.config_enableDesktopAudioTileDetailsView)
 
-    fun isEnabled(): Boolean {
-        return isEnabled
-    }
+    fun isEnabled(): Boolean = enabled
 }

@@ -16,7 +16,7 @@
 
 package com.android.systemui.volume.panel.component.mediainput.domain
 
-import com.android.systemui.volume.dialog.domain.interactor.DesktopAudioTileDetailsFeatureInteractor
+import com.android.systemui.volume.domain.interactor.DesktopAudioTileDetailsFeatureInteractor
 import com.android.systemui.volume.panel.dagger.scope.VolumePanelScope
 import com.android.systemui.volume.panel.domain.ComponentAvailabilityCriteria
 import javax.inject.Inject

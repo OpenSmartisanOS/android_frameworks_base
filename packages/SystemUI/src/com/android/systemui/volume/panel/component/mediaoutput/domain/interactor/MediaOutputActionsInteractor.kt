@@ -31,7 +31,7 @@ import com.android.systemui.media.dialog.MediaOutputDialogManager
 import com.android.systemui.qs.panels.data.repository.QSPanelAppearanceRepository
 import com.android.systemui.res.R
 import com.android.systemui.statusbar.notification.stack.shared.model.ShadeScrimShape
-import com.android.systemui.volume.dialog.domain.interactor.DesktopAudioTileDetailsFeatureInteractor
+import com.android.systemui.volume.domain.interactor.DesktopAudioTileDetailsFeatureInteractor
 import com.android.systemui.volume.panel.component.mediaoutput.domain.model.MediaOutputComponentModel
 import com.android.systemui.volume.panel.dagger.scope.VolumePanelScope
 import javax.inject.Inject

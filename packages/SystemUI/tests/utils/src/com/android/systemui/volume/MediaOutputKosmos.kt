@@ -29,7 +29,7 @@ import com.android.systemui.util.mockito.mock
 import com.android.systemui.util.mockito.whenever
 import com.android.systemui.volume.data.repository.FakeLocalMediaRepository
 import com.android.systemui.volume.data.repository.FakeMediaControllerRepository
-import com.android.systemui.volume.dialog.domain.interactor.desktopAudioTileDetailsFeatureInteractor
+import com.android.systemui.volume.domain.interactor.desktopAudioTileDetailsFeatureInteractor
 import com.android.systemui.volume.panel.component.mediaoutput.data.repository.FakeLocalMediaRepositoryFactory
 import com.android.systemui.volume.panel.component.mediaoutput.domain.interactor.MediaDeviceSessionInteractor
 import com.android.systemui.volume.panel.component.mediaoutput.domain.interactor.MediaOutputActionsInteractor

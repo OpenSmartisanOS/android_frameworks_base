@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package com.android.systemui.volume.dialog.captions.domain
+package com.android.systemui.volume.domain.interactor
 
-import com.android.systemui.accessibility.domain.interactor.captioningInteractor
+import android.content.applicationContext
 import com.android.systemui.kosmos.Kosmos
-import com.android.systemui.kosmos.applicationCoroutineScope
 
-val Kosmos.volumeDialogCaptionsButtonInteractor by
-    Kosmos.Fixture {
-        VolumeDialogCaptionsButtonInteractor(
-            coroutineScope = applicationCoroutineScope,
-            captioningInteractor = captioningInteractor,
-        )
-    }
+val Kosmos.desktopAudioTileDetailsFeatureInteractor by
+    Kosmos.Fixture { DesktopAudioTileDetailsFeatureInteractor(applicationContext) }
