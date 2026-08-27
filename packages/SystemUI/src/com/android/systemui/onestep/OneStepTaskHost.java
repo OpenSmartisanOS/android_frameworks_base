@@ -496,6 +496,7 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
             setSceneInputEnabled(false);
             mTopArea.applyState(spec, taskCount);
             if (mRoot != null) mRoot.setAlpha(0f);
+            setPanelWindowVisible(false);
             return;
         }
         ensureWindow();
@@ -503,6 +504,7 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
             setSceneInputEnabled(false);
             mTopArea.hideImmediately();
             if (mRoot != null) mRoot.setAlpha(0f);
+            setPanelWindowVisible(false);
             if (spec.visible) {
                 Log.e(TAG, "Refusing partial OneStep scene; trusted windows are not ready");
                 final ISidebarService service = getSidebarService();
@@ -531,6 +533,7 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
             cancelPanelAnimation();
             setSceneInputEnabled(false);
             mRoot.setAlpha(0f);
+            setPanelWindowVisible(false);
         }
         if (mSwapVisualRunning) {
             // The in-scene transition layer owns the redraw while the real TaskViews exchange.
@@ -644,6 +647,10 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
                 PixelFormat.TRANSLUCENT);
         mLayoutParams.gravity = Gravity.TOP | Gravity.LEFT;
         mLayoutParams.setTitle("OneStepTaskPanel");
+        if (!mPanelSpec.visible) {
+            mLayoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        }
+        mLayoutParams.alpha = mPanelSpec.visible ? 1f : 0f;
         // The TaskView punches a hole in this SystemUI window so app input can reach the
         // embedded activity. Mark the surrounding panel as trusted; otherwise InputDispatcher
         // treats it as an obscuring overlay and drops touches inside the punched-out region.
@@ -1022,6 +1029,7 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
     private void showPanelForWmAnimation() {
         cancelPanelAnimation();
         if (mRoot == null) return;
+        setPanelWindowVisible(true);
         setSceneInputEnabled(true);
         mRoot.setAlpha(1f);
         mRoot.setTranslationX(0f);
@@ -1031,9 +1039,30 @@ final class OneStepTaskHostV2 implements OneStepTaskHost.Delegate {
 
     private void hidePanelAfterWmAnimation() {
         // WMS has committed the last reverse-animation frame and keeps the 2051 token off-screen.
-        // Leave the host VISIBLE so its three SurfaceViews remain attached; only revoke input.
+        // Leave the host VISIBLE so its three SurfaceViews remain attached, but hide the window
+        // surface itself. View alpha alone does not reliably affect embedded SurfaceView layers.
         setSceneInputEnabled(false);
         if (mRoot != null) mRoot.setAlpha(0f);
+        setPanelWindowVisible(false);
+    }
+
+    private void setPanelWindowVisible(boolean visible) {
+        if (mLayoutParams == null) return;
+        final float alpha = visible ? 1f : 0f;
+        final int oldFlags = mLayoutParams.flags;
+        if (visible) {
+            mLayoutParams.flags &= ~WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        } else {
+            mLayoutParams.flags |= WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE;
+        }
+        final boolean changed = mLayoutParams.alpha != alpha || oldFlags != mLayoutParams.flags;
+        mLayoutParams.alpha = alpha;
+        if (!changed || !mAttached || mRoot == null) return;
+        try {
+            mWindowManager.updateViewLayout(mRoot, mLayoutParams);
+        } catch (RuntimeException e) {
+            Log.w(TAG, "Unable to update OneStep task panel visibility", e);
+        }
     }
 
     private void setSceneInputEnabled(boolean enabled) {
