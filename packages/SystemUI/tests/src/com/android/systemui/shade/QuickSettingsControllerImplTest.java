@@ -182,6 +182,40 @@ public class QuickSettingsControllerImplTest extends QuickSettingsControllerImpl
     }
 
     @Test
+    public void shouldQuickSettingsIntercept_keyguard_offsetsHeaderByQsFrameTop() {
+        when(mQsFrame.getTop()).thenReturn(200);
+        when(mQsHeader.getTop()).thenReturn(20);
+        when(mQsHeader.getBottom()).thenReturn(80);
+        mQsController.setQs(mQs);
+        mQsController.setBarState(KEYGUARD);
+
+        assertThat(mQsController.shouldQuickSettingsIntercept(500, 50, 0)).isFalse();
+        assertThat(mQsController.shouldQuickSettingsIntercept(500, 250, 0)).isTrue();
+    }
+
+    @Test
+    public void shouldQuickSettingsIntercept_qsNotCreated_usesStatusBarHeight() {
+        when(mQsFrame.getTop()).thenReturn(200);
+        when(mQsFrame.getBottom()).thenReturn(1000);
+        mQsController.setStatusBarMinHeight(100);
+        mQsController.setQs(null);
+
+        assertThat(mQsController.shouldQuickSettingsIntercept(500, 250, 0)).isTrue();
+        assertThat(mQsController.shouldQuickSettingsIntercept(500, 500, 0)).isFalse();
+    }
+
+    @Test
+    public void canPanelCollapseOnQQS_qsNotCreated_usesStatusBarHeight() {
+        when(mQsFrame.getTop()).thenReturn(200);
+        when(mQsFrame.getBottom()).thenReturn(1000);
+        mQsController.setStatusBarMinHeight(100);
+        mQsController.setQs(null);
+
+        assertThat(mQsController.canPanelCollapseOnQQS(500, 250)).isTrue();
+        assertThat(mQsController.canPanelCollapseOnQQS(500, 500)).isFalse();
+    }
+
+    @Test
     public void handleTouch_qsTouchedWhileCollapsingDisablesTracking() {
         mQsController.handleTouch(
                 createMotionEvent(0, QS_FRAME_BOTTOM, ACTION_DOWN), false, false);
