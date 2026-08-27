@@ -1,0 +1,3 @@
+<!-- Platform status-bar artwork kept separate from the density-specific R2 resource. -->
+<inset xmlns:android="http://schemas.android.com/apk/res/android"
+    android:drawable="@drawable/platform_ic_bluetooth_connected" />
