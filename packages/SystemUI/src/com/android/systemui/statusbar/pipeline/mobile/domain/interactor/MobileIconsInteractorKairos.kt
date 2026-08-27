@@ -297,8 +297,7 @@ constructor(
 
     override val isStackable: State<Boolean> =
         if (
-            !context.resources.getBoolean(R.bool.config_sos_legacy_shade) &&
-                NewStatusBarIcons.isEnabled &&
+            false && NewStatusBarIcons.isEnabled &&
                 StatusBarRootModernization.isEnabled
         ) {
             icons.flatMap { iconsBySubId: Map<Int, MobileIconInteractorKairos> ->

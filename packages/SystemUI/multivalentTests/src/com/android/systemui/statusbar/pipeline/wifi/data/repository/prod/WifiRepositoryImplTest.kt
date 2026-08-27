@@ -19,6 +19,7 @@ package com.android.systemui.statusbar.pipeline.wifi.data.repository.prod
 import android.content.Context
 import android.content.pm.UserInfo
 import android.net.wifi.ScanResult
+import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.UNKNOWN_SSID
 import android.net.wifi.sharedconnectivity.app.NetworkProviderInfo
@@ -602,6 +603,30 @@ class WifiRepositoryImplTest : SysuiTestCase() {
             getCallback().onWifiEntriesChanged()
 
             assertThat((latest as WifiNetworkModel.Active).isValidated).isTrue()
+        }
+
+    @Test
+    fun wifiNetwork_active_carriesCurrentRssiAndWifiStandard() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.wifiNetwork)
+            val wifiInfo =
+                mock<WifiInfo>().apply {
+                    whenever(rssi).thenReturn(-67)
+                    whenever(wifiStandard).thenReturn(ScanResult.WIFI_STANDARD_11AX)
+                }
+            val wifiEntry =
+                mock<WifiEntry>().apply {
+                    whenever(isPrimaryNetwork).thenReturn(true)
+                    whenever(level).thenReturn(3)
+                }
+            whenever(wifiManager.connectionInfo).thenReturn(wifiInfo)
+            whenever(wifiPickerTracker.connectedWifiEntry).thenReturn(wifiEntry)
+
+            getCallback().onWifiEntriesChanged()
+
+            val active = latest as WifiNetworkModel.Active
+            assertThat(active.rssi).isEqualTo(-67)
+            assertThat(active.wifiStandard).isEqualTo(ScanResult.WIFI_STANDARD_11AX)
         }
 
     @Test

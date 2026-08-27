@@ -164,7 +164,7 @@ public class StatusBarSignalPolicy
         if (isAirplaneMode) {
             mIconController.setIcon(
                     mSlotAirplane,
-                    R.drawable.stat_sys_airplane_mode,
+                    R.drawable.stat_sys_signal_flightmode,
                     mContext.getString(R.string.accessibility_airplane_mode));
         }
     }

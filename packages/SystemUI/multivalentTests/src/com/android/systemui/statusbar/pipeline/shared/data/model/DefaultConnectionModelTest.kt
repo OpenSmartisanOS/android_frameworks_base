@@ -20,6 +20,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.SmallTest
 import com.android.systemui.SysuiTestCase
 import com.android.systemui.log.LogMessageImpl
+import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.DefaultTransport
 import com.google.common.truth.Truth.assertThat
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -27,6 +28,34 @@ import org.junit.runner.RunWith
 @SmallTest
 @RunWith(AndroidJUnit4::class)
 class DefaultConnectionModelTest : SysuiTestCase() {
+    @Test
+    fun legacyConstructionWithoutTransport_infersCompatibleDefaultTransport() {
+        assertThat(
+                DefaultConnectionModel(
+                        wifi = DefaultConnectionModel.Wifi(isDefault = true),
+                        isValidated = true,
+                    )
+                    .defaultTransport
+            )
+            .isEqualTo(DefaultTransport.WIFI)
+        assertThat(
+                DefaultConnectionModel(
+                        carrierMerged = DefaultConnectionModel.CarrierMerged(isDefault = true),
+                        isValidated = true,
+                    )
+                    .defaultTransport
+            )
+            .isEqualTo(DefaultTransport.MOBILE)
+        assertThat(
+                DefaultConnectionModel(
+                        isVpn = true,
+                        isValidated = true,
+                    )
+                    .defaultTransport
+            )
+            .isEqualTo(DefaultTransport.VPN)
+    }
+
     @Test
     fun messageInitializerAndPrinter_isValidatedFalse_hasCorrectInfo() {
         val model =
@@ -36,6 +65,7 @@ class DefaultConnectionModelTest : SysuiTestCase() {
                 DefaultConnectionModel.CarrierMerged(isDefault = true),
                 DefaultConnectionModel.Ethernet(isDefault = false),
                 isValidated = false,
+                defaultTransport = DefaultTransport.MOBILE,
             )
         val message = LogMessageImpl.create()
 
@@ -47,6 +77,8 @@ class DefaultConnectionModelTest : SysuiTestCase() {
         assertThat(messageString).contains("carrierMerged.isDefault=true")
         assertThat(messageString).contains("ethernet.isDefault=false")
         assertThat(messageString).contains("isValidated=false")
+        assertThat(messageString).contains("isVpn=false")
+        assertThat(messageString).contains("defaultTransport=MOBILE")
     }
 
     @Test
@@ -58,6 +90,7 @@ class DefaultConnectionModelTest : SysuiTestCase() {
                 DefaultConnectionModel.CarrierMerged(isDefault = false),
                 DefaultConnectionModel.Ethernet(isDefault = false),
                 isValidated = true,
+                defaultTransport = DefaultTransport.WIFI,
             )
         val message = LogMessageImpl.create()
 
@@ -69,5 +102,7 @@ class DefaultConnectionModelTest : SysuiTestCase() {
         assertThat(messageString).contains("carrierMerged.isDefault=false")
         assertThat(messageString).contains("ethernet.isDefault=false")
         assertThat(messageString).contains("isValidated=true")
+        assertThat(messageString).contains("isVpn=false")
+        assertThat(messageString).contains("defaultTransport=WIFI")
     }
 }

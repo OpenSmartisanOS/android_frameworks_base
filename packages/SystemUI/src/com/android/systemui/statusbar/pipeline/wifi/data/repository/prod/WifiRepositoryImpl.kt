@@ -19,6 +19,7 @@ package com.android.systemui.statusbar.pipeline.wifi.data.repository.prod
 import android.annotation.SuppressLint
 import android.content.Context
 import android.net.wifi.ScanResult
+import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.os.UserHandle
 import android.telephony.SubscriptionManager
@@ -388,6 +389,7 @@ constructor(
     }
 
     private fun WifiEntry.convertNormalToModel(): WifiNetworkModel {
+        val wifiInfo = wifiManager.connectionInfo
         val hotspotDeviceType =
             if (this is HotspotNetworkEntry) {
                 this.deviceType.toHotspotDeviceType()
@@ -399,6 +401,8 @@ constructor(
             isValidated = this.hasInternetAccess(),
             level = this.level,
             ssid = this.title,
+            rssi = wifiInfo?.rssi ?: WifiInfo.INVALID_RSSI,
+            wifiStandard = wifiInfo?.wifiStandard ?: ScanResult.WIFI_STANDARD_UNKNOWN,
             hotspotDeviceType = hotspotDeviceType,
         )
     }

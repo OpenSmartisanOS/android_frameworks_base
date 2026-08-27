@@ -24,6 +24,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED
 import android.net.NetworkCapabilities.TRANSPORT_CELLULAR
 import android.net.NetworkCapabilities.TRANSPORT_ETHERNET
+import android.net.NetworkCapabilities.TRANSPORT_VPN
 import android.net.NetworkCapabilities.TRANSPORT_WIFI
 import android.net.vcn.VcnTransportInfo
 import android.net.vcn.VcnUtils
@@ -43,6 +44,7 @@ import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlo
 import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlots
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.CarrierMerged
+import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.DefaultTransport
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.Ethernet
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.Mobile
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.Wifi
@@ -131,16 +133,48 @@ constructor(
             .stateIn(
                 scope,
                 started = SharingStarted.WhileSubscribed(),
-                initialValue = defaultHiddenIcons
+                initialValue = defaultHiddenIcons,
             )
 
-    private val defaultNetworkCapabilities: SharedFlow<NetworkCapabilities?> =
+    private data class DefaultNetworkState(
+        val network: Network?,
+        val capabilities: NetworkCapabilities?,
+    )
+
+    private val defaultNetworkState: SharedFlow<DefaultNetworkState> =
         conflatedCallbackFlow {
+                var currentNetwork: Network? = null
+
+                fun publishCurrentDefault(excludedNetwork: Network? = null) {
+                    val queriedNetwork =
+                        try {
+                            connectivityManager.activeNetwork
+                        } catch (_: RuntimeException) {
+                            null
+                        }
+                    val activeNetwork = queriedNetwork?.takeUnless { it == excludedNetwork }
+                    val capabilities =
+                        try {
+                            activeNetwork?.let(connectivityManager::getNetworkCapabilities)
+                        } catch (_: RuntimeException) {
+                            null
+                        }
+                    currentNetwork = activeNetwork
+                    trySend(DefaultNetworkState(activeNetwork, capabilities))
+                }
+
                 val callback =
                     object : ConnectivityManager.NetworkCallback(FLAG_INCLUDE_LOCATION_INFO) {
+                        override fun onAvailable(network: Network) {
+                            // Establish identity before capabilities arrive. An onLost callback for
+                            // the old default may legally be delivered after this callback.
+                            currentNetwork = network
+                        }
+
                         override fun onLost(network: Network) {
                             logger.logOnDefaultLost(network)
-                            trySend(null)
+                            if (network != currentNetwork) return
+                            publishCurrentDefault(excludedNetwork = network)
                         }
 
                         override fun onCapabilitiesChanged(
@@ -148,18 +182,24 @@ constructor(
                             networkCapabilities: NetworkCapabilities,
                         ) {
                             logger.logOnDefaultCapabilitiesChanged(network, networkCapabilities)
-                            trySend(networkCapabilities)
+                            // Ignore capabilities from the previous default after a newer
+                            // onAvailable established its identity.
+                            if (currentNetwork != null && network != currentNetwork) return
+                            currentNetwork = network
+                            trySend(DefaultNetworkState(network, networkCapabilities))
                         }
                     }
 
                 connectivityManager.registerDefaultNetworkCallback(callback)
+                publishCurrentDefault()
 
                 awaitClose { connectivityManager.unregisterNetworkCallback(callback) }
             }
-            .shareIn(scope, SharingStarted.WhileSubscribed())
+            .shareIn(scope, SharingStarted.WhileSubscribed(), replay = 1)
 
     override val vcnSubId: StateFlow<Int?> =
-        defaultNetworkCapabilities
+        defaultNetworkState
+            .map { it.capabilities }
             .map { networkCapabilities ->
                 networkCapabilities?.run {
                     val subId =
@@ -180,7 +220,8 @@ constructor(
 
     @SuppressLint("MissingPermission")
     override val defaultConnections: StateFlow<DefaultConnectionModel> =
-        defaultNetworkCapabilities
+        defaultNetworkState
+            .map { it.capabilities }
             .map { networkCapabilities ->
                 if (networkCapabilities == null) {
                     // The system no longer has a default network, so everything is
@@ -191,6 +232,8 @@ constructor(
                         CarrierMerged(isDefault = false),
                         Ethernet(isDefault = false),
                         isValidated = false,
+                        isVpn = false,
+                        defaultTransport = DefaultTransport.NONE,
                     )
                 } else {
                     val wifiInfo =
@@ -201,8 +244,19 @@ constructor(
                     val isMobileDefault = networkCapabilities.hasTransport(TRANSPORT_CELLULAR)
                     val isCarrierMergedDefault = wifiInfo?.isCarrierMerged == true
                     val isEthernetDefault = networkCapabilities.hasTransport(TRANSPORT_ETHERNET)
+                    val isVpn = networkCapabilities.hasTransport(TRANSPORT_VPN)
 
                     val isValidated = networkCapabilities.hasCapability(NET_CAPABILITY_VALIDATED)
+                    val defaultTransport =
+                        when {
+                            isVpn -> DefaultTransport.VPN
+                            isEthernetDefault -> DefaultTransport.ETHERNET
+                            isCarrierMergedDefault -> DefaultTransport.MOBILE
+                            networkCapabilities.hasTransport(TRANSPORT_WIFI) ->
+                                DefaultTransport.WIFI
+                            isMobileDefault -> DefaultTransport.MOBILE
+                            else -> DefaultTransport.OTHER
+                        }
 
                     DefaultConnectionModel(
                         Wifi(isWifiDefault),
@@ -210,6 +264,8 @@ constructor(
                         CarrierMerged(isCarrierMergedDefault),
                         Ethernet(isEthernetDefault),
                         isValidated,
+                        isVpn,
+                        defaultTransport,
                     )
                 }
             }

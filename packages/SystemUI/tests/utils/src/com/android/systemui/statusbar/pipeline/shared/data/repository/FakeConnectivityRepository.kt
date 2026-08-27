@@ -18,6 +18,7 @@ package com.android.systemui.statusbar.pipeline.shared.data.repository
 
 import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlot
 import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel
+import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.DefaultTransport
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -47,6 +48,7 @@ class FakeConnectivityRepository : ConnectivityRepository {
             DefaultConnectionModel(
                 mobile = DefaultConnectionModel.Mobile(default),
                 isValidated = validated,
+                defaultTransport = if (default) DefaultTransport.MOBILE else DefaultTransport.NONE,
             )
     }
 
@@ -57,6 +59,8 @@ class FakeConnectivityRepository : ConnectivityRepository {
             DefaultConnectionModel(
                 ethernet = DefaultConnectionModel.Ethernet(default),
                 isValidated = validated,
+                defaultTransport =
+                    if (default) DefaultTransport.ETHERNET else DefaultTransport.NONE,
             )
     }
 
@@ -66,6 +70,7 @@ class FakeConnectivityRepository : ConnectivityRepository {
             DefaultConnectionModel(
                 wifi = DefaultConnectionModel.Wifi(default),
                 isValidated = validated,
+                defaultTransport = if (default) DefaultTransport.WIFI else DefaultTransport.NONE,
             )
     }
 
@@ -76,6 +81,7 @@ class FakeConnectivityRepository : ConnectivityRepository {
                 wifi = DefaultConnectionModel.Wifi(default),
                 carrierMerged = DefaultConnectionModel.CarrierMerged(default),
                 isValidated = validated,
+                defaultTransport = if (default) DefaultTransport.MOBILE else DefaultTransport.NONE,
             )
     }
 }

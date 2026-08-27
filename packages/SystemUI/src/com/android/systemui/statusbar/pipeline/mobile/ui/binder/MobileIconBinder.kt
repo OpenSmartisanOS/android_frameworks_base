@@ -18,7 +18,6 @@ package com.android.systemui.statusbar.pipeline.mobile.ui.binder
 
 import android.annotation.ColorInt
 import android.content.res.ColorStateList
-import android.graphics.drawable.Animatable
 import android.view.View
 import android.view.View.GONE
 import android.view.View.VISIBLE
@@ -31,6 +30,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.android.app.tracing.coroutines.launchTraced as launch
+import com.android.settingslib.graph.SignalDrawable
 import com.android.systemui.Flags.statusBarStaticInoutIndicators
 import com.android.systemui.common.ui.binder.IconViewBinder
 import com.android.systemui.lifecycle.repeatWhenAttached
@@ -41,6 +41,7 @@ import com.android.systemui.statusbar.StatusBarIconView.STATE_HIDDEN
 import com.android.systemui.statusbar.core.NewStatusBarIcons
 import com.android.systemui.statusbar.pipeline.mobile.domain.model.SignalIconModel
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileViewLogger
+import com.android.systemui.statusbar.pipeline.mobile.ui.view.SignalClusterView
 import com.android.systemui.statusbar.pipeline.mobile.ui.viewmodel.LocationBasedMobileViewModel
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.ModernStatusBarViewBinding
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.ModernStatusBarViewVisibilityHelper
@@ -49,7 +50,9 @@ import com.android.systemui.statusbar.pipeline.shared.ui.binder.StatusBarViewBin
 import com.android.systemui.util.kotlin.pairwiseBy
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flowOf
 
 data class MobileIconColors(@ColorInt val tint: Int, @ColorInt val contrast: Int)
 
@@ -61,6 +64,7 @@ object MobileIconBinder {
         viewModel: LocationBasedMobileViewModel,
         @StatusBarIconView.VisibleState initialVisibilityState: Int = STATE_HIDDEN,
         logger: MobileViewLogger,
+        statusBarPresentation: Boolean = false,
     ): ModernStatusBarViewBinding {
         val mobileGroupView = view.requireViewById<ViewGroup>(R.id.mobile_group)
         val activityContainer = view.requireViewById<View>(R.id.inout_container)
@@ -73,6 +77,17 @@ object MobileIconBinder {
         val roamingSpace = view.requireViewById<Space>(R.id.mobile_roaming_space)
         val endSideRoamingView = view.requireViewById<ImageView>(R.id.mobile_roaming_updated)
         val dotView = view.requireViewById<StatusBarIconView>(R.id.status_bar_dot)
+        val useStatusBarPresentation = statusBarPresentation
+        val statusBarView = view as? SignalClusterView
+        val wifiDefault = statusBarView?.wifiDefault ?: flowOf(false)
+        val mobileDrawable =
+            if (useStatusBarPresentation) null
+            else SignalDrawable(view.context).also { iconView.setImageDrawable(it) }
+        if (useStatusBarPresentation) {
+            roamingView.isVisible = false
+            roamingSpace.isVisible = false
+            endSideRoamingView.isVisible = false
+        }
 
         view.isVisible = viewModel.isVisible.value
         iconView.isVisible = true
@@ -158,19 +173,21 @@ object MobileIconBinder {
                                         shouldRequestLayout = shouldRequestLayout,
                                     )
                                     val level = newIcon.level.coerceIn(0, 5)
-                                    val carrierChange = newIcon.carrierNetworkChange
-                                    (iconView.drawable as? Animatable)?.stop()
-                                    val iconRes =
-                                        SosSignalIconResource.resolve(
-                                            context = view.context,
-                                            subscriptionId = viewModel.subscriptionId,
-                                            level = level,
-                                            showExclamationMark = newIcon.showExclamationMark,
-                                            carrierNetworkChange = carrierChange,
+                                    if (useStatusBarPresentation) {
+                                        val carrierChange = newIcon.carrierNetworkChange
+                                        val statusBarView = view as? SignalClusterView
+                                        statusBarView?.renderSignal(
+                                            level,
+                                            newIcon.showExclamationMark,
+                                            carrierChange,
                                         )
-                                    if (iconRes != 0) {
-                                        iconView.setImageResource(iconRes)
-                                        if (carrierChange) (iconView.drawable as? Animatable)?.start()
+                                    } else {
+                                        mobileDrawable?.let {
+                                            if (iconView.drawable !== it) {
+                                                iconView.setImageDrawable(it)
+                                            }
+                                            it.level = packedSignalDrawableState
+                                        }
                                     }
                                     viewModel.verboseLogger?.logBinderSignalIconResult(
                                         parentView = view,
@@ -200,19 +217,60 @@ object MobileIconBinder {
 
                     // Set the network type icon
                     launch {
-                        viewModel.networkTypeIcon.distinctUntilChanged().collect { dataTypeId ->
-                            viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
-                                view,
-                                viewModel.subscriptionId,
-                                dataTypeId,
-                            )
-                            dataTypeId?.let { IconViewBinder.bind(dataTypeId, networkTypeView) }
-                            val prevVis = networkTypeContainer.visibility
-                            networkTypeContainer.visibility =
-                                if (dataTypeId != null) VISIBLE else GONE
+                        if (useStatusBarPresentation) {
+                            combine(
+                                    viewModel.networkTypeIcon,
+                                    viewModel.roaming,
+                                    wifiDefault,
+                                ) { dataTypeId, isRoaming, wifiDefault ->
+                                    Triple(dataTypeId, isRoaming, wifiDefault)
+                                }
+                                .distinctUntilChanged()
+                                .collect { (dataTypeId, isRoaming, wifiDefault) ->
+                                    viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
+                                        view,
+                                        viewModel.subscriptionId,
+                                        dataTypeId,
+                                    )
+                                    dataTypeId?.let {
+                                        IconViewBinder.bind(
+                                            SignalIconResource.resolveNetworkType(it),
+                                            networkTypeView,
+                                        )
+                                    }
+                                    val prevVis = networkTypeContainer.visibility
+                                    // R2: hide RAT when Wi-Fi is the default network and not roaming.
+                                    networkTypeContainer.visibility =
+                                        if (
+                                            SignalIconResource.shouldShowRat(
+                                                hasDataType = dataTypeId != null,
+                                                roaming = isRoaming,
+                                                wifiDefault = wifiDefault,
+                                            )
+                                        ) {
+                                            VISIBLE
+                                        } else {
+                                            GONE
+                                        }
+                                    if (prevVis != networkTypeContainer.visibility) {
+                                        view.requestLayout()
+                                    }
+                                }
+                        } else {
+                            viewModel.networkTypeIcon.distinctUntilChanged().collect { dataTypeId ->
+                                viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
+                                    view,
+                                    viewModel.subscriptionId,
+                                    dataTypeId,
+                                )
+                                dataTypeId?.let { IconViewBinder.bind(it, networkTypeView) }
+                                val prevVis = networkTypeContainer.visibility
+                                networkTypeContainer.visibility =
+                                    if (dataTypeId != null) VISIBLE else GONE
 
-                            if (prevVis != networkTypeContainer.visibility) {
-                                view.requestLayout()
+                                if (prevVis != networkTypeContainer.visibility) {
+                                    view.requestLayout()
+                                }
                             }
                         }
                     }
@@ -220,10 +278,12 @@ object MobileIconBinder {
                     // Set the network type background
                     launch {
                         viewModel.networkTypeBackground.collect { background ->
-                            networkTypeContainer.setBackgroundResource(background?.resId ?: 0)
+                            networkTypeContainer.setBackgroundResource(
+                                if (useStatusBarPresentation) 0 else background?.resId ?: 0
+                            )
 
                             // Tint will invert when this bit changes
-                            if (background?.resId != null) {
+                            if (!useStatusBarPresentation && background?.resId != null) {
                                 networkTypeContainer.backgroundTintList =
                                     ColorStateList.valueOf(iconTint.value.tint)
                                 networkTypeView.imageTintList =
@@ -235,10 +295,15 @@ object MobileIconBinder {
                         }
                     }
 
-                    // Set the roaming indicator
+                    // R2 distribution build keeps the original standalone roaming layer.
                     launch {
                         viewModel.roaming.distinctUntilChanged().collect { isRoaming ->
-                            if (NewStatusBarIcons.isEnabled) {
+                            if (useStatusBarPresentation) {
+                                roamingView.setImageResource(R.drawable.stat_sys_roaming)
+                                roamingView.isVisible = isRoaming
+                                roamingSpace.isVisible = isRoaming
+                                endSideRoamingView.isVisible = false
+                            } else if (NewStatusBarIcons.isEnabled) {
                                 endSideRoamingView.isVisible = isRoaming
                             } else {
                                 roamingView.isVisible = isRoaming
@@ -247,7 +312,32 @@ object MobileIconBinder {
                         }
                     }
 
-                    if (statusBarStaticInoutIndicators()) {
+                    if (useStatusBarPresentation) {
+                        launch {
+                            combine(
+                                    viewModel.activityInVisible,
+                                    viewModel.activityOutVisible,
+                                    viewModel.roaming,
+                                    viewModel.networkTypeIcon,
+                                ) { hasActivityIn, hasActivityOut, isRoaming, dataTypeId ->
+                                    SignalIconResource.resolveActivity(
+                                        hasActivityIn,
+                                        hasActivityOut,
+                                        isRoaming,
+                                        dataTypeId != null,
+                                    )
+                                }
+                                .distinctUntilChanged()
+                                .collect { activityRes ->
+                                    if (activityRes != 0) {
+                                        activityIn.setImageResource(activityRes)
+                                    }
+                                    activityIn.isVisible = activityRes != 0
+                                    activityOut.isVisible = false
+                                    activityContainer.isVisible = activityRes != 0
+                                }
+                        }
+                    } else if (statusBarStaticInoutIndicators()) {
                         // Set the opacity of the activity indicators
                         launch {
                             viewModel.activityInVisible.collect { visible ->
@@ -271,9 +361,11 @@ object MobileIconBinder {
                         }
                     }
 
-                    launch {
-                        viewModel.activityContainerVisible.collect {
-                            activityContainer.isVisible = it
+                    if (!useStatusBarPresentation) {
+                        launch {
+                            viewModel.activityContainerVisible.collect {
+                                activityContainer.isVisible = it
+                            }
                         }
                     }
 
@@ -282,11 +374,20 @@ object MobileIconBinder {
                         iconTint.collect { colors ->
                             val tint = ColorStateList.valueOf(colors.tint)
                             val contrast = ColorStateList.valueOf(colors.contrast)
+                            val statusBarView = view as? SignalClusterView
 
-                            iconView.imageTintList = tint
+                            iconView.imageTintList =
+                                if (useStatusBarPresentation && statusBarView?.colorIcon == true) {
+                                    null
+                                } else {
+                                    tint
+                                }
 
                             // If the bg is visible, tint it and use the contrast for the fg
-                            if (viewModel.networkTypeBackground.value != null) {
+                            if (
+                                !useStatusBarPresentation &&
+                                    viewModel.networkTypeBackground.value != null
+                            ) {
                                 networkTypeContainer.backgroundTintList = tint
                                 networkTypeView.imageTintList = contrast
                             } else {

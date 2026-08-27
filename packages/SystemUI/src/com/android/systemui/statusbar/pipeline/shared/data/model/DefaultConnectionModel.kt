@@ -56,10 +56,41 @@ data class DefaultConnectionModel(
 
     /** True if the default connection is currently validated and false otherwise. */
     val isValidated: Boolean = false,
+
+    /** True when the default network is a VPN, regardless of its underlying transport. */
+    val isVpn: Boolean = false,
+
+    /**
+     * The actual top-level default transport. This intentionally does not treat a connected
+     * underlying Wi-Fi network as the default while a VPN, Ethernet, or cellular network owns the
+     * default route. R2 uses this value when deciding whether the mobile RAT should be hidden and
+     * whether a connected Wi-Fi icon should enter its weak-network warning state.
+     */
+    val defaultTransport: DefaultTransport =
+        when {
+            isVpn -> DefaultTransport.VPN
+            ethernet.isDefault -> DefaultTransport.ETHERNET
+            carrierMerged.isDefault -> DefaultTransport.MOBILE
+            wifi.isDefault -> DefaultTransport.WIFI
+            mobile.isDefault -> DefaultTransport.MOBILE
+            else -> DefaultTransport.NONE
+        },
 ) {
+    enum class DefaultTransport {
+        NONE,
+        WIFI,
+        MOBILE,
+        ETHERNET,
+        VPN,
+        OTHER,
+    }
+
     data class Wifi(val isDefault: Boolean)
+
     data class Mobile(val isDefault: Boolean)
+
     data class CarrierMerged(val isDefault: Boolean)
+
     data class Ethernet(val isDefault: Boolean)
 
     /**
@@ -74,6 +105,8 @@ data class DefaultConnectionModel(
         message.bool3 = carrierMerged.isDefault
         message.bool4 = ethernet.isDefault
         message.int1 = if (isValidated) 1 else 0
+        message.int2 = if (isVpn) 1 else 0
+        message.str1 = defaultTransport.name
     }
 
     fun messagePrinter(message: LogMessage): String {
@@ -82,6 +115,8 @@ data class DefaultConnectionModel(
             "mobile.isDefault=${message.bool2}, " +
             "carrierMerged.isDefault=${message.bool3}, " +
             "ethernet.isDefault=${message.bool4}, " +
-            "isValidated=${if (message.int1 == 1) "true" else "false"})"
+            "isValidated=${if (message.int1 == 1) "true" else "false"}, " +
+            "isVpn=${if (message.int2 == 1) "true" else "false"}, " +
+            "defaultTransport=${message.str1})"
     }
 }

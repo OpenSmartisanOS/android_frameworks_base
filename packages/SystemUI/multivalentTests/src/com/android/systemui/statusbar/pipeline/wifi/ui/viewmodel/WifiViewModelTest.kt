@@ -123,6 +123,23 @@ class WifiViewModelTest : SysuiTestCase() {
         }
 
     @Test
+    fun wifiState_allLocationViewModelsReceiveSameState() =
+        testScope.runTest {
+            val home = viewModelForLocation(underTest, StatusBarLocation.HOME)
+            val keyguard = viewModelForLocation(underTest, StatusBarLocation.KEYGUARD)
+            val qs = viewModelForLocation(underTest, StatusBarLocation.QS)
+
+            val latestHome by collectLastValue(home.wifiState)
+            val latestKeyguard by collectLastValue(keyguard.wifiState)
+            val latestQs by collectLastValue(qs.wifiState)
+
+            wifiRepository.setWifiNetwork(WifiNetworkModel.Active.of(isValidated = true, level = 2))
+
+            assertThat(latestHome).isEqualTo(latestKeyguard)
+            assertThat(latestKeyguard).isEqualTo(latestQs)
+        }
+
+    @Test
     fun wifiIcon_validHotspot_hotspotIconNotShown() =
         testScope.runTest {
             val latest by collectLastValue(underTest.wifiIcon)

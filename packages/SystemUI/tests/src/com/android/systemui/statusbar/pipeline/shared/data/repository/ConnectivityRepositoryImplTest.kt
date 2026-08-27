@@ -41,6 +41,7 @@ import com.android.systemui.log.core.FakeLogBuffer
 import com.android.systemui.statusbar.pipeline.shared.ConnectivityInputLogger
 import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlot
 import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlots
+import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel.DefaultTransport
 import com.android.systemui.statusbar.pipeline.shared.data.repository.ConnectivityRepositoryImpl.Companion.DEFAULT_HIDDEN_ICONS_RESOURCE
 import com.android.systemui.statusbar.pipeline.shared.data.repository.ConnectivityRepositoryImpl.Companion.HIDDEN_ICONS_TUNABLE_KEY
 import com.android.systemui.statusbar.pipeline.shared.data.repository.ConnectivityRepositoryImpl.Companion.getMainOrUnderlyingWifiInfo
@@ -235,6 +236,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             getDefaultNetworkCallback().onCapabilitiesChanged(NETWORK, capabilities)
 
             assertThat(latest!!.mobile.isDefault).isFalse()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.OTHER)
             assertThat(latest!!.wifi.isDefault).isFalse()
             assertThat(latest!!.ethernet.isDefault).isFalse()
             assertThat(latest!!.carrierMerged.isDefault).isFalse()
@@ -258,6 +260,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.wifi.isDefault).isFalse()
             assertThat(latest!!.ethernet.isDefault).isFalse()
             assertThat(latest!!.carrierMerged.isDefault).isFalse()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.MOBILE)
         }
 
     @Test
@@ -278,6 +281,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.ethernet.isDefault).isFalse()
             assertThat(latest!!.carrierMerged.isDefault).isFalse()
             assertThat(latest!!.mobile.isDefault).isFalse()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.WIFI)
         }
 
     @Test
@@ -298,6 +302,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.wifi.isDefault).isFalse()
             assertThat(latest!!.carrierMerged.isDefault).isFalse()
             assertThat(latest!!.mobile.isDefault).isFalse()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.ETHERNET)
         }
 
     @Test
@@ -320,6 +325,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.wifi.isDefault).isTrue()
             assertThat(latest!!.carrierMerged.isDefault).isTrue()
             assertThat(latest!!.mobile.isDefault).isFalse()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.MOBILE)
         }
 
     @Test
@@ -342,6 +348,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.mobile.isDefault).isTrue()
             assertThat(latest!!.carrierMerged.isDefault).isTrue()
             assertThat(latest!!.wifi.isDefault).isTrue()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.MOBILE)
         }
 
     private fun newWifiNetwork(wifiInfo: WifiInfo): Network {
@@ -451,6 +458,143 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             getDefaultNetworkCallback().onCapabilitiesChanged(NETWORK, mainCapabilities)
 
             assertThat(latest!!.carrierMerged.isDefault).isTrue()
+            assertThat(latest!!.isVpn).isTrue()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.VPN)
+        }
+
+    @Test
+    fun defaultConnections_oldNetworkLostAfterNewCapabilities_keepsNewDefault() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.defaultConnections)
+            val callback = getDefaultNetworkCallback()
+            val oldNetwork = mock<Network>()
+            val newNetwork = mock<Network>()
+            val cellular =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_CELLULAR)).thenReturn(true)
+                }
+            val wifi =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_WIFI)).thenReturn(true)
+                }
+
+            callback.onAvailable(oldNetwork)
+            callback.onCapabilitiesChanged(oldNetwork, cellular)
+            callback.onAvailable(newNetwork)
+            callback.onCapabilitiesChanged(newNetwork, wifi)
+            callback.onLost(oldNetwork)
+            runCurrent()
+
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.WIFI)
+            assertThat(latest!!.wifi.isDefault).isTrue()
+            assertThat(latest!!.mobile.isDefault).isFalse()
+        }
+
+    @Test
+    fun defaultConnections_oldNetworkLostAfterNewAvailable_keepsPublishedStateUntilNewCaps() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.defaultConnections)
+            val callback = getDefaultNetworkCallback()
+            val oldNetwork = mock<Network>()
+            val newNetwork = mock<Network>()
+            val cellular =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_CELLULAR)).thenReturn(true)
+                }
+            val wifi =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_WIFI)).thenReturn(true)
+                }
+
+            callback.onAvailable(oldNetwork)
+            callback.onCapabilitiesChanged(oldNetwork, cellular)
+            callback.onAvailable(newNetwork)
+            callback.onLost(oldNetwork)
+            runCurrent()
+
+            // onAvailable freezes the new identity before its capabilities arrive. A late loss
+            // from the old default must not clear the last complete presentation in between.
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.MOBILE)
+
+            callback.onCapabilitiesChanged(newNetwork, wifi)
+            runCurrent()
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.WIFI)
+        }
+
+    @Test
+    fun defaultConnections_currentLost_requeriesReplacementDefaultAtomically() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.defaultConnections)
+            val callback = getDefaultNetworkCallback()
+            val oldNetwork = mock<Network>()
+            val replacement = mock<Network>()
+            val cellular =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_CELLULAR)).thenReturn(true)
+                }
+            val wifi =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_WIFI)).thenReturn(true)
+                }
+
+            callback.onAvailable(oldNetwork)
+            callback.onCapabilitiesChanged(oldNetwork, cellular)
+            whenever(connectivityManager.activeNetwork).thenReturn(replacement)
+            whenever(connectivityManager.getNetworkCapabilities(replacement)).thenReturn(wifi)
+
+            callback.onLost(oldNetwork)
+            runCurrent()
+
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.WIFI)
+            assertThat(latest!!.wifi.isDefault).isTrue()
+            assertThat(latest!!.mobile.isDefault).isFalse()
+        }
+
+    @Test
+    fun defaultConnections_oldCapabilitiesAfterNewAvailable_areIgnored() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.defaultConnections)
+            val callback = getDefaultNetworkCallback()
+            val oldNetwork = mock<Network>()
+            val newNetwork = mock<Network>()
+            val cellular =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_CELLULAR)).thenReturn(true)
+                }
+            val wifi =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_WIFI)).thenReturn(true)
+                }
+
+            callback.onAvailable(oldNetwork)
+            callback.onCapabilitiesChanged(oldNetwork, cellular)
+            callback.onAvailable(newNetwork)
+            callback.onCapabilitiesChanged(oldNetwork, cellular)
+            callback.onCapabilitiesChanged(newNetwork, wifi)
+            runCurrent()
+
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.WIFI)
+        }
+
+    @Test
+    fun defaultConnections_currentNetworkLost_activeQueryStillReturnsLost_clearsDefault() =
+        testScope.runTest {
+            val latest by collectLastValue(underTest.defaultConnections)
+            val callback = getDefaultNetworkCallback()
+            val network = mock<Network>()
+            val wifi =
+                mock<NetworkCapabilities>().also {
+                    whenever(it.hasTransport(TRANSPORT_WIFI)).thenReturn(true)
+                }
+            whenever(connectivityManager.activeNetwork).thenReturn(network)
+            whenever(connectivityManager.getNetworkCapabilities(network)).thenReturn(wifi)
+
+            callback.onAvailable(network)
+            callback.onCapabilitiesChanged(network, wifi)
+            callback.onLost(network)
+            runCurrent()
+
+            assertThat(latest!!.defaultTransport).isEqualTo(DefaultTransport.NONE)
         }
 
     @Test
@@ -615,6 +759,7 @@ class ConnectivityRepositoryImplTest : SysuiTestCase() {
             assertThat(latest!!.mobile.isDefault).isTrue()
             assertThat(latest!!.carrierMerged.isDefault).isTrue()
             assertThat(latest!!.wifi.isDefault).isTrue()
+            assertThat(latest!!.isVpn).isTrue()
         }
 
     @Test

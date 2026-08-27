@@ -16,6 +16,8 @@
 
 package com.android.systemui.statusbar.pipeline.wifi.shared.model
 
+import android.net.wifi.ScanResult
+import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.net.wifi.WifiManager.UNKNOWN_SSID
 import android.net.wifi.sharedconnectivity.app.NetworkProviderInfo
@@ -60,6 +62,8 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             row.logChange(COL_LEVEL, LEVEL_DEFAULT)
             row.logChange(COL_NUM_LEVELS, NUM_LEVELS_DEFAULT)
             row.logChange(COL_SSID, null)
+            row.logChange(COL_RSSI, null)
+            row.logChange(COL_WIFI_STANDARD, null)
             row.logChange(COL_HOTSPOT, null)
         }
     }
@@ -67,7 +71,7 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
     /** A model representing that the wifi information we received was invalid in some way. */
     data class Invalid(
         /** A description of why the wifi information was invalid. */
-        val invalidReason: String,
+        val invalidReason: String
     ) : WifiNetworkModel() {
         override fun toString() = "WifiNetwork.Invalid[reason=$invalidReason]"
 
@@ -89,6 +93,8 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             row.logChange(COL_LEVEL, LEVEL_DEFAULT)
             row.logChange(COL_NUM_LEVELS, NUM_LEVELS_DEFAULT)
             row.logChange(COL_SSID, null)
+            row.logChange(COL_RSSI, null)
+            row.logChange(COL_WIFI_STANDARD, null)
             row.logChange(COL_HOTSPOT, null)
         }
     }
@@ -96,7 +102,7 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
     /** A model representing that we have no active wifi network. */
     data class Inactive(
         /** An optional description of why the wifi information was inactive. */
-        val inactiveReason: String? = null,
+        val inactiveReason: String? = null
     ) : WifiNetworkModel() {
         override fun toString() = "WifiNetwork.Inactive[reason=$inactiveReason]"
 
@@ -118,6 +124,8 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             row.logChange(COL_LEVEL, LEVEL_DEFAULT)
             row.logChange(COL_NUM_LEVELS, NUM_LEVELS_DEFAULT)
             row.logChange(COL_SSID, null)
+            row.logChange(COL_RSSI, null)
+            row.logChange(COL_WIFI_STANDARD, null)
             row.logChange(COL_HOTSPOT, null)
         }
     }
@@ -157,7 +165,7 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             fun of(
                 subscriptionId: Int,
                 level: Int,
-                numberOfLevels: Int = MobileConnectionRepository.DEFAULT_NUM_LEVELS
+                numberOfLevels: Int = MobileConnectionRepository.DEFAULT_NUM_LEVELS,
             ): WifiNetworkModel {
                 if (!subscriptionId.isSubscriptionIdValid()) {
                     return Invalid(INVALID_SUB_ID_ERROR_STRING)
@@ -219,6 +227,8 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             row.logChange(COL_LEVEL, level)
             row.logChange(COL_NUM_LEVELS, numberOfLevels)
             row.logChange(COL_SSID, null)
+            row.logChange(COL_RSSI, null)
+            row.logChange(COL_WIFI_STANDARD, null)
             row.logChange(COL_HOTSPOT, null)
         }
     }
@@ -240,6 +250,12 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
         /** See [android.net.wifi.WifiInfo.ssid]. */
         val ssid: String?,
 
+        /** Raw RSSI used by the Smartisan four-bucket status-bar presentation. */
+        val rssi: Int,
+
+        /** See [android.net.wifi.WifiInfo.getWifiStandard]. */
+        val wifiStandard: Int,
+
         /**
          * The type of device providing a hotspot connection, or [HotspotDeviceType.NONE] if this
          * isn't a hotspot connection.
@@ -256,12 +272,14 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
                 isValidated: Boolean = false,
                 level: Int,
                 ssid: String? = null,
+                rssi: Int = WifiInfo.INVALID_RSSI,
+                wifiStandard: Int = ScanResult.WIFI_STANDARD_UNKNOWN,
                 hotspotDeviceType: HotspotDeviceType = HotspotDeviceType.NONE,
             ): WifiNetworkModel {
                 if (!level.isValid()) {
                     return Inactive(getInvalidLevelErrorString(level))
                 }
-                return Active(isValidated, level, ssid, hotspotDeviceType)
+                return Active(isValidated, level, ssid, rssi, wifiStandard, hotspotDeviceType)
             }
 
             private fun Int.isValid(): Boolean {
@@ -303,6 +321,12 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             if (prevVal.ssid != ssid) {
                 row.logChange(COL_SSID, ssid)
             }
+            if (prevVal.rssi != rssi) {
+                row.logChange(COL_RSSI, rssi)
+            }
+            if (prevVal.wifiStandard != wifiStandard) {
+                row.logChange(COL_WIFI_STANDARD, wifiStandard)
+            }
             if (prevVal.hotspotDeviceType != hotspotDeviceType) {
                 row.logChange(COL_HOTSPOT, hotspotDeviceType.name)
             }
@@ -315,6 +339,8 @@ sealed class WifiNetworkModel : Diffable<WifiNetworkModel> {
             row.logChange(COL_LEVEL, level)
             row.logChange(COL_NUM_LEVELS, null)
             row.logChange(COL_SSID, ssid)
+            row.logChange(COL_RSSI, rssi)
+            row.logChange(COL_WIFI_STANDARD, wifiStandard)
             row.logChange(COL_HOTSPOT, hotspotDeviceType.name)
         }
     }
@@ -369,6 +395,8 @@ const val COL_VALIDATED = "isValidated"
 const val COL_LEVEL = "level"
 const val COL_NUM_LEVELS = "maxLevel"
 const val COL_SSID = "ssid"
+const val COL_RSSI = "rssi"
+const val COL_WIFI_STANDARD = "wifiStandard"
 const val COL_HOTSPOT = "hotspot"
 
 val LEVEL_DEFAULT: String? = null

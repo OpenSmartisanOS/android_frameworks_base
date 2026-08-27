@@ -24,20 +24,20 @@ import com.android.settingslib.SignalIcon.IconGroup;
 public class WifiIcons {
 
     public static final int[] WIFI_FULL_ICONS = {
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_0_fully,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_1_fully,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_2_fully,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_3_fully,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_4_fully
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_0_fully,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_1_fully,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_2_fully,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_3_fully,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_4_fully
     };
     public static final int WIFI_NO_SIGNAL = WIFI_FULL_ICONS[0];
 
     public static final int[] WIFI_NO_INTERNET_ICONS = {
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_0,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_1,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_2,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_3,
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_warning
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_0,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_1,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_2,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_3,
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_warning
     };
 
     public static final int[][] QS_WIFI_SIGNAL_STRENGTH = {
@@ -57,8 +57,9 @@ public class WifiIcons {
             }
     };
 
-    // The legacy status-bar controller still consumes this table directly. Keep its status-bar
-    // entries on the SOS artwork while leaving the larger QS/access-point entries untouched.
+    // The legacy and modern platform status-bar pipelines both consume this table. Keep these
+    // resource IDs isolated from the density-specific R2 artwork used by WifiView. The larger
+    // QS/access-point table below deliberately stays on the platform resources.
     static final int[][] WIFI_SIGNAL_STRENGTH = {
             WIFI_NO_INTERNET_ICONS,
             WIFI_FULL_ICONS
@@ -67,7 +68,7 @@ public class WifiIcons {
     public static final int QS_WIFI_NO_NETWORK = com.android.internal.R.drawable.ic_wifi_signal_0;
 
     public static final int WIFI_NO_NETWORK =
-            com.android.systemui.res.R.drawable.stat_sys_wifi_signal_null;
+            com.android.systemui.res.R.drawable.platform_stat_sys_wifi_signal_null;
 
     static final int WIFI_LEVEL_COUNT = WIFI_SIGNAL_STRENGTH[0].length;
 

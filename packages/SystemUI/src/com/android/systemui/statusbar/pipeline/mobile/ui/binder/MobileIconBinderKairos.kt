@@ -18,13 +18,13 @@ package com.android.systemui.statusbar.pipeline.mobile.ui.binder
 
 import android.content.res.ColorStateList
 import android.graphics.Color
-import android.graphics.drawable.Animatable
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.Space
 import androidx.core.view.isVisible
+import com.android.settingslib.graph.SignalDrawable
 import com.android.systemui.Flags
 import com.android.systemui.common.ui.binder.IconViewBinder
 import com.android.systemui.kairos.BuildScope
@@ -41,6 +41,7 @@ import com.android.systemui.res.R
 import com.android.systemui.statusbar.StatusBarIconView
 import com.android.systemui.statusbar.pipeline.mobile.domain.model.SignalIconModel
 import com.android.systemui.statusbar.pipeline.mobile.ui.MobileViewLogger
+import com.android.systemui.statusbar.pipeline.mobile.ui.view.SignalClusterView
 import com.android.systemui.statusbar.pipeline.mobile.ui.viewmodel.LocationBasedMobileViewModelKairos
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.ModernStatusBarViewBinding
 import com.android.systemui.statusbar.pipeline.shared.ui.binder.ModernStatusBarViewVisibilityHelper
@@ -64,6 +65,7 @@ object MobileIconBinderKairos {
         logger: MobileViewLogger,
         scope: CoroutineScope,
         kairosNetwork: KairosNetwork,
+        statusBarPresentation: Boolean = false,
     ): Pair<ModernStatusBarViewBinding, Job> {
         val binding =
             ModernStatusBarViewBindingKairosImpl(subId, kairosNetwork, initialVisibilityState)
@@ -77,6 +79,7 @@ object MobileIconBinderKairos {
                         viewModel = viewModel.applySpec(),
                         logger = logger,
                         binding = binding,
+                        statusBarPresentation = statusBarPresentation,
                     )
                 }
             }
@@ -138,6 +141,7 @@ object MobileIconBinderKairos {
         viewModel: LocationBasedMobileViewModelKairos,
         logger: MobileViewLogger,
         binding: ModernStatusBarViewBindingKairosImpl,
+        statusBarPresentation: Boolean,
     ) {
         viewModel.isVisible.observe(
             name = nameTag("MobileIconBinderKairos.bindingShouldIconBeVisible")
@@ -155,6 +159,21 @@ object MobileIconBinderKairos {
         val roamingView = view.requireViewById<ImageView>(R.id.mobile_roaming)
         val roamingSpace = view.requireViewById<Space>(R.id.mobile_roaming_space)
         val dotView = view.requireViewById<StatusBarIconView>(R.id.status_bar_dot)
+        val useStatusBarPresentation = statusBarPresentation
+        val wifiDefault =
+            if (useStatusBarPresentation) {
+                (view as SignalClusterView).wifiDefault.toState(
+                    nameTag { "MobileIconBinderKairos.wifiDefault" }
+                )
+            } else {
+                null
+            }
+        val mobileDrawable =
+            if (useStatusBarPresentation) null
+            else SignalDrawable(view.context).also { iconView.setImageDrawable(it) }
+        if (useStatusBarPresentation) {
+            roamingView.setImageResource(R.drawable.stat_sys_roaming)
+        }
 
         val isVisible = viewModel.isVisible.sample()
         effect(name = nameTag("MobileIconBinderKairos.viewIsVisibleInitEffect")) {
@@ -232,19 +251,20 @@ object MobileIconBinderKairos {
                         shouldRequestLayout = shouldRequestLayout,
                     )
                     val level = newIcon.level.coerceIn(0, 5)
-                    val carrierChange = newIcon.carrierNetworkChange
-                    (iconView.drawable as? Animatable)?.stop()
-                    val iconRes =
-                        SosSignalIconResource.resolve(
-                            context = view.context,
-                            subscriptionId = viewModel.subscriptionId,
-                            level = level,
-                            showExclamationMark = newIcon.showExclamationMark,
-                            carrierNetworkChange = carrierChange,
+                    if (useStatusBarPresentation) {
+                        val carrierChange = newIcon.carrierNetworkChange
+                        (view as? SignalClusterView)?.renderSignal(
+                            level,
+                            newIcon.showExclamationMark,
+                            carrierChange,
                         )
-                    if (iconRes != 0) {
-                        iconView.setImageResource(iconRes)
-                        if (carrierChange) (iconView.drawable as? Animatable)?.start()
+                    } else {
+                        mobileDrawable?.let {
+                            if (iconView.drawable !== it) {
+                                iconView.setImageDrawable(it)
+                            }
+                            it.level = packedSignalDrawableState
+                        }
                     }
                     viewModel.verboseLogger?.logBinderSignalIconResult(
                         parentView = view,
@@ -271,21 +291,60 @@ object MobileIconBinderKairos {
             }
 
             // Set the network type icon
-            viewModel.networkTypeIcon.observe(
-                name = nameTag { "MobileIconBinderKairos.networkTypeIcon" }
-            ) { dataTypeId ->
-                viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
-                    view,
-                    viewModel.subscriptionId,
-                    dataTypeId,
-                )
-                dataTypeId?.let { IconViewBinder.bind(dataTypeId, networkTypeView) }
-                val prevVis = networkTypeContainer.visibility
-                networkTypeContainer.visibility =
-                    if (dataTypeId != null) View.VISIBLE else View.GONE
+            if (useStatusBarPresentation && wifiDefault != null) {
+                combine(viewModel.networkTypeIcon, viewModel.roaming, wifiDefault) {
+                        dataTypeId,
+                        isRoaming,
+                        wifiDefault ->
+                        Triple(dataTypeId, isRoaming, wifiDefault)
+                    }
+                    .observe(name = nameTag { "MobileIconBinderKairos.networkTypeIcon" }) {
+                        (dataTypeId, isRoaming, wifiDefault) ->
+                        viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
+                            view,
+                            viewModel.subscriptionId,
+                            dataTypeId,
+                        )
+                        dataTypeId?.let {
+                            IconViewBinder.bind(
+                                SignalIconResource.resolveNetworkType(it),
+                                networkTypeView,
+                            )
+                        }
+                        val prevVis = networkTypeContainer.visibility
+                        networkTypeContainer.visibility =
+                            if (
+                                SignalIconResource.shouldShowRat(
+                                    hasDataType = dataTypeId != null,
+                                    roaming = isRoaming,
+                                    wifiDefault = wifiDefault,
+                                )
+                            ) {
+                                View.VISIBLE
+                            } else {
+                                View.GONE
+                            }
+                        if (prevVis != networkTypeContainer.visibility) {
+                            view.requestLayout()
+                        }
+                    }
+            } else {
+                viewModel.networkTypeIcon.observe(
+                    name = nameTag { "MobileIconBinderKairos.networkTypeIcon" }
+                ) { dataTypeId ->
+                    viewModel.verboseLogger?.logBinderReceivedNetworkTypeIcon(
+                        view,
+                        viewModel.subscriptionId,
+                        dataTypeId,
+                    )
+                    dataTypeId?.let { IconViewBinder.bind(it, networkTypeView) }
+                    val prevVis = networkTypeContainer.visibility
+                    networkTypeContainer.visibility =
+                        if (dataTypeId != null) View.VISIBLE else View.GONE
 
-                if (prevVis != networkTypeContainer.visibility) {
-                    view.requestLayout()
+                    if (prevVis != networkTypeContainer.visibility) {
+                        view.requestLayout()
+                    }
                 }
             }
 
@@ -293,17 +352,21 @@ object MobileIconBinderKairos {
             viewModel.networkTypeBackground.observe(
                 name = nameTag { "MobileIconBinderKairos.networkTypeBackground" }
             ) { background ->
-                networkTypeContainer.setBackgroundResource(background?.resId ?: 0)
+                networkTypeContainer.setBackgroundResource(
+                    if (useStatusBarPresentation) 0 else background?.resId ?: 0
+                )
             }
 
             combine(viewModel.networkTypeBackground, binding.iconTint) { background, colors ->
-                    Pair(background != null, colors)
+                    Pair(!useStatusBarPresentation && background != null, colors)
                 }
                 .observe(name = nameTag { "MobileIconBinderKairos.networkTypeTint" }) {
                     (hasBackground, colors) ->
                     val tint = ColorStateList.valueOf(colors.tint)
                     val contrast = ColorStateList.valueOf(colors.contrast)
-                    iconView.imageTintList = tint
+                    val statusBarView = view as? SignalClusterView
+                    iconView.imageTintList =
+                        if (useStatusBarPresentation && statusBarView?.colorIcon == true) null else tint
                     // Tint will invert when this bit changes
                     if (hasBackground) {
                         networkTypeContainer.backgroundTintList = tint
@@ -317,14 +380,42 @@ object MobileIconBinderKairos {
                     dotView.setDecorColor(colors.tint)
                 }
 
-            // Set the roaming indicator
+            // R2 distribution build keeps the original standalone roaming layer.
             viewModel.roaming.observe(name = nameTag { "MobileIconBinderKairos.roaming" }) {
                 isRoaming ->
-                roamingView.isVisible = isRoaming
-                roamingSpace.isVisible = isRoaming
+                if (useStatusBarPresentation) {
+                    roamingView.isVisible = isRoaming
+                    roamingSpace.isVisible = isRoaming
+                } else {
+                    roamingView.isVisible = isRoaming
+                    roamingSpace.isVisible = isRoaming
+                }
             }
 
-            if (Flags.statusBarStaticInoutIndicators()) {
+            if (useStatusBarPresentation) {
+                combine(
+                        viewModel.activityInVisible,
+                        viewModel.activityOutVisible,
+                        viewModel.roaming,
+                        viewModel.networkTypeIcon,
+                    ) { hasActivityIn, hasActivityOut, isRoaming, dataTypeId ->
+                        SignalIconResource.resolveActivity(
+                            hasActivityIn,
+                            hasActivityOut,
+                            isRoaming,
+                            dataTypeId != null,
+                        )
+                    }
+                    .observe(name = nameTag { "MobileIconBinderKairos.activity" }) { activityRes
+                        ->
+                        if (activityRes != 0) {
+                            activityIn.setImageResource(activityRes)
+                        }
+                        activityIn.isVisible = activityRes != 0
+                        activityOut.isVisible = false
+                        activityContainer.isVisible = activityRes != 0
+                    }
+            } else if (Flags.statusBarStaticInoutIndicators()) {
                 // Set the opacity of the activity indicators
                 viewModel.activityInVisible.observe(
                     name = nameTag { "MobileIconBinderKairos.activityInVisible" }
@@ -354,10 +445,12 @@ object MobileIconBinderKairos {
                 }
             }
 
-            viewModel.activityContainerVisible.observe(
-                name = nameTag { "MobileIconBinderKairos.activityContainerVisible" }
-            ) {
-                activityContainer.isVisible = it
+            if (!useStatusBarPresentation) {
+                viewModel.activityContainerVisible.observe(
+                    name = nameTag { "MobileIconBinderKairos.activityContainerVisible" }
+                ) {
+                    activityContainer.isVisible = it
+                }
             }
 
             binding.decorTint.observe(name = nameTag { "MobileIconBinderKairos.decorTint" }) { tint

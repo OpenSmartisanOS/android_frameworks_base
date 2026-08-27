@@ -17,6 +17,10 @@
 package com.android.systemui.statusbar.pipeline.wifi.ui.viewmodel
 
 import android.content.Context
+import android.database.ContentObserver
+import android.provider.Settings
+import com.android.settingslib.AccessibilityContentDescriptions.WIFI_CONNECTION_STRENGTH
+import com.android.settingslib.AccessibilityContentDescriptions.WIFI_NO_CONNECTION
 import com.android.systemui.Flags.statusBarStaticInoutIndicators
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
@@ -30,18 +34,24 @@ import com.android.systemui.statusbar.pipeline.shared.data.model.DataActivityMod
 import com.android.systemui.statusbar.pipeline.wifi.domain.interactor.WifiInteractor
 import com.android.systemui.statusbar.pipeline.wifi.shared.WifiConstants
 import com.android.systemui.statusbar.pipeline.wifi.shared.model.WifiNetworkModel
+import com.android.systemui.statusbar.pipeline.wifi.ui.model.WifiState
 import com.android.systemui.statusbar.pipeline.wifi.ui.model.WifiIcon
+import com.android.systemui.utils.coroutines.flow.conflatedCallbackFlow
 import java.util.function.Supplier
 import javax.inject.Inject
 import javax.inject.Named
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.transformLatest
 
 /**
  * Models the UI state for the status bar wifi icon.
@@ -66,6 +76,86 @@ constructor(
     @Background scope: CoroutineScope,
     wifiConstants: WifiConstants,
 ) : WifiViewModelCommon {
+    private val avoidBadWifi: StateFlow<Boolean> =
+        conflatedCallbackFlow {
+                val resolver = context.contentResolver
+                val observer =
+                    object : ContentObserver(null) {
+                        override fun onChange(selfChange: Boolean) {
+                            trySend(readAvoidBadWifi())
+                        }
+                    }
+                resolver.registerContentObserver(
+                    Settings.Global.getUriFor(Settings.Global.NETWORK_AVOID_BAD_WIFI),
+                    false,
+                    observer,
+                )
+                trySend(readAvoidBadWifi())
+                awaitClose { resolver.unregisterContentObserver(observer) }
+            }
+            .stateIn(
+                scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = readAvoidBadWifi(),
+            )
+
+    private fun readAvoidBadWifi(): Boolean =
+        Settings.Global.getInt(
+            context.contentResolver,
+            Settings.Global.NETWORK_AVOID_BAD_WIFI,
+            0,
+        ) != 0
+
+    private val warning =
+        combine(interactor.defaultConnections, avoidBadWifi, interactor.wifiNetwork) {
+                defaultConnections,
+                avoidBadWifi,
+                network ->
+                network is WifiNetworkModel.Active &&
+                    WifiState.shouldWarn(defaultConnections, avoidBadWifi)
+            }
+            .delayR2WifiWarning()
+
+    private val defaultNetworkPresentation =
+        combine(interactor.defaultConnections, avoidBadWifi, warning) {
+            defaultConnections,
+            avoidBadWifi,
+            delayedWarning ->
+            // Revalidate against the current policy before publishing. This prevents a stale
+            // delayed warning from surviving for one frame after cellular stops being the
+            // default network or NETWORK_AVOID_BAD_WIFI is disabled.
+            defaultConnections to
+                (delayedWarning && WifiState.shouldWarn(defaultConnections, avoidBadWifi))
+        }
+
+    override val wifiState: StateFlow<WifiState> =
+        combine(
+                interactor.isEnabled,
+                interactor.isForceHidden,
+                interactor.wifiNetwork,
+                interactor.activity,
+                defaultNetworkPresentation,
+            ) { enabled, forceHidden, network, activity, policy ->
+                WifiState.fromInputs(
+                    enabled = enabled,
+                    forceHidden = forceHidden,
+                    hasDataCapabilities = connectivityConstants.hasDataCapabilities,
+                    network = network,
+                    defaultConnections = policy.first,
+                    warning = policy.second,
+                    activity = activity,
+                    connectedDescription = { level ->
+                        context.getString(WIFI_CONNECTION_STRENGTH[level])
+                    },
+                    disconnectedDescription = context.getString(WIFI_NO_CONNECTION),
+                )
+            }
+            .stateIn(
+                scope,
+                started = SharingStarted.WhileSubscribed(),
+                initialValue = WifiState(),
+            )
+
     override val wifiIcon: StateFlow<WifiIcon> =
         combine(
                 interactor.isEnabled,
@@ -135,4 +225,17 @@ constructor(
         airplaneModeViewModel.isAirplaneModeIconVisible
 
     override val isSignalSpacerVisible: Flow<Boolean> = shouldShowSignalSpacerProvider.get()
+
+    companion object {
+        internal const val WARNING_DELAY_MILLIS = 500L
+    }
 }
+
+/** Delays only warning entry. Warning exit is emitted synchronously, matching R2's Handler path. */
+internal fun Flow<Boolean>.delayR2WifiWarning(
+    delayMillis: Long = WifiViewModel.WARNING_DELAY_MILLIS
+): Flow<Boolean> =
+    distinctUntilChanged().transformLatest { warning ->
+        if (warning) delay(delayMillis)
+        emit(warning)
+    }

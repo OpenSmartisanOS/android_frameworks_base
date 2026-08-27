@@ -20,6 +20,7 @@ import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.statusbar.pipeline.shared.data.model.ConnectivitySlot
 import com.android.systemui.statusbar.pipeline.shared.data.model.DataActivityModel
+import com.android.systemui.statusbar.pipeline.shared.data.model.DefaultConnectionModel
 import com.android.systemui.statusbar.pipeline.shared.data.repository.ConnectivityRepository
 import com.android.systemui.statusbar.pipeline.shared.ui.model.WifiToggleState
 import com.android.systemui.statusbar.pipeline.wifi.data.repository.WifiRepository
@@ -58,6 +59,9 @@ interface WifiInteractor {
 
     /** Our current wifi activity. See [DataActivityModel]. */
     val activity: StateFlow<DataActivityModel>
+
+    /** Current default transport and validation state used by the original R2 icon policy. */
+    val defaultConnections: StateFlow<DefaultConnectionModel>
 
     /** True if we're configured to force-hide the wifi icon and false otherwise. */
     val isForceHidden: Flow<Boolean>
@@ -100,6 +104,9 @@ constructor(
     override val wifiNetwork: Flow<WifiNetworkModel> = wifiRepository.wifiNetwork
 
     override val activity: StateFlow<DataActivityModel> = wifiRepository.wifiActivity
+
+    override val defaultConnections: StateFlow<DefaultConnectionModel> =
+        connectivityRepository.defaultConnections
 
     override val isForceHidden: Flow<Boolean> =
         connectivityRepository.forceHiddenSlots.map { it.contains(ConnectivitySlot.WIFI) }
