@@ -1,0 +1,2 @@
+<!-- Platform status-bar artwork kept separate from the density-specific R2 resource. -->
+<com.android.systemui.statusbar.CastDrawable />
