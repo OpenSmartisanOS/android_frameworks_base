@@ -14,3 +14,7 @@ gen/
 
 # macOS AppleDouble metadata
 ._*
+
+# Python bytecode and interpreter caches
+__pycache__/
+*.py[cod]
