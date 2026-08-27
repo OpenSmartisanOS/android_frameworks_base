@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- SmartisanOS R2 volume panel design constants. Runtime geometry is calculated from the
+         1080 x 2242 reference canvas by VolumeDialogLayoutModel. -->
+    <color name="volume_dialog_panel_scrim">#14000000</color>
+    <color name="volume_dialog_panel_text">#80000000</color>
+    <color name="volume_dialog_panel_text_active">#FF3D7FF2</color>
+    <color name="volume_dialog_panel_column">#FAFFFFFF</color>
+    <color name="volume_dialog_panel_column_active">#E8F2FF</color>
+    <color name="volume_dialog_panel_stroke">#26000000</color>
+    <color name="volume_dialog_panel_stroke_active">#669ADF</color>
+    <color name="volume_dialog_panel_track">#33000000</color>
+    <color name="volume_dialog_panel_progress">#FF3D7FF2</color>
+
+    <dimen name="volume_dialog_reference_column_width">180px</dimen>
+    <dimen name="volume_dialog_reference_panel_height">594px</dimen>
+    <dimen name="volume_dialog_reference_corner_radius">24px</dimen>
+    <dimen name="volume_dialog_reference_shadow_margin">12px</dimen>
+    <dimen name="volume_dialog_reference_enter_translation">144px</dimen>
+
+    <string name="volume_dialog_brightness">Brightness</string>
+    <string name="volume_dialog_ring">Ringtone</string>
+    <string name="volume_dialog_call">Call</string>
+    <string name="volume_dialog_alarm">Alarm</string>
+    <string name="volume_dialog_media">Media</string>
+    <string name="volume_dialog_accessibility">Accessibility</string>
+    <string name="volume_dialog_mute">Mute for a certain time period</string>
+    <string name="volume_dialog_unmute">Unmute</string>
+    <string name="volume_dialog_cancel_mute">Cancel timed mute</string>
+    <string name="volume_dialog_mute_remaining">Timed mute, %1$s remaining</string>
+    <string name="volume_dialog_mute_started">Timed mute enabled</string>
+    <string name="volume_dialog_mute_finished">Timed mute ended</string>
+    <string name="volume_dialog_unavailable_by_dnd">Unavailable while Do Not Disturb is active</string>
+    <string name="volume_dialog_expand">Show all volume controls</string>
+    <string name="volume_dialog_collapse">Collapse volume controls</string>
+    <string name="volume_dialog_panel_shown">Volume panel displayed</string>
+    <string name="volume_dialog_panel_hidden">Volume panel hidden</string>
+
+    <string-array name="volume_dialog_mute_time_labels">
+        <item>15 min</item>
+        <item>30 min</item>
+        <item>45 min</item>
+        <item>1 h</item>
+        <item>1.5 h</item>
+        <item>2 h</item>
+        <item>3 h</item>
+        <item>4 h</item>
+        <item>5 h</item>
+        <item>6 h</item>
+        <item>7 h</item>
+        <item>8 h</item>
+    </string-array>
+
+    <integer-array name="volume_dialog_mute_time_seconds">
+        <item>900</item>
+        <item>1800</item>
+        <item>2700</item>
+        <item>3600</item>
+        <item>5400</item>
+        <item>7200</item>
+        <item>10800</item>
+        <item>14400</item>
+        <item>18000</item>
+        <item>21600</item>
+        <item>25200</item>
+        <item>28800</item>
+    </integer-array>
+
+    <declare-styleable name="VerticalSeekBar">
+        <attr name="vsb_min" format="float" />
+        <attr name="vsb_max" format="float" />
+        <attr name="vsb_progress" format="float" />
+        <attr name="vsb_track_size" format="dimension" />
+        <attr name="vsb_second_track_size" format="dimension" />
+        <attr name="vsb_thumb_radius" format="dimension" />
+        <attr name="vsb_thumb_radius_on_dragging" format="dimension" />
+        <attr name="vsb_section_count" format="integer" />
+        <attr name="vsb_show_section_mark" format="boolean" />
+        <attr name="vsb_touch_to_seek" format="boolean" />
+        <attr name="vsb_trick_image_width" format="dimension" />
+        <attr name="vsb_trick_image_height" format="dimension" />
+        <attr name="vsb_trick_interval" format="dimension" />
+    </declare-styleable>
+</resources>

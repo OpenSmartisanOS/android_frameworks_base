@@ -32,10 +32,8 @@ import com.android.systemui.demomode.DemoMode;
 import com.android.systemui.demomode.DemoModeController;
 import com.android.systemui.keyguard.KeyguardViewMediator;
 import com.android.systemui.plugins.ActivityStarter;
-import com.android.systemui.plugins.PluginDependencyProvider;
 import com.android.systemui.plugins.VolumeDialog;
 import com.android.systemui.plugins.VolumeDialogController;
-import com.android.systemui.statusbar.policy.ExtensionController;
 import com.android.systemui.tuner.TunerService;
 
 import java.io.PrintWriter;
@@ -81,8 +79,6 @@ public class VolumeDialogComponent implements VolumeComponent, TunerService.Tuna
             ActivityStarter activityStarter,
             VolumeDialogControllerImpl volumeDialogController,
             DemoModeController demoModeController,
-            PluginDependencyProvider pluginDependencyProvider,
-            ExtensionController extensionController,
             TunerService tunerService,
             VolumeDialog volumeDialog) {
         mContext = context;
@@ -90,18 +86,8 @@ public class VolumeDialogComponent implements VolumeComponent, TunerService.Tuna
         mActivityStarter = activityStarter;
         mController = volumeDialogController;
         mController.setUserActivityListener(this);
-        // Allow plugins to reference the VolumeDialogController.
-        pluginDependencyProvider.allowPluginDependency(VolumeDialogController.class);
-        extensionController.newExtension(VolumeDialog.class)
-                .withPlugin(VolumeDialog.class)
-                .withDefault(() -> volumeDialog)
-                .withCallback(dialog -> {
-                    if (mDialog != null) {
-                        mDialog.destroy();
-                    }
-                    mDialog = dialog;
-                    mDialog.init(LayoutParams.TYPE_VOLUME_OVERLAY, mVolumeDialogCallback);
-                }).build();
+        mDialog = volumeDialog;
+        mDialog.init(LayoutParams.TYPE_VOLUME_OVERLAY, mVolumeDialogCallback);
 
 
         mDefaultVolumeDownToEnterSilent = mContext.getResources()
@@ -201,7 +187,7 @@ public class VolumeDialogComponent implements VolumeComponent, TunerService.Tuna
         mActivityStarter.startActivity(intent, true /* onlyProvisioned */, true /* dismissShade */);
     }
 
-    private final VolumeDialogImpl.Callback mVolumeDialogCallback = new VolumeDialogImpl.Callback() {
+    private final VolumeDialog.Callback mVolumeDialogCallback = new VolumeDialog.Callback() {
         @Override
         public void onZenSettingsClicked() {
             startSettings(ZEN_SETTINGS);

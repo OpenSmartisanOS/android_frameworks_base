@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<transition xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/volume_dialog_cancel_normal"
+        android:drawable="@drawable/mute_time_btn_bg" />
+    <item android:id="@+id/volume_dialog_cancel_pressed"
+        android:drawable="@drawable/mute_time_btn_bg_close" />
+</transition>

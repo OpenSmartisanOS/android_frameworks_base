@@ -1,0 +1,626 @@
+{
+  "source": "SmartisanSystemUI.apk / SmartisanOS R2 8.5.3-202207181710",
+  "generator": "packages/SystemUI/provenance/generate_smartisan_r2_volume_resources.py",
+  "resources": [
+    {
+      "sourcePath": "res/drawable/active_bg.xml",
+      "targetPath": "packages/SystemUI/res/drawable/active_bg.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "47173bd7ff087011338437d4b5bb03a802765d7efae855559c8a650d38427d75",
+      "targetSha256": "4d77b5f2e6640a98dc617685ab158e2e066c5ee3ec61354dbae7961edeb75340",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    },
+    {
+      "sourcePath": "res/drawable/active_bg_blue.xml",
+      "targetPath": "packages/SystemUI/res/drawable/active_bg_blue.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "ed8a28b563ae457a9900f8ba26931cb24d98964e110645e2b08b07bb71df9b75",
+      "targetSha256": "02c7fb1d37b0019306c63b59a8154e54c8640213f264a9fd047aea14e8ff72d0",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    },
+    {
+      "sourcePath": "res/drawable/cancel_mute_btn_bg.xml",
+      "targetPath": "packages/SystemUI/res/drawable/cancel_mute_btn_bg.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "38c452f67ff83424e9ced55f13ae67c4a7c5d001b2500812b82d72a46bdd7f84",
+      "targetSha256": "e995766c5328b78aebbe79bb8ad2dea156b2c47e9236f05369f5dd7c8b8ea903",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    },
+    {
+      "sourcePath": "res/drawable/cancel_mute_btn_icon.xml",
+      "targetPath": "packages/SystemUI/res/drawable/cancel_mute_btn_icon.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "0e1198d6d647e6bbaca9c2247757a35e8822bed9922066f47f7128f15a20f28b",
+      "targetSha256": "54ad9fc6aeab01c246bcf683899b88c0ad9174a2a6d1130a606cd00346a96e0a",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/headset.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/headset.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "1f6d7e3829e532c3eccc27f7c3e57468b5663aa400bff3fdbb0cb40b3e38be4a"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/headset_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/headset_active.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "30953a4e3f2ed335ec7b2c3930a0739f73908974aebb6601a1e1c213b5af68a2"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_new_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_new_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "aa3140784c5f96b61aeb5d6230a6682b1986621920f4e0c9cdba7d5c04965a2d"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_new_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_new_open.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "c7e889d75ae20ce72ebd3ef66951f8e677dbed6996deb802d03b7f3e03d8472f"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_alarm_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_alarm_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "5472c7eeb0fde9b10d49a4a787927e0398ff6b680a4da67afb7fdaef2b31ee10"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_alarm_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_alarm_open.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "566439379ee14e4016c30c89ce53008121b314a9e02ed27531efeb60e65301b3"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_brightness_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_brightness_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "18710736a237acd536e1249fc98da713ac2fa1d39792941ab51d83a9f1edab90"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_brightness_hight.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_brightness_hight.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "7af0eb9af7991c271ed8f332cc00653b6e89817a8494a36b3c220373047b3493"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_brightness_small.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_brightness_small.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fe7418ae05f768c41df58ddba619cd7400eb6fc98f63d2df24c3d50086431e04"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_call_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_call_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "73660510a99f0cacad8c3bf032b859c84332a8c7df0a36b0fe78c0e319585cd7"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_call_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_call_open.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "a07e33a505c2864aa883fed51f6c399f8eecd797e4c426dcc29bbc8bbd9b2b32"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_close_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_close_mark.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "b0cca9af4947f699fa0f98d1177f57e6304c2b5b5e702407983be6897364a5c2"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_close_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_close_mark_normal.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "4d646d20869133d48246e69dfae5e24138ffd420c6008a086f8464bd4db6dc98"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_media_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_media_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "d917e4f6c242750411d2e0f500bbf324a2faa49ccd459630d606f6844fd11262"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_media_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_media_open.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "479e612f940d57da8ff8d0610a88e74486d2e4c1be26a1c3f140f363ddad584c"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_open_blue_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_open_blue_mark.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fc38fbe5d1390f6100b74e915aff147cfb7970c6564f66e066fb2d5bc5eb38fb"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_open_blue_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_open_blue_mark_normal.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "2e77d2b376bb58a23ce2b7b05a5e5f209579975a936f70fbe0f3c76e43d50d6d"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_open_yellow_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_open_yellow_mark.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "187e210f1ead414e49c4a75a219d88b70b028b98060e87f6000298da795ea9c6"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_open_yellow_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_open_yellow_mark_normal.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fbbf167a0299998b8b677d8182c4b7ef8f6d361d8191bafd7528df8bb5c656e0"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_ring_high.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_ring_high.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "f03c82f6cabec60a78b7a44b34a81f1a9d9a93bfbb2fc6e42d7ecc5247859114"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_ring_middle.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_ring_middle.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "91a1b58c2ef020d9e09c22ba50aad8e45e5984070b85f6a8847010c6d66fcd24"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_ring_small.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_ring_small.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "0aaa76a5639602b7462aae57e76c81a64ec27e61b688b2dd967c7d41e36204b3"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_ringtone_mute.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_ringtone_mute.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "eb4435df53a28e61a8b920e2716cfbe69b568fa469e8732120ce3a15d756de29"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_shadow_bg.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_shadow_bg.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "ea6aa5d6c3df86d28b84ee34136afbf480722afa2ecfec9e04fef462b3f39b04"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/ic_smartisan_volume_panel_vibrate.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/ic_smartisan_volume_panel_vibrate.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fa7fd27264775b9aabba684d71d14674878915a2da0ff6c41c0a68788ef9d968"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_active.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "45cd0fa84363b22da9727f6b74f21a1aff26423ea4923b7d0090ead0cc739511"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_close.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "f504ba743c80c97bfa12a4e309d9c69bbbe9e7248a0d9604209c2c75787389a7"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_time_btn_bg.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_time_btn_bg.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "0ed3605f69ef1614b40292b52dd46fe11b7d49518b97a5ed2c5e5219622e1e50"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_time_btn_bg_close.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_time_btn_bg_close.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "c2ac03a91f316726f94a3d7eb012e087de425daf32c368f8c5cd00c8eda76fdc"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_time_tick_mark_track_blue.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_time_tick_mark_track_blue.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "86dc58ebd3ca985849eadd4f1741d36dd20ad5c971273dfc7086d5e2fb252624"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_time_tick_mark_track_gray.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_time_tick_mark_track_gray.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "2621ace257be9ee8b07fcbbc857d6026e9d03616094fd9800a535681877757a5"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/mute_timer_progress_full_bridge.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/mute_timer_progress_full_bridge.9.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "20e078f698b3a7236ee39ce924ae36833b3cdef052bcd613ed81f815634cda0d"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/wireless_headset.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/wireless_headset.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "88913f9544aad3f872b3381f0f9c217d3e1d398a13174249bfc7c82263c6627a"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi/wireless_headset_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi/wireless_headset_active.png",
+      "density": "400dpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "b5857cbde0b01570a673af2df09d01b9b98dcd4c8d8e4d0225992ecd60a30481"
+    },
+    {
+      "sourcePath": "res/drawable-400dpi-2142x1080/mute_timer_progress_full_bridge.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-400dpi-2142x1080/mute_timer_progress_full_bridge.9.png",
+      "density": "400dpi-2142x1080",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "20e078f698b3a7236ee39ce924ae36833b3cdef052bcd613ed81f815634cda0d"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/headset.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/headset.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "1f6d7e3829e532c3eccc27f7c3e57468b5663aa400bff3fdbb0cb40b3e38be4a"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/headset_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/headset_active.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "30953a4e3f2ed335ec7b2c3930a0739f73908974aebb6601a1e1c213b5af68a2"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_new_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_new_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "aa3140784c5f96b61aeb5d6230a6682b1986621920f4e0c9cdba7d5c04965a2d"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_new_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_new_open.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "c7e889d75ae20ce72ebd3ef66951f8e677dbed6996deb802d03b7f3e03d8472f"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_alarm_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_alarm_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "5472c7eeb0fde9b10d49a4a787927e0398ff6b680a4da67afb7fdaef2b31ee10"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_alarm_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_alarm_open.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "566439379ee14e4016c30c89ce53008121b314a9e02ed27531efeb60e65301b3"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "18710736a237acd536e1249fc98da713ac2fa1d39792941ab51d83a9f1edab90"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_hight.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_hight.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "7af0eb9af7991c271ed8f332cc00653b6e89817a8494a36b3c220373047b3493"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_small.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_brightness_small.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fe7418ae05f768c41df58ddba619cd7400eb6fc98f63d2df24c3d50086431e04"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_call_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_call_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "73660510a99f0cacad8c3bf032b859c84332a8c7df0a36b0fe78c0e319585cd7"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_call_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_call_open.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "a07e33a505c2864aa883fed51f6c399f8eecd797e4c426dcc29bbc8bbd9b2b32"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_close_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_close_mark.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "b0cca9af4947f699fa0f98d1177f57e6304c2b5b5e702407983be6897364a5c2"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_close_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_close_mark_normal.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "4d646d20869133d48246e69dfae5e24138ffd420c6008a086f8464bd4db6dc98"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_media_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_media_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "d917e4f6c242750411d2e0f500bbf324a2faa49ccd459630d606f6844fd11262"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_media_open.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_media_open.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "479e612f940d57da8ff8d0610a88e74486d2e4c1be26a1c3f140f363ddad584c"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_open_blue_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_open_blue_mark.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fc38fbe5d1390f6100b74e915aff147cfb7970c6564f66e066fb2d5bc5eb38fb"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_open_blue_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_open_blue_mark_normal.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "2e77d2b376bb58a23ce2b7b05a5e5f209579975a936f70fbe0f3c76e43d50d6d"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_open_yellow_mark.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_open_yellow_mark.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "187e210f1ead414e49c4a75a219d88b70b028b98060e87f6000298da795ea9c6"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_open_yellow_mark_normal.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_open_yellow_mark_normal.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fbbf167a0299998b8b677d8182c4b7ef8f6d361d8191bafd7528df8bb5c656e0"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_high.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_high.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "f03c82f6cabec60a78b7a44b34a81f1a9d9a93bfbb2fc6e42d7ecc5247859114"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_middle.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_middle.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "91a1b58c2ef020d9e09c22ba50aad8e45e5984070b85f6a8847010c6d66fcd24"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_small.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_ring_small.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "0aaa76a5639602b7462aae57e76c81a64ec27e61b688b2dd967c7d41e36204b3"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_ringtone_mute.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_ringtone_mute.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "eb4435df53a28e61a8b920e2716cfbe69b568fa469e8732120ce3a15d756de29"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_shadow_bg.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_shadow_bg.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "ea6aa5d6c3df86d28b84ee34136afbf480722afa2ecfec9e04fef462b3f39b04"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/ic_smartisan_volume_panel_vibrate.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/ic_smartisan_volume_panel_vibrate.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "fa7fd27264775b9aabba684d71d14674878915a2da0ff6c41c0a68788ef9d968"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_active.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "45cd0fa84363b22da9727f6b74f21a1aff26423ea4923b7d0090ead0cc739511"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_close.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_close.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "f504ba743c80c97bfa12a4e309d9c69bbbe9e7248a0d9604209c2c75787389a7"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_time_btn_bg.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_time_btn_bg.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "0ed3605f69ef1614b40292b52dd46fe11b7d49518b97a5ed2c5e5219622e1e50"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_time_btn_bg_close.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_time_btn_bg_close.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "c2ac03a91f316726f94a3d7eb012e087de425daf32c368f8c5cd00c8eda76fdc"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_time_tick_mark_track_blue.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_time_tick_mark_track_blue.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "86dc58ebd3ca985849eadd4f1741d36dd20ad5c971273dfc7086d5e2fb252624"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_time_tick_mark_track_gray.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_time_tick_mark_track_gray.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "2621ace257be9ee8b07fcbbc857d6026e9d03616094fd9800a535681877757a5"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_timer_progress_bridge.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_timer_progress_bridge.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "a2a2aeaaf242877f2f49f75a66f9c90c7e0b2928822c217d2177788ad1be2719"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/mute_timer_progress_full_bridge.9.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/mute_timer_progress_full_bridge.9.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "20e078f698b3a7236ee39ce924ae36833b3cdef052bcd613ed81f815634cda0d"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/wireless_headset.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/wireless_headset.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "88913f9544aad3f872b3381f0f9c217d3e1d398a13174249bfc7c82263c6627a"
+    },
+    {
+      "sourcePath": "res/drawable-xxhdpi/wireless_headset_active.png",
+      "targetPath": "packages/SystemUI/res/drawable-xxhdpi/wireless_headset_active.png",
+      "density": "xxhdpi",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": true,
+      "sha256": "b5857cbde0b01570a673af2df09d01b9b98dcd4c8d8e4d0225992ecd60a30481"
+    },
+    {
+      "sourcePath": "res/layout/smartisan_volume_adjust.xml",
+      "targetPath": "packages/SystemUI/res/layout/volume_dialog.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "3b829db6efcabc1c698c2119fa09d618e46e868af6ee486c14271b19efea0af2",
+      "targetSha256": "3741ef531502be50a825cc7f96db6763e971fb11061b88d83550ea99f3880e09",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    },
+    {
+      "sourcePath": "res/layout/smartisan_volume_adjust_item.xml",
+      "targetPath": "packages/SystemUI/res/layout/volume_dialog_column.xml",
+      "density": "default",
+      "usage": "SmartisanOS R2 volume panel",
+      "byteIdentical": false,
+      "sourceSha256": "2738fcf183fc5e4a0747ed62233443017d3ba588ed73b8a0f726a985ee078862",
+      "targetSha256": "48f0883c243686a423efb53b91e914eca8414567f18bcf8184169e089fc65a57",
+      "adaptation": "Android 16 IDs, controllers and responsive geometry; original visual values retained"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="volume_dialog_brightness">亮度</string>
+    <string name="volume_dialog_ring">铃声</string>
+    <string name="volume_dialog_call">通话</string>
+    <string name="volume_dialog_alarm">闹钟</string>
+    <string name="volume_dialog_media">媒体</string>
+    <string name="volume_dialog_accessibility">无障碍</string>
+    <string name="volume_dialog_mute">定时全局静音</string>
+    <string name="volume_dialog_unmute">取消静音</string>
+    <string name="volume_dialog_cancel_mute">取消定时静音</string>
+    <string name="volume_dialog_mute_remaining">定时静音，剩余 %1$s</string>
+    <string name="volume_dialog_mute_started">已开启定时静音</string>
+    <string name="volume_dialog_mute_finished">定时静音已结束</string>
+    <string name="volume_dialog_unavailable_by_dnd">勿扰模式下不可调整</string>
+    <string name="volume_dialog_expand">显示全部音量控制</string>
+    <string name="volume_dialog_collapse">收起音量控制</string>
+    <string name="volume_dialog_panel_shown">音量面板已显示</string>
+    <string name="volume_dialog_panel_hidden">音量面板已隐藏</string>
+
+    <string-array name="volume_dialog_mute_time_labels">
+        <item>15 分钟</item>
+        <item>30 分钟</item>
+        <item>45 分钟</item>
+        <item>1 小时</item>
+        <item>1.5 小时</item>
+        <item>2 小时</item>
+        <item>3 小时</item>
+        <item>4 小时</item>
+        <item>5 小时</item>
+        <item>6 小时</item>
+        <item>7 小时</item>
+        <item>8 小时</item>
+    </string-array>
+</resources>
