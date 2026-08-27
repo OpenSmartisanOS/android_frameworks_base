@@ -71,10 +71,6 @@
 
         <include layout="@layout/photo_preview_overlay" />
 
-        <include
-            layout="@layout/keyguard_status_bar"
-            android:visibility="invisible" />
-
         <Button
             android:id="@+id/report_rejected_touch"
             android:layout_width="wrap_content"

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="status_bar_no_sim">No SIM</string>
+    <string name="status_bar_private_notification">New notification</string>
+
+    <!-- R2 status-bar artwork is kept monochrome and follows the platform dark-icon tint. -->
+    <bool name="config_colored_notification_count">false</bool>
+
+    <!-- Smartisan component geometry; screen bounds and safe insets come from active overlays.
+         1080/400dpi baseline is 32px icons / 6+7px gaps / 24+23px content margins. Extra A16
+         status-bar height is vertical padding only and must not scale these values. -->
+    <dimen name="status_bar_icon_height">12.8dp</dimen>
+    <dimen name="status_bar_item_margin_start">2.4dp</dimen>
+    <dimen name="status_bar_item_margin_end">2.8dp</dimen>
+    <dimen name="status_bar_notification_icon_slot_width">20dp</dimen>
+    <dimen name="status_bar_notification_count_margin">1.15dp</dimen>
+    <dimen name="status_bar_battery_width">16.8dp</dimen>
+    <dimen name="status_bar_battery_margin_start">2.4dp</dimen>
+    <dimen name="status_bar_battery_margin_end">2.8dp</dimen>
+    <dimen name="status_bar_network_text_size">12dp</dimen>
+    <dimen name="privacy_icon_size">14.4dp</dimen>
+    <dimen name="status_bar_contents_margin_start">9.6dp</dimen>
+    <dimen name="status_bar_contents_margin_end">9.2dp</dimen>
+    <dimen name="status_bar_network_label_max_width">174dp</dimen>
+    <dimen name="status_bar_icon_padding">0dp</dimen>
+    <dimen name="status_bar_camera_area_width">0dp</dimen>
+    <dimen name="status_bar_ticker_icon_gap">3.2dp</dimen>
+    <dimen name="status_bar_network_speed_width">60dp</dimen>
+
+    <integer name="status_bar_panel_anim_duration">300</integer>
+    <integer name="status_bar_panel_anim_child_duration">200</integer>
+    <integer name="status_bar_panel_ticker_delay">500</integer>
+
+    <string-array name="sos_notification_call_packages" translatable="false">
+        <item>com.android.server.telecom</item>
+        <item>com.android.phone</item>
+        <item>com.android.dialer</item>
+        <item>com.google.android.dialer</item>
+    </string-array>
+
+    <string-array name="sos_notification_messaging_packages" translatable="false">
+        <item>com.android.mms</item>
+        <item>com.android.messaging</item>
+        <item>com.google.android.apps.messaging</item>
+    </string-array>
+
+    <string-array name="sos_notification_email_packages" translatable="false">
+        <item>com.android.email</item>
+        <item>com.android.exchange</item>
+        <item>com.google.android.gm</item>
+    </string-array>
+
+    <string-array name="sos_notification_android_packages" translatable="false">
+        <item>android</item>
+    </string-array>
+
+    <string-array name="sos_notification_systemui_packages" translatable="false">
+        <item>com.android.systemui</item>
+    </string-array>
+
+    <string-array name="sos_notification_hidden_packages" translatable="false">
+        <item>com.android.incallui</item>
+    </string-array>
+
+    <string-array name="sos_notification_social_packages" translatable="false">
+        <item>com.tencent.mm</item>
+        <item>com.tencent.mobileqq</item>
+        <item>com.sina.weibo</item>
+        <item>com.whatsapp</item>
+        <item>com.facebook.katana</item>
+        <item>com.facebook.orca</item>
+        <item>com.instagram.android</item>
+        <item>org.telegram.messenger</item>
+        <item>com.twitter.android</item>
+        <item>com.discord</item>
+    </string-array>
+
+    <integer name="carrier_network_change_anim_time">1200</integer>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="id" name="content" />
+    <item type="id" name="frame" />
+    <item type="id" name="stat_sys_battery_charge_anim" />
+    <item type="id" name="battery_graphic" />
+    <item type="id" name="battery_numeric" />
+    <item type="id" name="battery_charge_level" />
+    <item type="id" name="battery_charge_background" />
+    <item type="id" name="status_bar_ticker_content" />
+    <item type="id" name="status_bar_ticker_icon_switcher" />
+    <item type="id" name="status_bar_ticker_icon" />
+    <item type="id" name="status_bar_ticker_text_switcher" />
+    <item type="id" name="status_bar_ticker_text" />
+    <item type="id" name="net_speed_type" />
+    <item type="id" name="net_speed" />
+    <item type="id" name="net_unit" />
+</resources>

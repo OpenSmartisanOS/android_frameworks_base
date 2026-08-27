@@ -73,7 +73,7 @@
             android:id="@+id/mobile_roaming"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:src="@drawable/stat_sys_roaming"
+            android:src="@drawable/platform_stat_sys_roaming"
             android:contentDescription="@string/data_connection_roaming"
             android:visibility="gone" />
     </FrameLayout>

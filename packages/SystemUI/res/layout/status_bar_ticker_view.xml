@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/status_bar_ticker_view"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:visibility="gone"
+    android:importantForAccessibility="yes"
+    android:accessibilityLiveRegion="polite">
+
+    <ImageSwitcher
+        android:id="@id/status_bar_ticker_icon_switcher"
+        android:layout_width="@dimen/status_bar_icon_height"
+        android:layout_height="@dimen/status_bar_icon_height"
+        android:layout_gravity="center_vertical"
+        android:layout_marginEnd="8px"
+        android:animateFirstView="false"
+        android:importantForAccessibility="no">
+
+        <com.android.systemui.statusbar.AnimatedImageView
+            android:id="@id/status_bar_ticker_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerInside" />
+
+        <com.android.systemui.statusbar.AnimatedImageView
+            android:id="@id/status_bar_ticker_icon"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:scaleType="centerInside" />
+    </ImageSwitcher>
+
+    <TextSwitcher
+        android:id="@id/status_bar_ticker_text_switcher"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_weight="1"
+        android:animateFirstView="false">
+
+        <TextView
+            android:id="@id/status_bar_ticker_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="none"
+            android:gravity="center_vertical|start"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.StatusBar.Default"
+            android:textColor="#ffffffff" />
+
+        <TextView
+            android:id="@id/status_bar_ticker_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="none"
+            android:gravity="center_vertical|start"
+            android:includeFontPadding="false"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textAppearance="@style/TextAppearance.StatusBar.Default"
+            android:textColor="#ffffffff" />
+    </TextSwitcher>
+</LinearLayout>

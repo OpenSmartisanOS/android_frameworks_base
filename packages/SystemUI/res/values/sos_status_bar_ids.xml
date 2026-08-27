@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <item type="id" name="content" />
-    <item type="id" name="frame" />
-    <item type="id" name="stat_sys_battery_charge_anim" />
-</resources>
