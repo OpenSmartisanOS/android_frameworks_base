@@ -40,7 +40,7 @@ public class QuickswitchOrientedNavHandle extends NavigationHandle {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        canvas.drawRoundRect(computeHomeHandleBounds(), mRadius, mRadius, mPaint);
+        // Gesture input is owned by QuickStep; the rotated handle is visual-only.
     }
 
     public RectF computeHomeHandleBounds() {

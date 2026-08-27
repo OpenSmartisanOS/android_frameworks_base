@@ -1843,7 +1843,11 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
     private InsetsFrameProvider[] getInsetsFrameProvider(int insetsHeight, Context userContext) {
         final InsetsFrameProvider navBarProvider =
                 new InsetsFrameProvider(mInsetsSourceOwner, 0, WindowInsets.Type.navigationBars());
-        if (insetsHeight != -1 && !mEdgeBackGestureHandler.isButtonForcedVisible()) {
+        final boolean handlingGesture = mEdgeBackGestureHandler.isHandlingGestures();
+        if (handlingGesture) {
+            // Gesture navigation keeps its input sources, but contributes no visual/layout bar.
+            navBarProvider.setInsetsSize(Insets.NONE);
+        } else if (insetsHeight != -1 && !mEdgeBackGestureHandler.isButtonForcedVisible()) {
             navBarProvider.setInsetsSize(Insets.of(0, 0, 0, insetsHeight));
         }
         final boolean needsScrim = userContext.getResources().getBoolean(
@@ -1854,13 +1858,12 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
                 mInsetsSourceOwner, 0, WindowInsets.Type.tappableElement());
         final boolean tapThrough = userContext.getResources().getBoolean(
                 com.android.internal.R.bool.config_navBarTapThrough);
-        if (tapThrough) {
+        if (tapThrough || handlingGesture) {
             tappableElementProvider.setInsetsSize(Insets.NONE);
         }
 
         final int gestureHeight = userContext.getResources().getDimensionPixelSize(
                 com.android.internal.R.dimen.navigation_bar_gesture_height);
-        final boolean handlingGesture = mEdgeBackGestureHandler.isHandlingGestures();
         final InsetsFrameProvider mandatoryGestureProvider = new InsetsFrameProvider(
                 mInsetsSourceOwner, 0, WindowInsets.Type.mandatorySystemGestures());
         if (handlingGesture) {
@@ -1883,7 +1886,11 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
                         .setSource(InsetsFrameProvider.SOURCE_DISPLAY)
                         .setInsetsSize(Insets.of(0, 0, gestureInsetsRight, 0))
                         .setMinimalInsetsSizeInDisplayCutoutSafe(
-                                Insets.of(0, 0, gestureInsetsRight, 0))
+                                Insets.of(0, 0, gestureInsetsRight, 0)),
+                new InsetsFrameProvider(mInsetsSourceOwner, 2, WindowInsets.Type.systemGestures())
+                        .setSource(InsetsFrameProvider.SOURCE_DISPLAY)
+                        .setInsetsSize(handlingGesture
+                                ? Insets.of(0, 0, 0, gestureHeight) : Insets.NONE)
         };
     }
 
@@ -2038,8 +2045,10 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
         mView.setNavBarMode(mode, mNavigationModeController.getImeDrawsImeNavBar());
         if (isGesturalMode(mode)) {
             mRegionSamplingHelper.start(mSamplingBounds);
+            getBarTransitions().setBackgroundOverrideAlpha(0f);
         } else {
             mRegionSamplingHelper.stop();
+            getBarTransitions().setBackgroundOverrideAlpha(1f);
         }
     }
 
@@ -2059,13 +2068,6 @@ public class NavigationBar extends ViewController<NavigationBarView> implements 
         @Override
         public void onNavigationModeChanged(int mode) {
             mNavBarMode = mode;
-
-            if (!QuickStepContract.isGesturalMode(mode)) {
-                // Reset the override alpha
-                if (getBarTransitions() != null) {
-                    getBarTransitions().setBackgroundOverrideAlpha(1f);
-                }
-            }
 
             // Update the window layout params when the nav mode changes as that will affect the
             // system gesture insets

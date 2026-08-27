@@ -101,26 +101,9 @@ public class NavigationHandle extends View implements ButtonInterface {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-
-        // Draw that bar
-        int navHeight = getHeight();
-        float additionalHeight;
-        float additionalWidth;
-        if (mShrink) {
-            additionalHeight = 0;
-            additionalWidth = -mShrinkWidthForAnimation * mPulseAnimationProgress;
-        } else {
-            additionalHeight = mAdditionalHeightForAnimation * mPulseAnimationProgress;
-            additionalWidth = mAdditionalWidthForAnimation * mPulseAnimationProgress;
-        }
-
-        float height = mRadius * 2 + additionalHeight;
-        float width = getWidth() + additionalWidth;
-        float x = -additionalWidth;
-        float y = navHeight - mBottom - height + (additionalHeight / 2);
-        float adjustedRadius = height / 2;
-        canvas.drawRoundRect(x, y, width, y + height, adjustedRadius, adjustedRadius, mPaint);
+        // Smartisan's gestural navigation keeps the input channel but has no visual home handle.
+        // This is deliberately enforced at the final draw boundary so a late navigation-mode,
+        // IME or rotation update cannot resurrect the pill for one frame.
     }
 
     @Override
