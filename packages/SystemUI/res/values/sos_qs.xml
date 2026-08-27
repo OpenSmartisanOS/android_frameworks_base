@@ -19,7 +19,6 @@
     <dimen name="shade_switch_text_size">14sp</dimen>
     <dimen name="shade_action_margin_bottom">83dp</dimen>
     <dimen name="sos_qs_navbar_scrim_height">96dp</dimen>
-    <dimen name="sos_status_bar_round_radius">8dp</dimen>
     <dimen name="sos_brightness_height">46dp</dimen>
     <dimen name="sos_brightness_icon_size">22dp</dimen>
     <dimen name="sos_brightness_icon_margin_start">13dp</dimen>

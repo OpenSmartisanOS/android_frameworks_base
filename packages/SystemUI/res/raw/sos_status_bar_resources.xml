@@ -1,3 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools"
-    tools:keep="@drawable/stat_sys_wifi_signal_*,@drawable/stat_sys_signal_*,@drawable/stat_sys_battery*,@drawable/colored_stat_sys_battery*,@drawable/smaritisan_stat_sys_battery_*,@drawable/smaritisan_stat_sys_powersave_battery_*,@drawable/ic_alarm,@drawable/ic_bluetooth_connected,@drawable/ic_speaker_mute,@drawable/ic_volume_ringer_vibrate,@drawable/stat_sys_data_bluetooth_connected_battery_*,@drawable/stat_sys_cast,@drawable/stat_sys_connected_display,@drawable/stat_sys_signal_carrier_network_change*,@drawable/ic_qs_signal_carrier_network_change*" />

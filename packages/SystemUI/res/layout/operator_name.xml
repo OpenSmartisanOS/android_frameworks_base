@@ -28,5 +28,6 @@
         android:gravity="center_vertical|start"
         android:textAppearance="?android:attr/textAppearanceSmall"
         android:singleLine="true"
+        android:maxWidth="@dimen/status_bar_network_label_max_width"
         android:paddingEnd="5dp" />
 </com.android.systemui.statusbar.AlphaOptimizedFrameLayout>
