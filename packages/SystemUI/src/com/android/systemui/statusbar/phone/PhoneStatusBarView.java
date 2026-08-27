@@ -24,16 +24,13 @@ import android.graphics.Rect;
 import android.graphics.Region;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.Display;
 import android.view.DisplayCutout;
 import android.view.MotionEvent;
-import android.view.Surface;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowInsets;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.FrameLayout;
-import android.widget.LinearLayout;
 import android.window.DesktopExperienceFlags;
 
 import androidx.annotation.NonNull;
@@ -44,9 +41,7 @@ import com.android.systemui.res.R;
 import com.android.systemui.shade.ShadeExpandsOnStatusBarLongPress;
 import com.android.systemui.shade.StatusBarLongPressGestureDetector;
 import com.android.systemui.statusbar.core.StatusBarConnectedDisplays;
-import com.android.systemui.statusbar.phone.userswitcher.StatusBarUserSwitcherContainer;
 import com.android.systemui.statusbar.window.StatusBarWindowControllerStore;
-import com.android.systemui.user.ui.binder.StatusBarUserChipViewBinder;
 import com.android.systemui.user.ui.viewmodel.StatusBarUserChipViewModel;
 import com.android.systemui.util.leak.RotationUtils;
 
@@ -60,9 +55,9 @@ public class PhoneStatusBarView extends FrameLayout {
     private boolean mShouldUpdateStatusBarHeightWhenControllerSet = false;
     private int mRotationOrientation = -1;
     @Nullable
-    private View mCutoutSpace;
-    @Nullable
     private DisplayCutout mDisplayCutout;
+    @Nullable
+    private StatusBarCutoutMode mCutoutMode = StatusBarCutoutMode.NONE;
     @Nullable
     private Rect mDisplaySize;
     private int mStatusBarHeight;
@@ -71,18 +66,11 @@ public class PhoneStatusBarView extends FrameLayout {
     @Nullable
     private BooleanSupplier mIsStatusBarInteractiveSupplier;
     @Nullable
-    private HasCornerCutoutFetcher mHasCornerCutoutFetcher;
-    @Nullable
     private InsetsFetcher mInsetsFetcher;
     private int mDensity;
     private float mFontScale;
     private StatusBarLongPressGestureDetector mStatusBarLongPressGestureDetector;
     private final Region mTouchableRegion = Region.obtain();
-
-    /**
-     * Draw this many pixels into the left/right side of the cutout to optimally use the space
-     */
-    private int mCutoutSideNudge = 0;
 
     public PhoneStatusBarView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -104,8 +92,7 @@ public class PhoneStatusBarView extends FrameLayout {
     }
 
     void setHasCornerCutoutFetcher(@NonNull HasCornerCutoutFetcher cornerCutoutFetcher) {
-        mHasCornerCutoutFetcher = cornerCutoutFetcher;
-        updateCutoutLocation();
+        applyStatusBarCutoutLayout();
     }
 
     void setInsetsFetcher(@NonNull InsetsFetcher insetsFetcher) {
@@ -114,8 +101,7 @@ public class PhoneStatusBarView extends FrameLayout {
     }
 
     void init(StatusBarUserChipViewModel viewModel) {
-        StatusBarUserSwitcherContainer container = findViewById(R.id.user_switcher_container);
-        StatusBarUserChipViewBinder.bind(container, viewModel);
+        // R2 has no status-bar user chip. User switching remains owned by Keyguard/QS.
     }
 
     /** Updates the status bar's touchable region. */
@@ -127,9 +113,8 @@ public class PhoneStatusBarView extends FrameLayout {
     @Override
     public void onFinishInflate() {
         super.onFinishInflate();
-        mCutoutSpace = findViewById(R.id.cutout_space_view);
-
         updateResources();
+        applyStatusBarCutoutLayout();
     }
 
     @Override
@@ -138,6 +123,8 @@ public class PhoneStatusBarView extends FrameLayout {
         if (updateDisplayParameters()) {
             updateLayoutForCutout();
             updateWindowHeight();
+        } else {
+            applyStatusBarCutoutLayout();
         }
     }
 
@@ -165,17 +152,26 @@ public class PhoneStatusBarView extends FrameLayout {
 
     @Override
     public WindowInsets onApplyWindowInsets(WindowInsets insets) {
-        if (updateDisplayParameters()) {
+        final WindowInsets result = super.onApplyWindowInsets(insets);
+        final boolean changed = updateDisplayParameters(insets);
+        // The R2 host must consume the insets delivered for this traversal. Re-reading
+        // getRootWindowInsets() before View has committed them can retain the previous rotation's
+        // cutout (or NO_CUTOUT after a SystemUI restart), leaving the clock in the NONE layout.
+        if (changed || isAttachedToWindow()) {
             updateLayoutForCutout();
             requestLayout();
         }
-        return super.onApplyWindowInsets(insets);
+        return result;
     }
 
     /**
      * @return boolean indicating if we need to update the cutout location / margins
      */
     private boolean updateDisplayParameters() {
+        return updateDisplayParameters(getRootWindowInsets());
+    }
+
+    private boolean updateDisplayParameters(@Nullable WindowInsets insets) {
         boolean changed = false;
         int newRotation = RotationUtils.getExactRotation(mContext);
         if (newRotation != mRotationOrientation) {
@@ -183,9 +179,13 @@ public class PhoneStatusBarView extends FrameLayout {
             mRotationOrientation = newRotation;
         }
 
-        if (!Objects.equals(getRootWindowInsets().getDisplayCutout(), mDisplayCutout)) {
+        // A null root-insets snapshot is only a transient lifecycle state. Do not erase the last
+        // valid cutout while the new rotation is being attached; the next onApplyWindowInsets()
+        // call supplies the authoritative value.
+        final DisplayCutout newCutout = insets == null ? null : insets.getDisplayCutout();
+        if (insets != null && !Objects.equals(newCutout, mDisplayCutout)) {
             changed = true;
-            mDisplayCutout = getRootWindowInsets().getDisplayCutout();
+            mDisplayCutout = newCutout;
         }
 
         Configuration newConfiguration = mContext.getResources().getConfiguration();
@@ -284,9 +284,6 @@ public class PhoneStatusBarView extends FrameLayout {
     }
 
     public void updateResources() {
-        mCutoutSideNudge = getResources().getDimensionPixelSize(
-                R.dimen.display_cutout_margin_consumption);
-
         updateStatusBarHeight();
     }
 
@@ -317,14 +314,17 @@ public class PhoneStatusBarView extends FrameLayout {
         layoutParams.height = mStatusBarHeight - waterfallTopInset;
         updateSystemIconsContainerHeight();
         updatePaddings();
+        applyStatusBarGeometry();
         setLayoutParams(layoutParams);
     }
 
     private void updateSystemIconsContainerHeight() {
         View systemIconsContainer = findViewById(R.id.system_icons);
+        if (systemIconsContainer == null) {
+            return;
+        }
         ViewGroup.LayoutParams layoutParams = systemIconsContainer.getLayoutParams();
-        int newSystemIconsHeight =
-                getResources().getDimensionPixelSize(R.dimen.status_bar_system_icons_height);
+        int newSystemIconsHeight = ViewGroup.LayoutParams.MATCH_PARENT;
         if (layoutParams.height != newSystemIconsHeight) {
             layoutParams.height = newSystemIconsHeight;
             systemIconsContainer.setLayoutParams(layoutParams);
@@ -332,60 +332,129 @@ public class PhoneStatusBarView extends FrameLayout {
     }
 
     private void updatePaddings() {
-        int statusBarPaddingStart = getResources().getDimensionPixelSize(
-                R.dimen.status_bar_padding_start);
+        View contents = findViewById(R.id.status_bar_contents);
+        if (contents != null) {
+            ViewGroup.MarginLayoutParams lp =
+                    (ViewGroup.MarginLayoutParams) contents.getLayoutParams();
+            StatusBarMetrics metrics = getStatusBarMetrics();
+            lp.setMarginStart(metrics.getContentMarginStart());
+            lp.setMarginEnd(metrics.getContentMarginEnd());
+            contents.setLayoutParams(lp);
+            contents.setPadding(0, 0, 0, 0);
+        }
+        View systemIcons = findViewById(R.id.system_icons);
+        if (systemIcons != null) {
+            systemIcons.setPadding(0, 0, 0, 0);
+        }
+    }
 
-        findViewById(R.id.status_bar_contents).setPaddingRelative(
-                statusBarPaddingStart,
-                getResources().getDimensionPixelSize(R.dimen.status_bar_padding_top),
-                getResources().getDimensionPixelSize(R.dimen.status_bar_padding_end),
-                0);
+    private StatusBarMetrics getStatusBarMetrics() {
+        int width = getWidth();
+        if (width <= 0 && getRootView() != null) {
+            width = getRootView().getWidth();
+        }
+        if (width <= 0) {
+            width = getResources().getConfiguration().windowConfiguration.getBounds().width();
+        }
+        if (width <= 0) {
+            width = getResources().getDisplayMetrics().widthPixels;
+        }
+        Insets insets = mInsetsFetcher == null ? Insets.NONE : mInsetsFetcher.fetchInsets();
+        return StatusBarGeometry.calculate(
+                width,
+                getResources().getDisplayMetrics().density,
+                mStatusBarHeight > 0 ? mStatusBarHeight : SystemBarUtils.getStatusBarHeight(mContext),
+                insets);
+    }
 
-        findViewById(R.id.notification_lights_out)
-                .setPaddingRelative(0, statusBarPaddingStart, 0, 0);
+    private void applyStatusBarGeometry() {
+        StatusBarMetrics metrics = getStatusBarMetrics();
+        setViewSize(findViewById(R.id.notification_lights_out),
+                metrics.getIconHeight(), ViewGroup.LayoutParams.MATCH_PARENT);
+        View lightsOut = findViewById(R.id.notification_lights_out);
+        if (lightsOut != null) {
+            lightsOut.setPaddingRelative(metrics.getItemMarginStart(), 0, 0, 0);
+        }
+        setViewSize(findViewById(R.id.privacy_icon),
+                metrics.getIconHeight(), metrics.getIconHeight());
+        setViewHeightAndMargins(findViewById(R.id.otg), metrics.getIconHeight(), metrics);
+        setViewMargins(findViewById(R.id.battery), metrics);
+        setViewMargins(findViewById(R.id.network_label), metrics);
+        setViewMargins(findViewById(R.id.sidebar_drag), metrics);
+        setViewSize(findViewById(R.id.net_speed_view),
+                metrics.getNetworkSpeedWidth(), ViewGroup.LayoutParams.MATCH_PARENT);
+        View contents = findViewById(R.id.status_bar_contents);
+        if (contents != null
+                && contents.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp) {
+            lp.setMarginStart(metrics.getContentMarginStart());
+            lp.setMarginEnd(metrics.getContentMarginEnd());
+            contents.setLayoutParams(lp);
+        }
+        View ticker = findViewById(R.id.status_bar_ticker_view);
+        if (ticker != null) {
+            ticker.setPaddingRelative(
+                    metrics.getTickerPaddingStart(), 0, metrics.getTickerPaddingEnd(), 0);
+        }
+    }
 
-        findViewById(R.id.system_icons).setPaddingRelative(
-                getResources().getDimensionPixelSize(R.dimen.status_bar_icons_padding_start),
-                getResources().getDimensionPixelSize(R.dimen.status_bar_icons_padding_top),
-                getResources().getDimensionPixelSize(R.dimen.status_bar_icons_padding_end),
-                getResources().getDimensionPixelSize(R.dimen.status_bar_icons_padding_bottom)
-        );
+    private static void setViewSize(View view, int width, int height) {
+        if (view == null) return;
+        ViewGroup.LayoutParams lp = view.getLayoutParams();
+        lp.width = width;
+        lp.height = height;
+        view.setLayoutParams(lp);
+    }
+
+    private static void setViewHeightAndMargins(
+            View view, int height, StatusBarMetrics metrics) {
+        if (view == null) return;
+        ViewGroup.LayoutParams raw = view.getLayoutParams();
+        raw.height = height;
+        if (raw instanceof ViewGroup.MarginLayoutParams lp) {
+            lp.setMarginStart(metrics.getItemMarginStart());
+            lp.setMarginEnd(metrics.getItemMarginEnd());
+        }
+        view.setLayoutParams(raw);
+    }
+
+    private static void setViewMargins(View view, StatusBarMetrics metrics) {
+        if (view == null || !(view.getLayoutParams() instanceof ViewGroup.MarginLayoutParams lp)) {
+            return;
+        }
+        lp.setMarginStart(metrics.getItemMarginStart());
+        lp.setMarginEnd(metrics.getItemMarginEnd());
+        view.setLayoutParams(lp);
     }
 
     private void updateLayoutForCutout() {
         updateStatusBarHeight();
-        updateCutoutLocation();
+        applyStatusBarCutoutLayout();
         updateSafeInsets();
     }
 
-    private void updateCutoutLocation() {
-        // Not all layouts have a cutout (e.g., Car)
-        if (mCutoutSpace == null) {
-            return;
+    private void applyStatusBarCutoutLayout() {
+        View contents = findViewById(R.id.status_bar_contents);
+        // The status-bar window can be narrower than max bounds in split/folded configurations.
+        int screenWidth = getWidth();
+        if (screenWidth <= 0 && getRootView() != null) {
+            screenWidth = getRootView().getWidth();
         }
-
-        boolean hasCornerCutout;
-        if (mHasCornerCutoutFetcher != null) {
-            hasCornerCutout = mHasCornerCutoutFetcher.fetchHasCornerCutout();
-        } else {
-            Log.e(TAG, "mHasCornerCutoutFetcher unexpectedly null");
-            hasCornerCutout = true;
+        if (screenWidth <= 0) {
+            screenWidth = getResources().getConfiguration().windowConfiguration.getBounds().width();
         }
-
-        if (mDisplayCutout == null || mDisplayCutout.isEmpty() || hasCornerCutout) {
-            mCutoutSpace.setVisibility(View.GONE);
-            return;
+        if (screenWidth <= 0) {
+            screenWidth = getResources().getDisplayMetrics().widthPixels;
         }
-
-        mCutoutSpace.setVisibility(View.VISIBLE);
-        LinearLayout.LayoutParams lp = (LinearLayout.LayoutParams) mCutoutSpace.getLayoutParams();
-
-        Rect bounds = mDisplayCutout.getBoundingRectTop();
-
-        bounds.left = bounds.left + mCutoutSideNudge;
-        bounds.right = bounds.right - mCutoutSideNudge;
-        lp.width = bounds.width();
-        lp.height = bounds.height();
+        StatusBarCutoutMode mode =
+                StatusBarCutoutClassifier.classify(mDisplayCutout, screenWidth);
+        mCutoutMode = mode;
+        // R2 remains fully transparent on modern displays. The cutout still participates in
+        // geometry so icons never render beneath the camera, but it does not own a black mask.
+        setBackground(null);
+        Rect bounds =
+                mDisplayCutout == null ? null : new Rect(mDisplayCutout.getBoundingRectTop());
+        StatusBarCutoutLayout.apply(
+                contents instanceof ViewGroup ? (ViewGroup) contents : null, mode, bounds);
     }
 
     private void updateSafeInsets() {
@@ -395,21 +464,27 @@ public class PhoneStatusBarView extends FrameLayout {
         }
 
         Insets insets = mInsetsFetcher.fetchInsets();
+        int leftInset = insets.left;
+        int rightInset = insets.right;
+        StatusBarMetrics metrics = getStatusBarMetrics();
+        leftInset = Math.max(0, leftInset - metrics.getContentMarginStart());
+        rightInset = Math.max(0, rightInset - metrics.getContentMarginEnd());
         setPadding(
-                insets.left,
+                leftInset,
                 insets.top,
-                insets.right,
+                rightInset,
                 getPaddingBottom());
 
-        // Apply negative paddings to centered area layout so that we'll actually be on the center.
-        Display display = getDisplay();
-        final int winRotation = display != null ? display.getRotation() : Surface.ROTATION_0;
-        LayoutParams centeredAreaParams =
-                (LayoutParams) findViewById(R.id.centered_area).getLayoutParams();
-        centeredAreaParams.leftMargin =
-                winRotation == Surface.ROTATION_0 ? -insets.left : 0;
-        centeredAreaParams.rightMargin =
-                winRotation == Surface.ROTATION_0 ? -insets.right : 0;
+        View clockHost = findViewById(R.id.privacy_highlight);
+        if (clockHost == null) {
+            clockHost = findViewById(R.id.clock);
+        }
+        if (clockHost != null) {
+            clockHost.setTranslationX(
+                    mCutoutMode == StatusBarCutoutMode.NONE
+                            ? (getPaddingRight() - getPaddingLeft()) / 2f
+                            : 0f);
+        }
     }
 
     private void updateWindowHeight() {

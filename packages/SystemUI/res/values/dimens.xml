@@ -178,9 +178,9 @@
     <dimen name="status_bar_clock_size">14sp</dimen>
 
     <!-- Dimensions recovered from the SOS notification-count glyph implementation. -->
-    <dimen name="sos_notification_count_text_size">8sp</dimen>
-    <dimen name="sos_notification_count_max_offset_x">1dp</dimen>
-    <dimen name="sos_notification_count_text_offset_y">0dp</dimen>
+    <dimen name="status_bar_notification_count_text_size">10dp</dimen>
+    <dimen name="status_bar_notification_count_max_offset_x">2.74dp</dimen>
+    <dimen name="status_bar_notification_count_text_offset_y">0.38dp</dimen>
 
     <!-- The starting padding for the clock in the status bar. -->
     <dimen name="status_bar_clock_starting_padding">2dp</dimen>
@@ -192,7 +192,7 @@
     <dimen name="status_bar_left_clock_starting_padding">0dp</dimen>
 
     <!-- End padding for left-aligned status bar clock -->
-    <dimen name="status_bar_left_clock_end_padding">1sp</dimen>
+    <dimen name="status_bar_left_clock_end_padding">2.7dp</dimen>
 
     <!-- Margins before/after the new wifi icon -->
     <dimen name="status_bar_wifi_signal_horizontal_margin">1sp</dimen>
