@@ -21,15 +21,15 @@ import android.os.Handler
 import android.testing.AndroidTestingRunner
 import androidx.test.filters.SmallTest
 import com.android.systemui.SysuiTestCase
-import com.android.systemui.battery.SosBatteryStateController
+import com.android.systemui.battery.BatteryStateController
 import com.android.systemui.flags.FeatureFlags
 import com.android.systemui.settings.UserTracker
 import com.android.systemui.statusbar.data.repository.StatusBarContentInsetsProviderStore
-import com.android.systemui.statusbar.phone.SosStatusBarAccessoryController
-import com.android.systemui.statusbar.phone.SosStatusBarAppearanceController
-import com.android.systemui.statusbar.phone.SosStatusBarModeCoordinator
-import com.android.systemui.statusbar.phone.SosStatusBarTickerController
-import com.android.systemui.statusbar.phone.ui.SosSystemIconsController
+import com.android.systemui.statusbar.phone.StatusBarAccessoryController
+import com.android.systemui.statusbar.phone.StatusBarAppearanceController
+import com.android.systemui.statusbar.phone.StatusBarModeCoordinator
+import com.android.systemui.statusbar.phone.StatusBarTickerController
+import com.android.systemui.statusbar.phone.ui.SystemIconsController
 import com.android.systemui.statusbar.phone.ui.TintedIconManager
 import com.android.systemui.statusbar.policy.BatteryController
 import com.android.systemui.statusbar.policy.ConfigurationController
@@ -45,14 +45,14 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidTestingRunner::class)
 class ShadeHeaderControllerTest : SysuiTestCase() {
 
-    private val modeCoordinator = mock<SosStatusBarModeCoordinator>()
+    private val modeCoordinator = mock<StatusBarModeCoordinator>()
     private lateinit var underTest: ShadeHeaderController
 
     @Before
     fun setUp() {
         underTest =
             ShadeHeaderController(
-                mock<SosSystemIconsController>(),
+                mock<SystemIconsController>(),
                 mock<TintedIconManager.Factory>(),
                 mock<UserTracker>(),
                 mock<ConfigurationController>(),
@@ -61,12 +61,12 @@ class ShadeHeaderControllerTest : SysuiTestCase() {
                 mock<ContentResolver>(),
                 mock<FeatureFlags>(),
                 mock<BatteryController>(),
-                mock<SosBatteryStateController>(),
+                mock<BatteryStateController>(),
                 mock<StatusBarContentInsetsProviderStore>(),
-                mock<SosStatusBarAppearanceController>(),
-                mock<SosStatusBarAccessoryController>(),
+                mock<StatusBarAppearanceController>(),
+                mock<StatusBarAccessoryController>(),
                 modeCoordinator,
-                mock<SosStatusBarTickerController>(),
+                mock<StatusBarTickerController>(),
             )
     }
 

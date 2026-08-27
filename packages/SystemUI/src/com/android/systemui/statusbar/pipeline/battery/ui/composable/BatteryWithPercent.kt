@@ -54,24 +54,24 @@ import com.android.systemui.statusbar.pipeline.battery.data.repository.BatteryRe
 import com.android.systemui.statusbar.pipeline.battery.shared.ui.BatteryColors
 import com.android.systemui.statusbar.pipeline.battery.ui.viewmodel.BatteryViewModel
 
-private enum class SosBatteryState {
+private enum class BatteryState {
     FULL,
     CHARGING,
     POWER_SAVE,
     NORMAL,
 }
 
-private fun resolveSosBatteryState(
+private fun resolveBatteryState(
     isFull: Boolean,
     isPluggedIn: Boolean,
     isCharging: Boolean,
     isPowerSave: Boolean,
-): SosBatteryState =
+): BatteryState =
     when {
-        isFull && isPluggedIn -> SosBatteryState.FULL
-        isCharging -> SosBatteryState.CHARGING
-        isPowerSave -> SosBatteryState.POWER_SAVE
-        else -> SosBatteryState.NORMAL
+        isFull && isPluggedIn -> BatteryState.FULL
+        isCharging -> BatteryState.CHARGING
+        isPowerSave -> BatteryState.POWER_SAVE
+        else -> BatteryState.NORMAL
     }
 
 @Composable
@@ -114,7 +114,7 @@ fun BatteryWithPercent(
         val context = LocalContext.current
         val level = viewModel.level?.coerceIn(0, 100) ?: 0
         val batteryState =
-            resolveSosBatteryState(
+            resolveBatteryState(
                 isFull = viewModel.isFull,
                 isPluggedIn = viewModel.isPluggedIn,
                 isCharging = viewModel.isCharging,
@@ -128,16 +128,16 @@ fun BatteryWithPercent(
                 "${prefix}_${level.coerceAtLeast(1)}"
             } else {
                 when (batteryState) {
-                    SosBatteryState.FULL -> "stat_sys_battery_full"
-                    SosBatteryState.CHARGING -> "stat_sys_battery_charge"
-                    SosBatteryState.POWER_SAVE,
-                    SosBatteryState.NORMAL -> "stat_sys_battery"
+                    BatteryState.FULL -> "stat_sys_battery_full"
+                    BatteryState.CHARGING -> "stat_sys_battery_charge"
+                    BatteryState.POWER_SAVE,
+                    BatteryState.NORMAL -> "stat_sys_battery"
                 }
             }
         val levelRes =
             context.resources.getIdentifier(levelResourceName, "drawable", context.packageName)
         if (levelRes != 0) {
-            if (showPercent && batteryState == SosBatteryState.CHARGING) {
+            if (showPercent && batteryState == BatteryState.CHARGING) {
                 val backgroundName =
                     when {
                         viewModel.isPowerSave -> "smaritisan_stat_sys_powersave_battery_backgroud"
@@ -146,7 +146,7 @@ fun BatteryWithPercent(
                     }
                 val backgroundRes =
                     context.resources.getIdentifier(backgroundName, "drawable", context.packageName)
-                val transition = rememberInfiniteTransition(label = "sosBatteryCharge")
+                val transition = rememberInfiniteTransition(label = "batteryCharge")
                 val backgroundAlpha by
                     transition.animateFloat(
                         initialValue = 0f,
@@ -164,10 +164,10 @@ fun BatteryWithPercent(
                                     },
                                 repeatMode = RepeatMode.Restart,
                             ),
-                        label = "sosBatteryChargeBackground",
+                        label = "batteryChargeBackground",
                     )
                 Box(modifier = Modifier.height(batteryHeight).wrapContentWidth()) {
-                    SosBatteryImage(
+                    BatteryImage(
                         resourceId = levelRes,
                         level = level,
                         contentDescription = viewModel.contentDescription.load(),
@@ -175,7 +175,7 @@ fun BatteryWithPercent(
                         modifier = Modifier.height(batteryHeight).alpha(1f - backgroundAlpha),
                     )
                     if (backgroundRes != 0) {
-                        SosBatteryImage(
+                        BatteryImage(
                             resourceId = backgroundRes,
                             level = level,
                             contentDescription = null,
@@ -188,12 +188,12 @@ fun BatteryWithPercent(
                     }
                 }
             } else {
-                SosBatteryImage(
+                BatteryImage(
                     resourceId = levelRes,
                     level = level,
                     contentDescription = viewModel.contentDescription.load(),
                     tint = colorProducer().toArgb(),
-                    startAnimation = batteryState == SosBatteryState.CHARGING && !showPercent,
+                    startAnimation = batteryState == BatteryState.CHARGING && !showPercent,
                     modifier = Modifier.height(batteryHeight).wrapContentWidth(),
                 )
             }
@@ -214,7 +214,7 @@ fun BatteryWithPercent(
 }
 
 @Composable
-private fun SosBatteryImage(
+private fun BatteryImage(
     resourceId: Int,
     level: Int,
     contentDescription: String?,
@@ -223,7 +223,7 @@ private fun SosBatteryImage(
     startAnimation: Boolean = false,
 ) {
     AndroidView(
-        factory = { SosBatteryImageView(it).apply { scaleType = ImageView.ScaleType.CENTER_INSIDE } },
+        factory = { BatteryImageView(it).apply { scaleType = ImageView.ScaleType.CENTER_INSIDE } },
         update = { imageView ->
             val resourceChanged = imageView.tag != resourceId
             if (resourceChanged) {
@@ -245,7 +245,7 @@ private fun SosBatteryImage(
     )
 }
 
-private class SosBatteryImageView(context: Context) : ImageView(context) {
+private class BatteryImageView(context: Context) : ImageView(context) {
     override fun onDetachedFromWindow() {
         stopDrawableAnimation()
         super.onDetachedFromWindow()

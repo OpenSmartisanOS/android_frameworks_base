@@ -57,6 +57,7 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
     private final ContentResolver mContentResolver;
     private final FeatureFlags mFeatureFlags;
     private final BatteryController mBatteryController;
+    private final BatteryStateController mBatteryStateController;
 
     private final String mSlotBattery;
     private final SettingObserver mSettingObserver;
@@ -143,7 +144,8 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
             @Main Handler mainHandler,
             ContentResolver contentResolver,
             FeatureFlags featureFlags,
-            BatteryController batteryController) {
+            BatteryController batteryController,
+            BatteryStateController batteryStateController) {
         super(view);
         mLocation = location;
         mUserTracker = userTracker;
@@ -153,8 +155,11 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
         mContentResolver = contentResolver;
         mFeatureFlags = featureFlags;
         mBatteryController = batteryController;
+        mBatteryStateController = batteryStateController;
 
-        mView.setBatteryEstimateFetcher(mBatteryController::getEstimatedTimeRemainingString);
+        if (!(mView instanceof BatteryView)) {
+            mView.setBatteryEstimateFetcher(mBatteryController::getEstimatedTimeRemainingString);
+        }
 
         mSlotBattery = getResources().getString(com.android.internal.R.string.status_bar_battery);
         mSettingObserver = new SettingObserver(mMainHandler);
@@ -164,23 +169,28 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
     protected void onViewAttached() {
         mConfigurationController.addCallback(mConfigurationListener);
         subscribeForTunerUpdates();
-        mBatteryController.addCallback(mBatteryStateChangeCallback);
-
-        registerShowBatteryPercentObserver(mUserTracker.getUserId());
-        registerGlobalBatteryUpdateObserver();
-        mUserTracker.addCallback(mUserChangedCallback, new HandlerExecutor(mMainHandler));
-
-        mView.updateShowPercent();
+        if (mView instanceof BatteryView batteryView) {
+            mBatteryStateController.addListener(batteryView);
+        } else {
+            mBatteryController.addCallback(mBatteryStateChangeCallback);
+            registerShowBatteryPercentObserver(mUserTracker.getUserId());
+            registerGlobalBatteryUpdateObserver();
+            mUserTracker.addCallback(mUserChangedCallback, new HandlerExecutor(mMainHandler));
+            mView.updateShowPercent();
+        }
     }
 
     @Override
     protected void onViewDetached() {
         mConfigurationController.removeCallback(mConfigurationListener);
         unsubscribeFromTunerUpdates();
-        mBatteryController.removeCallback(mBatteryStateChangeCallback);
-
-        mUserTracker.removeCallback(mUserChangedCallback);
-        mContentResolver.unregisterContentObserver(mSettingObserver);
+        if (mView instanceof BatteryView batteryView) {
+            mBatteryStateController.removeListener(batteryView);
+        } else {
+            mBatteryController.removeCallback(mBatteryStateChangeCallback);
+            mUserTracker.removeCallback(mUserChangedCallback);
+            mContentResolver.unregisterContentObserver(mSettingObserver);
+        }
     }
 
     /**
@@ -252,6 +262,7 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
         private final ContentResolver mContentResolver;
         private final FeatureFlags mFeatureFlags;
         private final BatteryController mBatteryController;
+        private final BatteryStateController mBatteryStateController;
 
         @Inject
         public Factory(
@@ -261,7 +272,8 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
                 @Main Handler mainHandler,
                 ContentResolver contentResolver,
                 FeatureFlags featureFlags,
-                BatteryController batteryController
+                BatteryController batteryController,
+                BatteryStateController batteryStateController
         ) {
             mUserTracker = userTracker;
             mConfigurationController = configurationController;
@@ -270,6 +282,7 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
             mContentResolver = contentResolver;
             mFeatureFlags = featureFlags;
             mBatteryController = batteryController;
+            mBatteryStateController = batteryStateController;
         }
 
         /** */
@@ -283,7 +296,8 @@ public class BatteryMeterViewController extends ViewController<BatteryMeterView>
                     mMainHandler,
                     mContentResolver,
                     mFeatureFlags,
-                    mBatteryController
+                    mBatteryController,
+                    mBatteryStateController
             );
         }
     }

@@ -346,6 +346,11 @@ public class BatteryControllerImpl extends BroadcastReceiver implements BatteryC
     }
 
     @Override
+    public boolean isCharged() {
+        return mCharged;
+    }
+
+    @Override
     public boolean isPowerSave() {
         return mPowerSave;
     }
@@ -526,6 +531,11 @@ public class BatteryControllerImpl extends BroadcastReceiver implements BatteryC
         if (plugged != null) {
             mPluggedIn = Boolean.parseBoolean(plugged);
         }
+        // The platform demo protocol has no FULL status field. Treat its plugged bit as the
+        // synthetic charging state and clear any real-device FULL value cached before demo mode,
+        // otherwise a 100% device can pin Smartisan's demo battery to the static full artwork.
+        mCharged = false;
+        mCharging = mPluggedIn;
         if (powerSave != null) {
             mPowerSave = powerSave.equals("true");
             firePowerSaveChanged();

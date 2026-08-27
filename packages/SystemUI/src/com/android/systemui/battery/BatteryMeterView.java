@@ -803,4 +803,3 @@ public class BatteryMeterView extends LinearLayout implements DarkReceiver {
                 BatteryController.EstimateFetchCompletion completion);
     }
 }
-

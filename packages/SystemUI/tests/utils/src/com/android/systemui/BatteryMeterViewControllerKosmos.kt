@@ -36,6 +36,7 @@ Kosmos.Fixture {
         mock<Handler>(),
         MockContentResolver(),
         featureFlagsClassic.fake,
-        batteryController
+        batteryController,
+        mock<BatteryStateController>()
     )
 }

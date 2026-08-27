@@ -35,6 +35,7 @@ import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbPort;
 import android.hardware.usb.UsbPortStatus;
 import android.os.BatteryManager;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.PowerManager;
 import android.os.PowerSaveState;
@@ -267,6 +268,40 @@ public class BatteryControllerTest extends SysuiTestCase {
         mBatteryController.onReceive(getContext(), intent);
 
         Assert.assertFalse(mBatteryController.isBatteryDefender());
+    }
+
+    @Test
+    public void isCharged_usesExactFullStatus_notLevelOrPlugState() {
+        Intent chargingAtHundred = createChargingIntent(true)
+                .putExtra(BatteryManager.EXTRA_LEVEL, 100)
+                .putExtra(BatteryManager.EXTRA_SCALE, 100);
+        mBatteryController.onReceive(getContext(), chargingAtHundred);
+        assertThat(mBatteryController.isCharged()).isFalse();
+
+        Intent full = new Intent(Intent.ACTION_BATTERY_CHANGED)
+                .putExtra(BatteryManager.EXTRA_LEVEL, 100)
+                .putExtra(BatteryManager.EXTRA_SCALE, 100)
+                .putExtra(BatteryManager.EXTRA_PLUGGED, BatteryManager.BATTERY_PLUGGED_USB)
+                .putExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_FULL);
+        mBatteryController.onReceive(getContext(), full);
+        assertThat(mBatteryController.isCharged()).isTrue();
+    }
+
+    @Test
+    public void demoBattery_clearsCachedFullStatus() {
+        Intent full = new Intent(Intent.ACTION_BATTERY_CHANGED)
+                .putExtra(BatteryManager.EXTRA_PLUGGED, BatteryManager.BATTERY_PLUGGED_USB)
+                .putExtra(BatteryManager.EXTRA_STATUS, BatteryManager.BATTERY_STATUS_FULL);
+        mBatteryController.onReceive(getContext(), full);
+        assertThat(mBatteryController.isCharged()).isTrue();
+
+        when(mDemoModeController.isInDemoMode()).thenReturn(true);
+        Bundle args = new Bundle();
+        args.putString("level", "100");
+        args.putString("plugged", "true");
+        mBatteryController.dispatchDemoCommand("battery", args);
+
+        assertThat(mBatteryController.isCharged()).isFalse();
     }
 
     @Test

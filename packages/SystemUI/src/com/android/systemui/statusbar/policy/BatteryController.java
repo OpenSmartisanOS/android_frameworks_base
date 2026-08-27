@@ -75,6 +75,17 @@ public interface BatteryController extends DemoMode,
     boolean isPluggedIn();
 
     /**
+     * Returns {@code true} only when the latest battery status is
+     * {@link android.os.BatteryManager#BATTERY_STATUS_FULL}.
+     *
+     * <p>This is intentionally separate from the battery level. A device can report 100% while
+     * it is still charging, and Smartisan's status-bar battery has a distinct, static full state.
+     */
+    default boolean isCharged() {
+        return false;
+    }
+
+    /**
      * Returns {@code true} if the device is currently plugged in via wireless charger.
      */
     default boolean isPluggedInWireless() {
