@@ -93,7 +93,6 @@ import com.android.systemui.statusbar.notification.stack.NotificationStackScroll
 import com.android.systemui.statusbar.notification.stack.NotificationStackScrollLayoutController;
 import com.android.systemui.statusbar.notification.stack.StackStateAnimator;
 import com.android.systemui.statusbar.phone.KeyguardBypassController;
-import com.android.systemui.statusbar.phone.KeyguardStatusBarView;
 import com.android.systemui.statusbar.phone.LightBarController;
 import com.android.systemui.statusbar.phone.LockscreenGestureLogger;
 import com.android.systemui.statusbar.phone.ScrimController;
@@ -129,7 +128,6 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
 
     private final NotificationPanelView mPanelView;
     private final Lazy<LargeScreenHeaderHelper> mLargeScreenHeaderHelperLazy;
-    private final KeyguardStatusBarView mKeyguardStatusBar;
     private final FrameLayout mQsFrame;
 
     private final QsFrameTranslateController mQsFrameTranslateController;
@@ -362,7 +360,6 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
         mPanelView = panelView;
         mLargeScreenHeaderHelperLazy = largeScreenHeaderHelperLazy;
         mQsFrame = mPanelView.findViewById(R.id.qs_frame);
-        mKeyguardStatusBar = mPanelView.findViewById(R.id.keyguard_header);
         mResources = mPanelView.getResources();
         mSplitShadeStateController = splitShadeStateController;
         mSplitShadeEnabled = false;

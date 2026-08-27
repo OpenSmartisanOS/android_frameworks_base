@@ -42,7 +42,6 @@ class NotificationsQuickSettingsContainerTest : SysuiTestCase() {
 
     @Mock private lateinit var qsFrame: View
     @Mock private lateinit var stackScroller: View
-    @Mock private lateinit var keyguardStatusBar: View
     @Mock private lateinit var qsFragment: QSFragmentLegacy
 
     private lateinit var qsView: ViewGroup
@@ -346,17 +345,13 @@ class NotificationsQuickSettingsContainerTest : SysuiTestCase() {
         whenever(qsFrame.findViewById<View>(R.id.qs_frame)).thenReturn(qsFrame)
         whenever(stackScroller.findViewById<View>(R.id.notification_stack_scroller))
             .thenReturn(stackScroller)
-        whenever(keyguardStatusBar.findViewById<View>(R.id.keyguard_header))
-            .thenReturn(keyguardStatusBar)
         whenever(qsFragment.view).thenReturn(qsView)
 
         val layoutParams = ConstraintLayout.LayoutParams(0, 0)
         whenever(qsFrame.layoutParams).thenReturn(layoutParams)
         whenever(stackScroller.layoutParams).thenReturn(layoutParams)
-        whenever(keyguardStatusBar.layoutParams).thenReturn(layoutParams)
 
         underTest.addView(qsFrame)
         underTest.addView(stackScroller)
-        underTest.addView(keyguardStatusBar)
     }
 }

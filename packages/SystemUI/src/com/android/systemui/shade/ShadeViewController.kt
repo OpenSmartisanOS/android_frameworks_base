@@ -19,8 +19,6 @@ import android.view.MotionEvent
 import com.android.systemui.power.shared.model.WakefulnessModel
 import com.android.systemui.statusbar.notification.row.ExpandableNotificationRow
 import com.android.systemui.statusbar.phone.HeadsUpAppearanceController
-import com.android.systemui.statusbar.phone.KeyguardStatusBarView
-import com.android.systemui.statusbar.phone.KeyguardStatusBarViewController
 import java.util.function.Consumer
 
 /**
@@ -168,7 +166,7 @@ interface ShadeFoldAnimator {
 
 /**
  * An interface that provides the current state of the notification panel and related views, which
- * is needed to calculate [KeyguardStatusBarView]'s state in [KeyguardStatusBarViewController].
+ * is needed to calculate lockscreen shade state.
  */
 @Deprecated("This interface should not be used in scene container.")
 interface ShadeViewStateProvider {

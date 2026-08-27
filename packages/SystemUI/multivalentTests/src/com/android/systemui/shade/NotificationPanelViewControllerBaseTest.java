@@ -40,6 +40,7 @@ import static org.mockito.Mockito.when;
 
 import android.animation.Animator;
 import android.annotation.IdRes;
+import android.content.ContentResolver;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Handler;
@@ -61,7 +62,6 @@ import com.android.internal.logging.testing.UiEventLoggerFake;
 import com.android.internal.statusbar.IStatusBarService;
 import com.android.internal.util.LatencyTracker;
 import com.android.keyguard.KeyguardUpdateMonitor;
-import com.android.keyguard.dagger.KeyguardStatusBarViewComponent;
 import com.android.systemui.SysuiTestCase;
 import com.android.systemui.bouncer.domain.interactor.AlternateBouncerInteractor;
 import com.android.systemui.classifier.FalsingCollectorFake;
@@ -143,8 +143,6 @@ import com.android.systemui.statusbar.phone.DozeParameters;
 import com.android.systemui.statusbar.phone.HeadsUpAppearanceController;
 import com.android.systemui.statusbar.phone.KeyguardBypassController;
 import com.android.systemui.statusbar.phone.KeyguardClockPositionAlgorithm;
-import com.android.systemui.statusbar.phone.KeyguardStatusBarView;
-import com.android.systemui.statusbar.phone.KeyguardStatusBarViewController;
 import com.android.systemui.statusbar.phone.LightBarController;
 import com.android.systemui.statusbar.phone.LockscreenGestureLogger;
 import com.android.systemui.statusbar.phone.ScreenOffAnimationController;
@@ -197,7 +195,6 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
     @Mock protected NotificationStackScrollLayout mNotificationStackScrollLayout;
     @Mock protected HeadsUpManager mHeadsUpManager;
     @Mock protected NotificationGutsManager mGutsManager;
-    @Mock protected KeyguardStatusBarView mKeyguardStatusBar;
     @Mock protected HeadsUpTouchHelper.Callback mHeadsUpCallback;
     @Mock protected KeyguardUpdateMonitor mUpdateMonitor;
     @Mock protected KeyguardBypassController mKeyguardBypassController;
@@ -219,9 +216,6 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
     @Mock protected MediaHierarchyManager mMediaHierarchyManager;
     @Mock protected ConversationNotificationManager mConversationNotificationManager;
     @Mock protected StatusBarKeyguardViewManager mStatusBarKeyguardViewManager;
-    @Mock protected KeyguardStatusBarViewComponent.Factory mKeyguardStatusBarViewComponentFactory;
-    @Mock protected KeyguardStatusBarViewComponent mKeyguardStatusBarViewComponent;
-    @Mock protected KeyguardStatusBarViewController mKeyguardStatusBarViewController;
     @Mock protected LightBarController mLightBarController;
     @Mock protected NotificationStackScrollLayoutController
             mNotificationStackScrollLayoutController;
@@ -241,6 +235,7 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
     @Mock protected FragmentService mFragmentService;
     @Mock protected FragmentHostManager mFragmentHostManager;
     @Mock protected IStatusBarService mStatusBarService;
+    @Mock protected ContentResolver mContentResolver;
     @Mock protected NotificationRemoteInputManager mNotificationRemoteInputManager;
     @Mock protected ScreenRecordUxController mScreenRecordUxController;
     @Mock protected LockscreenGestureLogger mLockscreenGestureLogger;
@@ -392,7 +387,6 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
         when(mResources.getDimensionPixelSize(R.dimen.split_shade_full_transition_distance))
                 .thenReturn(SPLIT_SHADE_FULL_TRANSITION_DISTANCE);
         when(mView.getContext()).thenReturn(getContext());
-        when(mView.findViewById(R.id.keyguard_header)).thenReturn(mKeyguardStatusBar);
         when(mView.findViewById(R.id.notification_stack_scroller))
                 .thenReturn(mNotificationStackScrollLayout);
         when(mNotificationStackScrollLayoutController.getHeight()).thenReturn(1000);
@@ -475,10 +469,6 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
                 mShadeInteractor,
                 mLockscreenShadeTransitionController,
                 mDumpManager);
-        when(mKeyguardStatusBarViewComponentFactory.build(any(), any()))
-                .thenReturn(mKeyguardStatusBarViewComponent);
-        when(mKeyguardStatusBarViewComponent.getKeyguardStatusBarViewController())
-                .thenReturn(mKeyguardStatusBarViewController);
         when(mNotificationRemoteInputManager.isRemoteInputActive())
                 .thenReturn(false);
         doAnswer(invocation -> {
@@ -518,6 +508,7 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
 
         mNotificationPanelViewController = new NotificationPanelViewController(
                 mView,
+                mMainHandler,
                 coordinator, expansionHandler, mDynamicPrivacyController, mKeyguardBypassController,
                 mFalsingManager, new FalsingCollectorFake(),
                 mKeyguardStateController,
@@ -534,7 +525,6 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
                 mGutsManager,
                 mNotificationsQSContainerController,
                 mNotificationStackScrollLayoutController,
-                mKeyguardStatusBarViewComponentFactory,
                 mLockscreenShadeTransitionController,
                 mScrimController,
                 mMediaDataManager,
@@ -547,6 +537,7 @@ public class NotificationPanelViewControllerBaseTest extends SysuiTestCase {
                 mQsController,
                 mFragmentService,
                 mStatusBarService,
+                mContentResolver,
                 mShadeHeaderController,
                 mScreenOffAnimationController,
                 mLockscreenGestureLogger,

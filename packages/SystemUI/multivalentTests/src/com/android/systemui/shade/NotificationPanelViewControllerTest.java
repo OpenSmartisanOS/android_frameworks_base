@@ -161,6 +161,36 @@ public class NotificationPanelViewControllerTest extends NotificationPanelViewCo
     }
 
     @Test
+    public void lockscreenShadeVisualExpansion_keepsStableShadeLockedEndpoint() {
+        assertThat(NotificationPanelViewController.resolveLockscreenShadeVisualExpansion(
+                StatusBarState.SHADE_LOCKED,
+                /* repositoryExpansion= */ 0f,
+                /* currentVisualExpansion= */ 1f,
+                /* panelMotionActive= */ false,
+                /* panelOpen= */ true)).isEqualTo(1f);
+    }
+
+    @Test
+    public void lockscreenShadeVisualExpansion_acceptsCollapseWhileMotionIsActive() {
+        assertThat(NotificationPanelViewController.resolveLockscreenShadeVisualExpansion(
+                StatusBarState.SHADE_LOCKED,
+                /* repositoryExpansion= */ 0f,
+                /* currentVisualExpansion= */ 1f,
+                /* panelMotionActive= */ true,
+                /* panelOpen= */ true)).isEqualTo(0f);
+    }
+
+    @Test
+    public void lockscreenShadeVisualExpansion_doesNotLatchIdleKeyguard() {
+        assertThat(NotificationPanelViewController.resolveLockscreenShadeVisualExpansion(
+                StatusBarState.KEYGUARD,
+                /* repositoryExpansion= */ 0f,
+                /* currentVisualExpansion= */ 1f,
+                /* panelMotionActive= */ false,
+                /* panelOpen= */ true)).isEqualTo(0f);
+    }
+
+    @Test
     @Ignore("b/341163515 - fails to clean up animators correctly")
     public void testSwipeWhileLocked_notifiesKeyguardState() {
         mStatusBarStateController.setState(KEYGUARD);

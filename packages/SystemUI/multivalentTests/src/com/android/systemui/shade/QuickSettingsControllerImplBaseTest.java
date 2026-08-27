@@ -67,7 +67,6 @@ import com.android.systemui.statusbar.notification.stack.NotificationStackScroll
 import com.android.systemui.statusbar.phone.DozeParameters;
 import com.android.systemui.statusbar.phone.KeyguardBottomAreaView;
 import com.android.systemui.statusbar.phone.KeyguardBypassController;
-import com.android.systemui.statusbar.phone.KeyguardStatusBarView;
 import com.android.systemui.statusbar.phone.LightBarController;
 import com.android.systemui.statusbar.phone.LockscreenGestureLogger;
 import com.android.systemui.statusbar.phone.ScrimController;
@@ -107,7 +106,6 @@ public class QuickSettingsControllerImplBaseTest extends SysuiTestCase {
 
     @Mock protected Resources mResources;
     @Mock protected KeyguardBottomAreaView mQsFrame;
-    @Mock protected KeyguardStatusBarView mKeyguardStatusBar;
     @Mock protected QS mQs;
     @Mock protected QSFragmentLegacy mQSFragment;
     @Mock protected Lazy<NotificationPanelViewController> mPanelViewControllerLazy;
@@ -205,7 +203,6 @@ public class QuickSettingsControllerImplBaseTest extends SysuiTestCase {
                 R.dimen.lockscreen_shade_qs_transition_distance)).thenReturn(DEFAULT_HEIGHT);
         when(mPanelView.getResources()).thenReturn(mResources);
         when(mPanelView.getContext()).thenReturn(getContext());
-        when(mPanelView.findViewById(R.id.keyguard_header)).thenReturn(mKeyguardStatusBar);
         when(mNotificationStackScrollLayoutController.getHeight()).thenReturn(1000);
         when(mPanelView.findViewById(R.id.qs_frame)).thenReturn(mQsFrame);
         when(mQsFrame.getX()).thenReturn(QS_FRAME_START_X);
